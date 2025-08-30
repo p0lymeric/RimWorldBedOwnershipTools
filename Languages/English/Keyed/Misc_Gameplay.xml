@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+    <BedOwnershipTools.CommunalBrackets>(communal)</BedOwnershipTools.CommunalBrackets>
+    <BedOwnershipTools.CommunalAbbrevBrackets>(comm.)</BedOwnershipTools.CommunalAbbrevBrackets>
+    <BedOwnershipTools.PinnedBrackets>(pinned)</BedOwnershipTools.PinnedBrackets>
+    <BedOwnershipTools.PinnedAbbrev>P</BedOwnershipTools.PinnedAbbrev>
+    <BedOwnershipTools.AssignmentGroup>Assignment group</BedOwnershipTools.AssignmentGroup>
+    <BedOwnershipTools.Edit>Edit...</BedOwnershipTools.Edit>
+    <BedOwnershipTools.Default>Default</BedOwnershipTools.Default>
+    <BedOwnershipTools.Home>Home</BedOwnershipTools.Home>
+    <BedOwnershipTools.Ship>Ship</BedOwnershipTools.Ship>
+    <BedOwnershipTools.Untitled>Untitled</BedOwnershipTools.Untitled>
+    <BedOwnershipTools.MaxAssignmentGroupsReached>Maximum {0} assignment groups allowed.</BedOwnershipTools.MaxAssignmentGroupsReached>
+    <BedOwnershipTools.InactiveBrackets>(inactive)</BedOwnershipTools.InactiveBrackets>
+</LanguageData>

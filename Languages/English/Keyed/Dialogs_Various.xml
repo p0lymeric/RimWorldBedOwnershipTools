@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+    <BedOwnershipTools.NewAssignmentGroupButton>New group</BedOwnershipTools.NewAssignmentGroupButton>
+    <BedOwnershipTools.NewAssignmentGroupButtonTip>Create a new assignment group.</BedOwnershipTools.NewAssignmentGroupButtonTip>
+    <BedOwnershipTools.EditAssignmentGroupsTip>Colonists give more priority to higher rows.</BedOwnershipTools.EditAssignmentGroupsTip>
+    <BedOwnershipTools.IncreasePriorityAssignmentGroupTip>Increase priority.</BedOwnershipTools.IncreasePriorityAssignmentGroupTip>
+    <BedOwnershipTools.DecreasePriorityAssignmentGroupTip>Decrease priority.</BedOwnershipTools.DecreasePriorityAssignmentGroupTip>
+    <BedOwnershipTools.VisibilityAssignmentGroupTip>Toggle whether buildings will display this assignment group's label.</BedOwnershipTools.VisibilityAssignmentGroupTip>
+    <BedOwnershipTools.RenameAssignmentGroupTip>Rename this assignment group.</BedOwnershipTools.RenameAssignmentGroupTip>
+    <BedOwnershipTools.DeleteAssignmentGroupTip>Delete this assignment group.</BedOwnershipTools.DeleteAssignmentGroupTip>
+    <BedOwnershipTools.DeleteAssignmentGroupConfirm>Are you sure you want to delete the assignment group: {0}?</BedOwnershipTools.DeleteAssignmentGroupConfirm>
+    <BedOwnershipTools.DeleteAssignmentGroupConfirmButton>Delete</BedOwnershipTools.DeleteAssignmentGroupConfirmButton>
+</LanguageData>

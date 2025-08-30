@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+    <BedOwnershipTools.CommandToggleIsAssignmentPinned>Pin owner</BedOwnershipTools.CommandToggleIsAssignmentPinned>
+    <BedOwnershipTools.CommandToggleIsAssignmentPinnedDesc>Pinning a building's assignment prevents its owners from changing outside of player action or major game events.</BedOwnershipTools.CommandToggleIsAssignmentPinnedDesc>
+
+    <BedOwnershipTools.CommandToggleIsAssignedToCommunity>Communal</BedOwnershipTools.CommandToggleIsAssignedToCommunity>
+    <BedOwnershipTools.CommandToggleIsAssignedToCommunityCommunalDesc>Communal: Anybody may use this building. Click to restrict to assigned owners.</BedOwnershipTools.CommandToggleIsAssignedToCommunityCommunalDesc>
+    <BedOwnershipTools.CommandToggleIsAssignedToCommunityNonCommunalDesc>Non-communal: Only assigned owners may use this building. Click to mark for communal use.</BedOwnershipTools.CommandToggleIsAssignedToCommunityNonCommunalDesc>
+
+    <BedOwnershipTools.CommandSetAssignmentGroup>Assign group</BedOwnershipTools.CommandSetAssignmentGroup>
+    <BedOwnershipTools.CommandSetAssignmentGroupDesc>Set an assignment group for this building. Colonists may own multiple buildings, if each is from a different assignment group.</BedOwnershipTools.CommandSetAssignmentGroupDesc>
+</LanguageData>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Analyzer>
+    <BedOwnershipTools>
+        <Types>
+            <li>BedOwnershipTools.AssignmentGroup</li>
+            <li>BedOwnershipTools.CATPBAndPOMethodReplacements</li>
+            <li>BedOwnershipTools.CATPBGroupAssignmentOverlayAdapter</li>
+            <li>BedOwnershipTools.CompBuilding_BedXAttrs</li>
+            <li>BedOwnershipTools.CompPawnXAttrs</li>
+            <li>BedOwnershipTools.GameComponent_AssignmentGroupManager</li>
+        </Types>
+        <Methods>
+            <!-- <li>Verse.Thing:Tick</li> -->
+        </Methods>
+        <NestedTypes>
+            <li>BedOwnershipTools.HarmonyPatches</li>
+        </NestedTypes>
+    </BedOwnershipTools>
+</Analyzer>
