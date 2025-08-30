@@ -146,12 +146,22 @@ namespace BedOwnershipTools {
                     if(!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
                         // bedXAttrs.assignedPawnsOverlay.AddRange(catp.AssignedPawns.Except(assignedPawnsOverlay)); // done by TryAssignPawn
                         bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(Traverse.Create(catp).Field("uninstalledAssignedPawns").GetValue<List<Pawn>>().Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
+                        foreach (Pawn pawn in bed.CompAssignableToPawn.AssignedPawnsForReading) {
+                            if (!bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
+                                Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) in its internal ownership list but not its overlay list.");
+                            }
+                        }
                         // if I am initted and my owner doesn't actually have a map entry for me, unlink me from them
+                        List<Pawn> pawnsToRemove = new List<Pawn>();
                         foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
                             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
                             if (!pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
                                 Log.Error($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
+                                pawnsToRemove.Add(pawn);
                             }
+                        }
+                        foreach (Pawn pawn in pawnsToRemove) {
+                            bedXAttrs.assignedPawnsOverlay.Remove(pawn);
                         }
                     }
                 }

@@ -157,5 +157,35 @@ namespace BedOwnershipTools {
                 // Messages.Message(key.Translate(def, pawn), new LookTargets(this, pawn), MessageTypeDefOf.CautionInput, historical: false);
             }
         }
+
+        public static bool IsAnyOwnerLovePartnerOf(Building_Bed bed, Pawn sleeper) {
+            CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+            foreach (Pawn owner in bedXAttrs.assignedPawnsOverlay) {
+                if (LovePartnerRelationUtility.LovePartnerRelationExists(sleeper, owner)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool BedOwnerWillShare(Building_Bed bed, Pawn sleeper, GuestStatus? guestStatus) {
+            CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+            if (!bedXAttrs.assignedPawnsOverlay.Any()) {
+                return true;
+            }
+            if (sleeper.IsPrisoner || guestStatus == GuestStatus.Prisoner || sleeper.IsSlave || guestStatus == GuestStatus.Slave) {
+                if (!bed.AnyUnownedSleepingSlot) {
+                    return false;
+                }
+            } else {
+                if (!bedXAttrs.assignedPawnsOverlay.Any()) {
+                    return false;
+                }
+                if (!IsAnyOwnerLovePartnerOf(bed, sleeper)) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

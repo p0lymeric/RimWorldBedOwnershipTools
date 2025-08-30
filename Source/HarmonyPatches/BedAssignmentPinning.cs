@@ -32,6 +32,14 @@ namespace BedOwnershipTools {
                         return;
                     }
 
+                    // belongs to the assignment group feature
+                    // CanUseBedNow !IsOwner && !BedOwnerWillShare
+                    if (enableBedAssignmentGroups) {
+                        if (!CATPBAndPOMethodReplacements.IsOwner(building_Bed, sleeper) && !CATPBAndPOMethodReplacements.BedOwnerWillShare(building_Bed, sleeper, guestStatus)) {
+                            __result = false;
+                        }
+                    }
+
                     if (enableBedAssignmentGroups) {
                         CompPawnXAttrs sleeperXAttrs = sleeper.GetComp<CompPawnXAttrs>();
                         foreach(var (assignmentGroup, bed) in sleeperXAttrs.assignmentGroupToOwnedBedMap) {
