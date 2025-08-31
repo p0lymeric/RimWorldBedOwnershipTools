@@ -2,5 +2,6 @@
 <Configuration>
   <Excluded>
     <exclude>.git</exclude>
+    <exclude>Collateral</exclude>
   </Excluded>
 </Configuration>

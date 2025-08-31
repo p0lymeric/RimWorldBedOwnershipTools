@@ -4,6 +4,8 @@
 
 # Bed Ownership Tools
 
+![communal beds](About/Preview.png)
+
 Bed Ownership Tools reduces micromanagement of colonists' bed assignments by introducing new ownership controls on beds.
 
 In my RimWorld playthroughs, I didn't like how sending colonists on quests or designating emergency sleeping quarters often led to them forgetting home bed assignments.
@@ -16,7 +18,7 @@ A brief psychotic wander later...
 
 Communal beds are good for situations when colonists need a bed, but cannot access a permanent bed due to travel, zoning restrictions, or limited availability of permanent bedrooms.
 
-![communal beds](Development/Promo/Communal.png)
+![communal beds](Collateral/DocMedia/ReadmeCommunal.png)
 
 Instead of assigning named owners to beds, you can now mark a bed for "communal" use. When a colonist cannot access or claim an owned bed, they'll use a communal bed before sleeping on the ground. While using a communal bed, they'll still remember their previous bed.
 
@@ -26,7 +28,7 @@ Communal beds are highly versatile for early to late game use. Use cases for com
 
 Pinned assignments prevent colonists from forgetting prior bed assignments, unless manually reassigned by the player (or arrested, killed, divorced, etc.)
 
-![pinned assignments](Development/Promo/Pinned.png)
+![pinned assignments](Collateral/DocMedia/ReadmePinned.png)
 
 Perhaps you've sent several colonists to a quest site and mass-claimed buildings before. A brief undraft to have the (exhausted) troops perform some deconstruction, and half of your colony has suddenly forgotten their home beds in favour of some dead tribals' bed rolls.
 
@@ -36,7 +38,7 @@ By pinning those colonists' home bed assignments beforehand, they'll sleep on th
 
 Assignment groups allow colonists to own and automatically switch between multiple beds based on priority rankings.
 
-![assignment groups](Development/Promo/AssignmentGroup.png)
+![assignment groups](Collateral/DocMedia/ReadmeAssignmentGroup.png)
 
 You may find multiple assignments useful for late-game colonies where colonists have personalized bedrooms.
 
@@ -57,7 +59,7 @@ When a crew member is on a mission, or if they've been zoned into the gravship, 
 
 Let's say you want your ship's captain to sleep in their quarters when possible (for the fun of it), while the rest of the crew prefer to sleep at home. To do this, you can create another assignment group.
 
-![assignment groups](Development/Promo/AssignmentGroupEditDialog.png)
+![assignment groups](Collateral/DocMedia/ReadmeAssignmentGroupEditDialog.png)
 
 1. To do this, click on any bed, and select "Assign group" > "Edit...".
 2. A dialog will appear where you can add/rename/remove groups, and reorder their priorities.
