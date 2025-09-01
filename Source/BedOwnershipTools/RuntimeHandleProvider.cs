@@ -1,8 +1,6 @@
 using System;
 using RimWorld;
 using Verse;
-using UnityEngine;
-using HarmonyLib;
 
 // Tries to retrieve references to handles in foreign assemblies
 // and reports whether they are valid for use

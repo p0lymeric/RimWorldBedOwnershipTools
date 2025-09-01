@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using RimWorld;
 using Verse;
-using HarmonyLib;
 
 namespace BedOwnershipTools {
     public static class CATPBAndPOMethodReplacements {

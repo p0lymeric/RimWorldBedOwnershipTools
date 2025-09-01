@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using RimWorld;
 using Verse;
-using HarmonyLib;
 
 // Cursed subclass definition for purposes of massaging data presented to
 // and manipulated by Dialog_AssignBuildingOwner(CompAssignableToPawn)

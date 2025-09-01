@@ -1,6 +1,5 @@
 using RimWorld;
 using Verse;
-using UnityEngine;
 
 namespace BedOwnershipTools {
     public class AssignmentGroup : IExposable, ILoadReferenceable, IRenameable {
