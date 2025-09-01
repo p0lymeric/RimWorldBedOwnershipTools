@@ -21,8 +21,8 @@ namespace BedOwnershipTools {
         public bool isTheSystemActive = false;
 
         // Used to track all pawns and beds so that assignment groups can be deleted
-        public HashSet<ThingComp> compPawnXAttrsRegistry = new HashSet<ThingComp>();
-        public HashSet<ThingComp> compBuilding_BedXAttrsRegistry = new HashSet<ThingComp>();
+        public HashSet<CompPawnXAttrs> compPawnXAttrsRegistry = new HashSet<CompPawnXAttrs>();
+        public HashSet<CompBuilding_BedXAttrs> compBuilding_BedXAttrsRegistry = new HashSet<CompBuilding_BedXAttrs>();
 
         // We will restrict custom assignment group IDs to be handed out in the range [1, MAXIMUM_NONDEFAULT_GROUPS]
         // TODO mod setting
@@ -109,7 +109,7 @@ namespace BedOwnershipTools {
                     if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
                         // just out of paranoia
                         if (ownedBed != otherBed) {
-                            Log.Error("[BOT] Pawn has inconsistent beds stored in internal and overlay ownership fields.");
+                            Log.Warning("[BOT] Pawn has inconsistent beds stored in internal and overlay ownership fields.");
                         }
                     } else {
                         if (isTheSystemActive) {
@@ -155,7 +155,7 @@ namespace BedOwnershipTools {
                         foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
                             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
                             if (!pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
-                                Log.Error($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
+                                Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
                                 pawnsToRemove.Add(pawn);
                             }
                         }

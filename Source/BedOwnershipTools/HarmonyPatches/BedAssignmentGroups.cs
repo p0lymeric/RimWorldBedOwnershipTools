@@ -96,6 +96,40 @@ namespace BedOwnershipTools {
         // We unfortunately need to patch each user of the unclaim method as a special case.
         [HarmonyPatch(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))]
         public class Patch_Pawn_Ownership_UnclaimBed {
+            // When UnclaimBed is called, the method isn't told which bed was targeted
+            // This works with single bed ownership since the information can be recovered from the Pawn itself
+            // i.e. iff there is a bed in the world that has a Pawn in assignedPawns, that Pawn's Pawn_Ownership
+            // will have that bed referenced by OwnedBed
+
+            // This scheme obviously breaks when multiple bed ownership is introduced
+            // To handle this, we postfix UnclaimBed and introduce a "hinting" system where parameters are
+            // set inside this patch before it executes (crude, thread-unsafe way to pass arguments).
+
+            // Several major handling categories emerge:
+            // Directed
+            // - The caller was detoured/transpiled to call CATPBAndPOMethodReplacements.UnclaimBedDirected for the desired beds
+            // - The caller has HintDontInvalidateOverlays calls inserted before its calls to UnclaimBed
+            // -> the postfix in this patch will not intervene in unclaiming beds in the overlay
+            // InvAll (hinted)
+            // - The caller's code was reviewed, and
+            //   1) the intent is for the Pawn to lose all its beds
+            //   2) each call to UnclaimBed in the function is not qualified by conditionals along the line of "if (the pawn owns a bed) then UnclaimBed"
+            //      a) if this is false, then the function may need to be handled as a directed case
+            // - The caller has HintInvalidateAllOverlays calls inserted before its calls to UnclaimBed
+            // -> the postfix in this patch will relinqiush all the Pawn's beds in the overlay
+            // InvAll (unhinted)
+            // - The caller's code was not reviewed (e.g. game updates, this mod developer's own miss, or other mods making bed-related calls)
+            //   1) the system will automatically assume the intent is for the Pawn to lose all its beds
+            //      a) this may be annoying if that is not the case, but it is a safe option
+            //   2) the system cannot assure that "if (the pawn owns a bed) then UnclaimBed" cases will be captured
+            //      a) the mod will not capture cases where the Pawn only owns inactive beds and there is no active bed to trigger that logic
+            //      TODO can make it so that if an active bed is unassigned, then the Pawn will choose an inactive bed to reclaim
+            // -> the postfix in this patch will relinqiush all the Pawn's beds in the overlay
+            // -> the postfix in this patch will write a warning to the console for debugging purposes
+
+            static bool setBeforeCallingToNotInvalidateAllOverlays = false;
+            static bool setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
+
             public static void HintDontInvalidateOverlays() {
                 setBeforeCallingToNotInvalidateAllOverlays = true;
             }
@@ -106,8 +140,7 @@ namespace BedOwnershipTools {
                 setBeforeCallingToNotInvalidateAllOverlays = false;
                 setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
             }
-            static bool setBeforeCallingToNotInvalidateAllOverlays = false;
-            static bool setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
+
             static void Postfix(Pawn_Ownership __instance, ref bool __result) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (!enableBedAssignmentGroups) {
@@ -118,18 +151,20 @@ namespace BedOwnershipTools {
                     Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
                     if (!setBeforeCallingToInvalidateAllOverlaysWithoutWarning) {
                         if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging) {
-                            // don't cry wolf if the pawn only owns one bed -- mods like Hospitality call TryUnassignPawn on guests
-                            // if (pawnXAttrs.assignmentGroupToOwnedBedMap.Count <= 1) {
-                            // } else {
-                                Log.Warning($"[BOT] Pawn_Ownership.UnclaimBed was called, but Bed Ownership Tools doesn't have special handling for the calling case. All of {pawn.Label}'s beds have been unassigned, as it is the safest default way to proceed.");
-                            // }
+                            Log.Warning($"[BOT] Pawn_Ownership.UnclaimBed was called, but Bed Ownership Tools doesn't have special handling for the calling case. All of {pawn.Label}'s beds have been unassigned, as it is the safest default way to proceed.");
                         }
                     }
                     CATPBAndPOMethodReplacements.UnclaimBedAll(pawn);
                 }
                 ClearHints();
             }
-            static IEnumerable<CodeInstruction> InsertCodeInstructionsBeforePredicate(IEnumerable<CodeInstruction> instructions, System.Predicate<CodeInstruction> predicate, IEnumerable<CodeInstruction> toInsert, bool firstMatchOnly) {
+
+            static IEnumerable<CodeInstruction> InsertCodeInstructionsBeforePredicate(
+                IEnumerable<CodeInstruction> instructions,
+                System.Predicate<CodeInstruction> predicate,
+                IEnumerable<CodeInstruction> toInsert,
+                bool firstMatchOnly
+            ) {
                 bool everMatched = false;
                 foreach (CodeInstruction instruction in instructions) {
                     bool skipInsert = firstMatchOnly && everMatched;
@@ -147,6 +182,7 @@ namespace BedOwnershipTools {
                     Log.Error("[BOT] Transpiler never found the predicate instruction to trigger code modification");
                 }
             }
+
             public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
                 return InsertCodeInstructionsBeforePredicate(
                     instructions,
@@ -175,6 +211,7 @@ namespace BedOwnershipTools {
                     false
                 );
             }
+
             public static void HintDontInvalidateOverlaysWithCompAssignableToPawn(CompAssignableToPawn catp) {
                 if (catp is CompAssignableToPawn_Bed) {
                     setBeforeCallingToNotInvalidateAllOverlays = true;
@@ -210,20 +247,6 @@ namespace BedOwnershipTools {
                             OpCodes.Call,
                             AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
                             nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlaysWithCompAssignableToPawn))
-                        )
-                    },
-                    false
-                );
-            }
-            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTryUnassignPawnUncheckedTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
-                    instructions,
-                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
-                    new[] {
-                        new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
-                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlays))
                         )
                     },
                     false
@@ -283,9 +306,10 @@ namespace BedOwnershipTools {
                 // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.Dialog_AssignBuildingOwner.DrawAssignedRow -- directed, other calling paths shouldn't exist, HIT
                 // OK hint already inserted in CATPBGroupAssignmentOverlayAdapter
 
-                if (BedOwnershipTools.Singleton.runtimeHandles.modHospitalityLoadedForCompatPatching) {
-                    harmony.Patch(AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeHospitalityBuilding_GuestBed, "TickLong"), transpiler: new HarmonyMethod(InsertHintInvalidateAllOverlaysTryUnassignPawnUncheckedTranspiler));
-                }
+                // NOTE inadvisible to patch other mods when unneeded
+                // if (BedOwnershipTools.Singleton.runtimeHandles.modHospitalityLoadedForCompatPatching) {
+                //     harmony.Patch(AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeHospitalityBuilding_GuestBed, "TickLong"), transpiler: new HarmonyMethod(InsertHintInvalidateAllOverlaysTryUnassignPawnUncheckedNoErrorTranspiler));
+                // }
             }
         }
 
