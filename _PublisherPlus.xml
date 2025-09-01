@@ -3,5 +3,7 @@
   <Excluded>
     <exclude>.git</exclude>
     <exclude>Collateral</exclude>
+    <exclude>Source\.vs</exclude>
+    <exclude>Source\Artifacts</exclude>
   </Excluded>
 </Configuration>
