@@ -24,12 +24,16 @@ namespace BedOwnershipTools {
                 if (!enableBedAssignmentGroups) {
                     return;
                 }
+
                 CompPawnXAttrs sleeperXAttrs = sleeper.GetComp<CompPawnXAttrs>();
-                foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority) {
-                    if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
-                        if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
-                            sleeper.ownership.ClaimBedIfNonMedical(bed);
-                            break;
+                // not sure when the null check here would fail but it may stop issues if the sleeper doesn't have a CompPawnXAttrs component
+                if (sleeperXAttrs != null) {
+                    foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority) {
+                        if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                            if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
+                                sleeper.ownership.ClaimBedIfNonMedical(bed);
+                                break;
+                            }
                         }
                     }
                 }

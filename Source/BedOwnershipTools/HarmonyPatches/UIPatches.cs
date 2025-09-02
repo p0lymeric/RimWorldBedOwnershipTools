@@ -368,6 +368,13 @@ namespace BedOwnershipTools {
                     return true;
                 }
 
+                // for compatibility with other mods that touch AssigningCandidates on non-colonist beds
+                // e.g. Set Owner for Prisoner Bed
+                Building_Bed bed = (Building_Bed)(__instance.parent);
+                if (bed.ForPrisoners || bed.Medical) {
+                    return true;
+                }
+
                 __result = MyAssigningCandidatesGetterImpl(__instance);
                 return false;
             }
