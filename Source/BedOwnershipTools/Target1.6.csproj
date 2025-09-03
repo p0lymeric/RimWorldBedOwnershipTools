@@ -5,6 +5,7 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <PathMap>$(SolutionDir)=.\</PathMap>
         <DefineConstants>RIMWORLD__1_6</DefineConstants>
         <AssemblyName>BedOwnershipTools</AssemblyName>
     </PropertyGroup>
@@ -15,6 +16,6 @@
     </ItemGroup>
 
     <Target Name="CopyAssembly" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(ProjectDir)..\..\1.6\Assemblies\" />
+        <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(SolutionDir)..\1.6\Assemblies\" />
     </Target>
 </Project>
