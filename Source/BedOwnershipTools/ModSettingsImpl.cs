@@ -18,6 +18,7 @@ namespace BedOwnershipTools {
         public bool showColonistsAcrossAllMapsInAssignmentDialog = true;
 
         public bool enableHospitalityModCompatPatches = true;
+        public bool enableOneBedToSleepWithAllModCompatPatches = true;
         // TODO bed linking in Dubs Hygiene is not aware of overlay owners
 
         public bool devEnableDebugInspectStringListings = false;
@@ -37,6 +38,7 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref this.enableBedAssignmentGroups, "enableBedAssignmentGroups", true);
 
             Scribe_Values.Look(ref this.enableHospitalityModCompatPatches, "enableHospitalityModCompatPatches", true);
+            Scribe_Values.Look(ref this.enableOneBedToSleepWithAllModCompatPatches, "enableOneBedToSleepWithAllModCompatPatches", true);
 
             Scribe_Values.Look(ref this.devEnableDebugInspectStringListings, "devEnableDebugInspectStringListings", false);
             Scribe_Values.Look(ref this.devEnableUnaccountedCaseLogging, "devEnableUnaccountedCaseLogging", false);

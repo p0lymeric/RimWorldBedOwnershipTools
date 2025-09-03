@@ -207,18 +207,6 @@ namespace BedOwnershipTools {
                     }
                 }
             }
-
-            [HarmonyPatchCategory("HospitalityModCompatPatches")]
-            [HarmonyPatch("Hospitality.Patches.Toils_LayDown_Patch+ApplyBedThoughts", "AddedBedIsOwned")]
-            public class ModCompatPatch_Hospitality_AddedBedIsOwned {
-                // Hospitality prefixes this method and detours out immediately afterwards instead of infix patching
-                // But they introduce a similar patch helper as us
-                // We'll add our check as an OR'd condition to their patch helper
-                static void Postfix(ref bool __result, Pawn pawn, Building_Bed buildingBed) {
-                    CompBuilding_BedXAttrs xAttrs = buildingBed.GetComp<CompBuilding_BedXAttrs>();
-                    __result = __result || xAttrs.IsAssignedToCommunity;
-                }
-            }
         }
 
         // TODO

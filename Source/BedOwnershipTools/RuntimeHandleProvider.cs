@@ -13,11 +13,22 @@ namespace BedOwnershipTools {
         public bool modHospitalityLoadedForCompatPatching = false;
         public Type typeHospitalityBuilding_GuestBed = null;
 
+        public bool modOneBedToSleepWithAllLoadedForCompatPatching = false;
+        public Type typeOneBedToSleepWithAll_CompPolygamyMode = null;
+        public Type typeOneBedToSleepWithAll_PolygamyModeUtility = null;
+
         public RuntimeHandleProvider(ModSettingsImpl settings) {
             if (settings.enableHospitalityModCompatPatches) {
                 typeHospitalityBuilding_GuestBed = Type.GetType("Hospitality.Building_GuestBed, Hospitality");
                 if (typeHospitalityBuilding_GuestBed != null) {
                     modHospitalityLoadedForCompatPatching = true;
+                }
+            }
+            if (settings.enableOneBedToSleepWithAllModCompatPatches) {
+                typeOneBedToSleepWithAll_CompPolygamyMode = Type.GetType("OneBedToSleepWithAll.CompPolygamyMode, OneBedToSleepWithAll");
+                typeOneBedToSleepWithAll_PolygamyModeUtility = Type.GetType("OneBedToSleepWithAll.PolygamyModeUtility, OneBedToSleepWithAll");
+                if (typeOneBedToSleepWithAll_CompPolygamyMode != null && typeOneBedToSleepWithAll_PolygamyModeUtility != null) {
+                    modOneBedToSleepWithAllLoadedForCompatPatching = true;
                 }
             }
         }

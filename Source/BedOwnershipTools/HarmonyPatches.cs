@@ -13,6 +13,10 @@ namespace BedOwnershipTools {
             if (mod.runtimeHandles.modHospitalityLoadedForCompatPatching) {
                 mod.harmony.PatchCategory("HospitalityModCompatPatches");
             }
+            if (mod.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
+                mod.harmony.PatchCategory("OneBedToSleepWithAllModCompatPatches");
+                ModCompatPatches_OneBedToSleepWithAll.Patch_UnclaimBedCalls.ApplyHarmonyPatches(mod.harmony);
+            }
         }
     }
 }

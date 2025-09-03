@@ -20,7 +20,7 @@
     <BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog>Show global colony member list while assigning beds</BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog>
     <BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog_Tooltip>If enabled, bed assignment dialogs will show eligible pawns across all maps, caravans and transporters. If disabled, reverts to vanilla behaviour where only pawns on the bed's map are shown.</BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog_Tooltip>
 
-    <BedOwnershipTools.EnableHospitalityModCompatPatches>Enable Hospitality mod compatibility patches</BedOwnershipTools.EnableHospitalityModCompatPatches>
+    <BedOwnershipTools.EnableModCompatPatches>Enable "{0}" mod compatibility patches</BedOwnershipTools.EnableModCompatPatches>
     <BedOwnershipTools.EnableModCompatPatches_Tooltip>Enables patching code within another mod, to improve compatibility with this mod. If enabled, only takes effect if that mod is loaded.\n\nThese patches may break with updates from either mod. This toggle allows opt-out from these code patches, as they may not be required for a playable experience.\n\nRimWorld must be restarted for a toggle to take effect.</BedOwnershipTools.EnableModCompatPatches_Tooltip>
 
     <BedOwnershipTools.DevEnableDebugInspectStringListings>[DEV] Enable debug inspect string listings</BedOwnershipTools.DevEnableDebugInspectStringListings>

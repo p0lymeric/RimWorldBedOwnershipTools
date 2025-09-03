@@ -32,6 +32,9 @@ namespace BedOwnershipTools {
                         if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                             if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
                                 sleeper.ownership.ClaimBedIfNonMedical(bed);
+                                if (BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
+                                    HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IfIsPolygamyThenDefineMaster(bed);
+                                }
                                 break;
                             }
                         }
@@ -167,7 +170,8 @@ namespace BedOwnershipTools {
                 IEnumerable<CodeInstruction> instructions,
                 System.Predicate<CodeInstruction> predicate,
                 IEnumerable<CodeInstruction> toInsert,
-                bool firstMatchOnly
+                bool firstMatchOnly,
+                bool errorOnNonMatch
             ) {
                 bool everMatched = false;
                 foreach (CodeInstruction instruction in instructions) {
@@ -183,7 +187,13 @@ namespace BedOwnershipTools {
                     }
                 }
                 if (!everMatched) {
-                    Log.Error("[BOT] Transpiler never found the predicate instruction to trigger code modification");
+                    if (errorOnNonMatch) {
+                        // we will be proactively accountable for patches to the base game
+                        Log.Error("[BOT] Transpiler never found the predicate instruction to trigger code modification");
+                    } else if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging) {
+                        // to not grab attention when patches to other mods fail to apply
+                        Log.Warning("[BOT] Transpiler never found the predicate instruction to trigger code modification");
+                    }
                 }
             }
 
@@ -198,7 +208,8 @@ namespace BedOwnershipTools {
                             nameof(Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays))
                         )
                     },
-                    false
+                    false,
+                    true
                 );
             }
             public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
@@ -212,6 +223,37 @@ namespace BedOwnershipTools {
                             nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlays))
                         )
                     },
+                    false,
+                    true
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return InsertCodeInstructionsBeforePredicate(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
+                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays))
+                        )
+                    },
+                    false,
+                    false
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return InsertCodeInstructionsBeforePredicate(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
+                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlays))
+                        )
+                    },
+                    false,
                     false
                 );
             }
@@ -238,7 +280,8 @@ namespace BedOwnershipTools {
                             nameof(Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlaysWithCompAssignableToPawn))
                         )
                     },
-                    false
+                    false,
+                    true
                 );
             }
             public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTryUnassignPawnTranspiler(IEnumerable<CodeInstruction> instructions) {
@@ -253,6 +296,37 @@ namespace BedOwnershipTools {
                             nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlaysWithCompAssignableToPawn))
                         )
                     },
+                    false,
+                    true
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTryUnassignPawnUncheckedNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return InsertCodeInstructionsBeforePredicate(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
+                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays))
+                        )
+                    },
+                    false,
+                    false
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTryUnassignPawnUncheckedNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return InsertCodeInstructionsBeforePredicate(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
+                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlays))
+                        )
+                    },
+                    false,
                     false
                 );
             }
@@ -309,11 +383,6 @@ namespace BedOwnershipTools {
 
                 // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.Dialog_AssignBuildingOwner.DrawAssignedRow -- directed, other calling paths shouldn't exist, HIT
                 // OK hint already inserted in CATPBGroupAssignmentOverlayAdapter
-
-                // NOTE inadvisible to patch other mods when unneeded
-                // if (BedOwnershipTools.Singleton.runtimeHandles.modHospitalityLoadedForCompatPatching) {
-                //     harmony.Patch(AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeHospitalityBuilding_GuestBed, "TickLong"), transpiler: new HarmonyMethod(InsertHintInvalidateAllOverlaysTryUnassignPawnUncheckedNoErrorTranspiler));
-                // }
             }
         }
 

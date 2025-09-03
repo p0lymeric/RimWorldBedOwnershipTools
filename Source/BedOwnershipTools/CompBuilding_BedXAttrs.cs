@@ -121,16 +121,43 @@ namespace BedOwnershipTools {
             }
         }
 
+        // calls via reflection are expensive...
+        // called once every TickLong ticks (2000 ticks ~ 33.3s) to enforce inter-mod setting coherency in the long term
+        // also called every frame when user has the bed open so they get interactive feedback from toggling settings
+        private void PeriodicInteractionSensitiveTasks() {
+            if (this.parent is Building_Bed bed) {
+                if (
+                    BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching &&
+                    HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed) &&
+                    this.isAssignedToCommunity
+                ) {
+                    this.isAssignedToCommunity = false;
+                }
+            }
+        }
+
+        public override void CompTickLong() {
+            PeriodicInteractionSensitiveTasks();
+        }
+
         public override IEnumerable<Gizmo> CompGetGizmosExtra() {
             bool disableGizmos = false;
+            bool disableToggleIsAssignedToCommunity = false;
             if (
                 BedOwnershipTools.Singleton.runtimeHandles.modHospitalityLoadedForCompatPatching &&
-                // fun reflection shenanigans
                 BedOwnershipTools.Singleton.runtimeHandles.typeHospitalityBuilding_GuestBed.IsInstanceOfType(this.parent)
             ) {
                 disableGizmos = true;
             }
+
             if (this.parent is Building_Bed bed) {
+                if (
+                    BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching &&
+                    HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed)
+                ) {
+                    disableToggleIsAssignedToCommunity = true;
+                }
+
                 Command_Toggle toggleIsAssignmentPinned = new Command_Toggle();
                 toggleIsAssignmentPinned.defaultLabel = "BedOwnershipTools.CommandToggleIsAssignmentPinned".Translate();
                 toggleIsAssignmentPinned.defaultDesc = "BedOwnershipTools.CommandToggleIsAssignmentPinnedDesc".Translate();
@@ -179,7 +206,7 @@ namespace BedOwnershipTools {
                     }
                     this.isAssignedToCommunity = !this.isAssignedToCommunity;
                 };
-                if (disableGizmos) {
+                if (disableGizmos || disableToggleIsAssignedToCommunity) {
                     toggleIsAssignedToCommunity.Disable();
                 }
                 if (BedOwnershipTools.Singleton.settings.enableCommunalBeds) {
@@ -190,6 +217,7 @@ namespace BedOwnershipTools {
                     }
                 }
 
+                PeriodicInteractionSensitiveTasks();
             }
         }
 

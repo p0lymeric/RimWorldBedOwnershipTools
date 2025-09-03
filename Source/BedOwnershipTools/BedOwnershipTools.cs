@@ -76,8 +76,13 @@ namespace BedOwnershipTools {
 
             listingStandard.GapLine();
             listingStandard.CheckboxLabeled(
-                "BedOwnershipTools.EnableHospitalityModCompatPatches".Translate(),
+                "BedOwnershipTools.EnableModCompatPatches".Translate("Hospitality"),
                 ref settings.enableHospitalityModCompatPatches,
+                "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
+            );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.EnableModCompatPatches".Translate("One bed to sleep with all - Polycule Edition"),
+                ref settings.enableOneBedToSleepWithAllModCompatPatches,
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );
 
