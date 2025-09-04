@@ -127,10 +127,9 @@ namespace BedOwnershipTools {
             }
         }
 
-        // calls via reflection are expensive...
-        // called once every TickLong ticks (2000 ticks ~ 33.3s) to enforce inter-mod setting coherency in the long term
-        // also called every frame when user has the bed open so they get interactive feedback from toggling settings
-        private void PeriodicInteractionSensitiveTasks() {
+        // called every frame when user has the bed open to respond to settings toggles from other mods
+        // so we don't need to hook into those mods' gizmos to listen to their events
+        private void SettingsFixupTasks() {
             if (this.parent is Building_Bed bed) {
                 if (
                     BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching &&
@@ -142,9 +141,10 @@ namespace BedOwnershipTools {
             }
         }
 
-        public override void CompTickLong() {
-            PeriodicInteractionSensitiveTasks();
-        }
+        // NOTE Building_Bed has a TickerType of Never so none of TickInterval, Tick, TickRare, or TickLong will actually execute
+        // public override void CompTickLong() {
+        //     SettingsFixupTasks();
+        // }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra() {
             bool disableGizmos = false;
@@ -157,6 +157,12 @@ namespace BedOwnershipTools {
             }
 
             if (this.parent is Building_Bed bed) {
+                // technically need to schedule these fixups inside the gizmo delegates or some time following the
+                // last pause-independent frame when a toggle could've occured
+                // possible race condition: player manages to toggle a gizmo and close the inspector on the same frame
+                // let's ignore handling this race condition for now
+                SettingsFixupTasks();
+
                 if (
                     BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching &&
                     HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed)
@@ -222,8 +228,6 @@ namespace BedOwnershipTools {
                         }
                     }
                 }
-
-                PeriodicInteractionSensitiveTasks();
             }
         }
 
