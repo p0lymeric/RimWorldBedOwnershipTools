@@ -44,6 +44,9 @@ namespace BedOwnershipTools {
 
                     if (enableBedAssignmentGroups) {
                         CompPawnXAttrs sleeperXAttrs = sleeper.GetComp<CompPawnXAttrs>();
+                        if (sleeperXAttrs == null) {
+                            return;
+                        }
                         foreach(var (assignmentGroup, bed) in sleeperXAttrs.assignmentGroupToOwnedBedMap) {
                             if (building_Bed == bed) {
                                 return;

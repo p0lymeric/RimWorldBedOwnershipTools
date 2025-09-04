@@ -108,6 +108,9 @@ namespace BedOwnershipTools {
                     // get my Pawn owners and transfer ownership to the new group
                     foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
                         CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                        if (pawnXAttrs == null) {
+                            continue;
+                        }
                         if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
                             if (pawn.ownership.OwnedBed == oldBed) {
                                 oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);

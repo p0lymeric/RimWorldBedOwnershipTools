@@ -26,17 +26,17 @@ namespace BedOwnershipTools {
                 }
 
                 CompPawnXAttrs sleeperXAttrs = sleeper.GetComp<CompPawnXAttrs>();
-                // not sure when the null check here would fail but it may stop issues if the sleeper doesn't have a CompPawnXAttrs component
-                if (sleeperXAttrs != null) {
-                    foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority) {
-                        if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
-                            if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
-                                sleeper.ownership.ClaimBedIfNonMedical(bed);
-                                if (BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
-                                    HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IfIsPolygamyThenDefineMaster(bed);
-                                }
-                                break;
+                if (sleeperXAttrs == null) {
+                    return;
+                }
+                foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority) {
+                    if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                        if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
+                            sleeper.ownership.ClaimBedIfNonMedical(bed);
+                            if (BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
+                                HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IfIsPolygamyThenDefineMaster(bed);
                             }
+                            break;
                         }
                     }
                 }
@@ -401,6 +401,9 @@ namespace BedOwnershipTools {
                 }
                 Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
                 CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs == null) {
+                    return;
+                }
                 List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
                     if (pawn.ageTracker.CurLifeStage.bodySizeFactor > bed.def.building.bed_maxBodySize) {
@@ -423,6 +426,9 @@ namespace BedOwnershipTools {
                 }
                 // since we're working with the subset of shared beds we only need to iterate through one of the divorcees
                 CompPawnXAttrs initXAttrs = initiator.GetComp<CompPawnXAttrs>();
+                if (initXAttrs == null) {
+                    return;
+                }
                 List<AssignmentGroup> bedsAGToDistribute = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupToOwnedBedMap) {
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
@@ -451,6 +457,9 @@ namespace BedOwnershipTools {
                 }
                 // since we're working with the subset of shared beds we only need to iterate through one of the divorcees
                 CompPawnXAttrs initXAttrs = initiator.GetComp<CompPawnXAttrs>();
+                if (initXAttrs == null) {
+                    return;
+                }
                 List<AssignmentGroup> bedsAGToDistribute = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupToOwnedBedMap) {
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
@@ -483,6 +492,9 @@ namespace BedOwnershipTools {
                     return;
                 }
                 CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs == null) {
+                    return;
+                }
                 List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
                     // if (pawn.ownership.OwnedBed.CompAssignableToPawn.IdeoligionForbids(pawn)) {
@@ -514,6 +526,9 @@ namespace BedOwnershipTools {
                 }
                 Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
                 CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs == null) {
+                    return;
+                }
                 List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
                     if (((bed.ForPrisoners && !pawn.IsPrisoner && !PawnUtility.IsBeingArrested(pawn)) || (!bed.ForPrisoners && pawn.IsPrisoner) || (bed.ForColonists && pawn.HostFaction == null))) {

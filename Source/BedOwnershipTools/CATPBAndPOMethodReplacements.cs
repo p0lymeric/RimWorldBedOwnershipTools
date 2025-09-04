@@ -9,7 +9,10 @@ namespace BedOwnershipTools {
                 return false;
             }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
-            return pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
+            if (pawnXAttrs == null) {
+                return pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
+            }
+            return false;
         }
         public static void ForceAddPawn(CompAssignableToPawn thiss, Pawn pawn) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
@@ -85,6 +88,9 @@ namespace BedOwnershipTools {
                 return;
             }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return;
+            }
             // Building_Bed ownedBed = pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup]; // need null check
             UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
             // ownedBed?.NotifyRoomAssignedPawnsChanged();
@@ -95,6 +101,9 @@ namespace BedOwnershipTools {
 
         public static bool ClaimBedIfNotMedical(Pawn pawn, Building_Bed newBed) {
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return false;
+            }
             CompBuilding_BedXAttrs newBedXAttrs = newBed.GetComp<CompBuilding_BedXAttrs>();
             if (newBedXAttrs == null) {
                 return false;
@@ -121,7 +130,9 @@ namespace BedOwnershipTools {
             if (newBedXAttrs.assignedPawnsOverlay.Count == newBed.SleepingSlotsCount) {
                 Pawn pawnToEvict = newBedXAttrs.assignedPawnsOverlay[newBedXAttrs.assignedPawnsOverlay.Count - 1];
                 CompPawnXAttrs pawnToEvictXAttrs = pawnToEvict.GetComp<CompPawnXAttrs>();
-                UnclaimBedDirected(pawnToEvict, newBedXAttrs.MyAssignmentGroup);
+                if (pawnToEvictXAttrs != null) {
+                    UnclaimBedDirected(pawnToEvict, newBedXAttrs.MyAssignmentGroup);
+                }
             }
             ForceAddPawn(newBed.CompAssignableToPawn, pawn); // newBed.CompAssignableToPawn.ForceAddPawn(pawn);
             pawnXAttrs.assignmentGroupToOwnedBedMap[newBedXAttrs.MyAssignmentGroup] = newBed; //OwnedBed = newBed;
@@ -138,6 +149,9 @@ namespace BedOwnershipTools {
 
         public static bool UnclaimBedAll(Pawn pawn) {
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return false;
+            }
             bool unassignedAtLeastOneBed = false;
             foreach(var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
                 ForceRemovePawn(bed.CompAssignableToPawn, pawn);
@@ -150,6 +164,9 @@ namespace BedOwnershipTools {
 
         public static bool UnclaimBedDirected(Pawn pawn, AssignmentGroup assignmentGroup) {
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return false;
+            }
             if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
                 ForceRemovePawn(oldBed.CompAssignableToPawn, pawn);
                 pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);

@@ -156,6 +156,9 @@ namespace BedOwnershipTools {
                         List<Pawn> pawnsToRemove = new List<Pawn>();
                         foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
                             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                            if (pawnXAttrs == null) {
+                                continue;
+                            }
                             if (!pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
                                 Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
                                 pawnsToRemove.Add(pawn);

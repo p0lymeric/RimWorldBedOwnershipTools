@@ -192,6 +192,10 @@ namespace BedOwnershipTools {
                         stringBuilder.AppendInNewLine("INTERNAL " + __instance.ownership.OwnedBed.GetUniqueLoadID());
                     }
                     CompPawnXAttrs xAttrs = __instance.GetComp<CompPawnXAttrs>();
+                    if (xAttrs == null) {
+                        __result = stringBuilder.ToString();
+                        return;
+                    }
                     foreach(var (assignmentGroup, bed) in xAttrs.assignmentGroupToOwnedBedMap) {
                         stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed.GetUniqueLoadID());
                     }
