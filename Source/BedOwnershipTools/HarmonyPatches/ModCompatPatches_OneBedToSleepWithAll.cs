@@ -75,6 +75,9 @@ namespace BedOwnershipTools {
                         Building_Bed bed = (Building_Bed)parent;
                         CompAssignableToPawn catp = parent.GetComp<CompAssignableToPawn>();
                         CompBuilding_BedXAttrs bedXAttrs = parent.GetComp<CompBuilding_BedXAttrs>();
+                        if (bedXAttrs == null) {
+                            return;
+                        }
                         for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
                             CATPBAndPOMethodReplacements.TryUnassignPawn(catp, bedXAttrs.assignedPawnsOverlay[num]);
                         }
@@ -89,6 +92,9 @@ namespace BedOwnershipTools {
                 static void Postfix(Pawn pawn, ThingWithComps ___parent, Pawn ___master) {
                     Building_Bed bed = ___parent as Building_Bed;
                     CompBuilding_BedXAttrs bedXAttrs = ___parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
                     if (bed.OwnersForReading.Contains(pawn) && ___master != null && ___master != pawn) {
                         foreach (Pawn owner in bedXAttrs.assignedPawnsOverlay.ListFullCopy()) {
                             if (owner != pawn) {
@@ -107,6 +113,9 @@ namespace BedOwnershipTools {
                         return;
                     }
                     CompBuilding_BedXAttrs bedXAttrs = ___parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
                     foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay.ListFullCopy()) {
                         if (___master != null) {
                             CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
@@ -122,6 +131,9 @@ namespace BedOwnershipTools {
                 static void Postfix(ThingWithComps ___parent, Pawn ___master, bool ___isPolygamy, Pawn ___currentNeighbor) {
                     Building_Bed bed = ___parent as Building_Bed;
                     CompBuilding_BedXAttrs bedXAttrs = ___parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
                     if (!___isPolygamy) {
                         return;
                     }
@@ -152,6 +164,9 @@ namespace BedOwnershipTools {
                 static void Postfix(ThingWithComps ___parent, Pawn ___master) {
                     Building_Bed bed = ___parent as Building_Bed;
                     CompBuilding_BedXAttrs bedXAttrs = ___parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
                     foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay.ListFullCopy()) {
                         CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
                     }

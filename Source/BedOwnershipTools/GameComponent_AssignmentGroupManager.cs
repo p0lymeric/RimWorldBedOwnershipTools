@@ -106,7 +106,9 @@ namespace BedOwnershipTools {
                 Building_Bed ownedBed = pawn.ownership.OwnedBed;
                 if (ownedBed != null) {
                     CompBuilding_BedXAttrs bedXAttrs = ownedBed.GetComp<CompBuilding_BedXAttrs>();
-                    if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
+                    if (bedXAttrs == null) {
+                        Log.Warning($"[BOT] A Pawn ({pawn.Label}) owns a bed ({ownedBed.GetUniqueLoadID()}) in its internal ownership list that doesn't have a CompBuilding_BedXAttrs component.");
+                    } else if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
                         // just out of paranoia
                         if (ownedBed != otherBed) {
                             Log.Warning("[BOT] Pawn has inconsistent beds stored in internal and overlay ownership fields.");

@@ -18,6 +18,8 @@ namespace BedOwnershipTools {
 
         public CATPBGroupAssignmentOverlayAdapter(CompAssignableToPawn_Bed inner) {
             this.inner = inner;
+            // xattrs null check performed in patch--this class shouldn't be instantiated unless
+            // the inner object actually has a CompBuilding_BedXAttrs component
             CompBuilding_BedXAttrs innerParentXAttrs = inner.parent.GetComp<CompBuilding_BedXAttrs>();
             // ThingComp
             this.parent = inner.parent;

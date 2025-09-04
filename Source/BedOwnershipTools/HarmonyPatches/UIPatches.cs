@@ -58,9 +58,12 @@ namespace BedOwnershipTools {
                 if(ModsConfig.BiotechActive && __instance.def == ThingDefOf.DeathrestCasket) {
                     return;
                 }
+                CompBuilding_BedXAttrs xAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
+                if (xAttrs == null) {
+                    return;
+                }
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append(__result);
-                CompBuilding_BedXAttrs xAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
                 if (__instance.def.building.bed_humanlike && __instance.def.building.bed_DisplayOwnerType && __instance.Faction == Faction.OfPlayer) {
                     switch (__instance.ForOwnerType)
                     {
@@ -201,6 +204,9 @@ namespace BedOwnershipTools {
         public class Patch_CompAssignableToPawn_Bed_ShouldShowAssignmentGizmo {
             static void Postfix(CompAssignableToPawn_Bed __instance, ref bool __result) {
                 CompBuilding_BedXAttrs xAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                if (xAttrs == null) {
+                    return;
+                }
                 __result = __result && !xAttrs.IsAssignedToCommunity;
             }
         }
@@ -218,7 +224,11 @@ namespace BedOwnershipTools {
 
                 bool showCommunalGUIOverlayInsteadOfBlankUnderBed = BedOwnershipTools.Singleton.settings.showCommunalGUIOverlayInsteadOfBlankUnderBed;
                 bool hideDisplayStringForNonHumanlikeBeds = !__instance.def.building.bed_humanlike && BedOwnershipTools.Singleton.settings.hideGUIOverlayOnNonHumanlikeBeds;
+
                 CompBuilding_BedXAttrs xAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
+                if (xAttrs == null) {
+                    return true;
+                }
 
                 Color defaultThingLabelColor = GenMapUI.DefaultThingLabelColor;
                 Color grey = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -308,6 +318,7 @@ namespace BedOwnershipTools {
             }
 
             public static Vector3 AdjustOwnerLabelPosToAvoidOverlapping(Building_Bed thiss, Vector3 screenPos, int slotIndex) {
+                // xattrs null check already performed earlier
                 CompBuilding_BedXAttrs xAttrs = thiss.GetComp<CompBuilding_BedXAttrs>();
                 Text.Font = GameFont.Tiny;
                 float num = Text.CalcSize(xAttrs.assignedPawnsOverlay[slotIndex].LabelShort).x + 1f;

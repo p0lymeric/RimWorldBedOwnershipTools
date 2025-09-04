@@ -20,6 +20,9 @@ namespace BedOwnershipTools {
                     bool pawnsMaySelfAssignToUnownedPinnedBeds = BedOwnershipTools.Singleton.settings.pawnsMaySelfAssignToUnownedPinnedBeds;
                     bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                     CompBuilding_BedXAttrs bedThingXAttrs = building_Bed.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedThingXAttrs == null) {
+                        return;
+                    }
                     // pass through original results for deathrest caskets, medical beds, prisoner beds, and communal beds
                     if ((ModsConfig.BiotechActive && building_Bed.def == ThingDefOf.DeathrestCasket) || building_Bed.Medical || building_Bed.ForPrisoners || bedThingXAttrs.IsAssignedToCommunity) {
                         return;
@@ -46,6 +49,9 @@ namespace BedOwnershipTools {
                                 return;
                             }
                             CompBuilding_BedXAttrs ownedBedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                            if (ownedBedXAttrs == null) {
+                                return;
+                            }
                             // Pawns can own a destroyed bed (e.g. the pawn's previous bed before abandoning a map tile) so exclude that case
                             if (ownedBedXAttrs.IsAssignmentPinned && assignmentGroup == bedThingXAttrs.MyAssignmentGroup && !bed.Destroyed) {
                                 // false if the Pawn holds ownership of a pinned bed in the same assignment group
@@ -57,6 +63,9 @@ namespace BedOwnershipTools {
                         if (building_Bed != sleeper.ownership.OwnedBed) {
                             if (sleeper.ownership.OwnedBed != null) {
                                 CompBuilding_BedXAttrs ownedBedXAttrs = sleeper.ownership.OwnedBed.GetComp<CompBuilding_BedXAttrs>();
+                                if (ownedBedXAttrs == null) {
+                                    return;
+                                }
                                 // Pawns can own a destroyed bed (e.g. the pawn's previous bed before abandoning a map tile) so exclude that case
                                 if (ownedBedXAttrs.IsAssignmentPinned && !sleeper.ownership.OwnedBed.Destroyed) {
                                     // false if the Pawn holds ownership of a pinned bed

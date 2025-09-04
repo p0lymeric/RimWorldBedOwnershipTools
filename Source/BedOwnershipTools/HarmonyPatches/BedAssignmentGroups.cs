@@ -56,6 +56,9 @@ namespace BedOwnershipTools {
                     return;
                 }
                 if (__instance is CompAssignableToPawn_Bed x) {
+                    if (x.parent.GetComp<CompBuilding_BedXAttrs>() == null) {
+                        return;
+                    }
                     if(ModsConfig.BiotechActive && x.parent.def == ThingDefOf.DeathrestCasket) {
                         return;
                     }
@@ -423,6 +426,9 @@ namespace BedOwnershipTools {
                 List<AssignmentGroup> bedsAGToDistribute = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupToOwnedBedMap) {
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        continue;
+                    }
                     if (bedXAttrs.assignedPawnsOverlay.Contains(recipient)) {
                         bedsAGToDistribute.Add(assignmentGroup);
                     }
@@ -448,6 +454,9 @@ namespace BedOwnershipTools {
                 List<AssignmentGroup> bedsAGToDistribute = new List<AssignmentGroup>();
                 foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupToOwnedBedMap) {
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        continue;
+                    }
                     if (bedXAttrs.assignedPawnsOverlay.Contains(recipient)) {
                         bedsAGToDistribute.Add(assignmentGroup);
                     }
@@ -480,6 +489,9 @@ namespace BedOwnershipTools {
                     //     assignmentGroupsToRemove.Add(assignmentGroup);
                     // }
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        continue;
+                    }
                     foreach (Pawn assignedPawn in bedXAttrs.assignedPawnsOverlay) {
                         if (!BedUtility.WillingToShareBed(pawn, assignedPawn)) {
                             assignmentGroupsToRemove.Add(assignmentGroup);
@@ -524,6 +536,9 @@ namespace BedOwnershipTools {
                 }
                 if (__instance is CompAssignableToPawn_Bed) {
                     CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
                     if (mode != DestroyMode.WillReplace) {
                         for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
                             CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num], sort: false, !__instance.parent.DestroyedOrNull());
@@ -539,6 +554,9 @@ namespace BedOwnershipTools {
                 }
                 if (__instance is CompAssignableToPawn_Bed) {
                     CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
                     for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
                         CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num], sort: false, !__instance.parent.DestroyedOrNull());
                     }

@@ -15,8 +15,11 @@ namespace BedOwnershipTools {
                 // But they introduce a similar patch helper as us in CommunalBeds.cs
                 // We'll add our check as an OR'd condition to their patch helper
                 static void Postfix(ref bool __result, Pawn pawn, Building_Bed buildingBed) {
-                    CompBuilding_BedXAttrs xAttrs = buildingBed.GetComp<CompBuilding_BedXAttrs>();
-                    __result = __result || xAttrs.IsAssignedToCommunity;
+                    CompBuilding_BedXAttrs bedXAttrs = buildingBed.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
+                    __result = __result || bedXAttrs.IsAssignedToCommunity;
                 }
             }
         }

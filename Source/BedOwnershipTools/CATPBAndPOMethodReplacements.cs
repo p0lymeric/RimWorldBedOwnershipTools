@@ -5,11 +5,17 @@ namespace BedOwnershipTools {
     public static class CATPBAndPOMethodReplacements {
         public static bool AssignedAnything(CompAssignableToPawn thiss, Pawn pawn) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return false;
+            }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
             return pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
         }
         public static void ForceAddPawn(CompAssignableToPawn thiss, Pawn pawn) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             if (!bedXAttrs.assignedPawnsOverlay.Contains(pawn))
             {
                 bedXAttrs.assignedPawnsOverlay.Add(pawn);
@@ -18,6 +24,9 @@ namespace BedOwnershipTools {
         }
         public static void ForceRemovePawn(CompAssignableToPawn thiss, Pawn pawn) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             if (bedXAttrs.assignedPawnsOverlay.Contains(pawn))
             {
                 bedXAttrs.assignedPawnsOverlay.Remove(pawn);
@@ -27,6 +36,9 @@ namespace BedOwnershipTools {
         }
         public static void SortAssignedPawns(CompAssignableToPawn thiss) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             bedXAttrs.assignedPawnsOverlay.RemoveAll((Pawn x) => x == null);
             bedXAttrs.assignedPawnsOverlay.SortBy((Pawn x) => x.thingIDNumber);
         }
@@ -34,6 +46,9 @@ namespace BedOwnershipTools {
         public static void PostSpawnSetup(CompAssignableToPawn thiss, bool respawningAfterLoad) {
             // base.PostSpawnSetup(respawningAfterLoad);
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             for (int num = bedXAttrs.uninstalledAssignedPawnsOverlay.Count - 1; num >= 0; num--) {
                 Pawn pawn = bedXAttrs.uninstalledAssignedPawnsOverlay[num];
                 if (CanSetUninstallAssignedPawn(thiss, pawn)) {
@@ -56,6 +71,9 @@ namespace BedOwnershipTools {
 
         public static void TryAssignPawn(CompAssignableToPawn thiss, Pawn pawn) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             Building_Bed building_Bed = (Building_Bed)thiss.parent;
             ClaimBedIfNotMedical(pawn, building_Bed);
             // building_Bed.NotifyRoomAssignedPawnsChanged();
@@ -63,6 +81,9 @@ namespace BedOwnershipTools {
         }
         public static void TryUnassignPawn(CompAssignableToPawn thiss, Pawn pawn, bool sort = true, bool uninstall = false) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.parent.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
             // Building_Bed ownedBed = pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup]; // need null check
             UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
@@ -75,6 +96,9 @@ namespace BedOwnershipTools {
         public static bool ClaimBedIfNotMedical(Pawn pawn, Building_Bed newBed) {
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
             CompBuilding_BedXAttrs newBedXAttrs = newBed.GetComp<CompBuilding_BedXAttrs>();
+            if (newBedXAttrs == null) {
+                return false;
+            }
             if (GameComponent_AssignmentGroupManager.Singleton.defaultAssignmentGroup == null) {
                 // the AGM is set up during FinalizeInit when the mod is freshly added
                 // if that's the case, any bed assignments that occur prior to this point must necessarily target the default group (which will be registered during FinalizeInit)
@@ -136,6 +160,9 @@ namespace BedOwnershipTools {
 
         public static bool IsOwner(Building_Bed thiss, Pawn p) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return false;
+            }
             int num = bedXAttrs.assignedPawnsOverlay.IndexOf(p);
             if (num >= 0) {
                 return true;
@@ -145,6 +172,9 @@ namespace BedOwnershipTools {
 
         public static void RemoveAllOwners(Building_Bed thiss, bool destroyed = false) {
             CompBuilding_BedXAttrs bedXAttrs = thiss.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return;
+            }
             for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
                 Pawn pawn = bedXAttrs.assignedPawnsOverlay[num];
                 UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
@@ -157,6 +187,7 @@ namespace BedOwnershipTools {
         }
 
         public static bool IsAnyOwnerLovePartnerOf(Building_Bed bed, Pawn sleeper) {
+            // xattrs null checked by caller
             CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
             foreach (Pawn owner in bedXAttrs.assignedPawnsOverlay) {
                 if (LovePartnerRelationUtility.LovePartnerRelationExists(sleeper, owner)) {
@@ -167,6 +198,7 @@ namespace BedOwnershipTools {
         }
 
         public static bool BedOwnerWillShare(Building_Bed bed, Pawn sleeper, GuestStatus? guestStatus) {
+            // xattrs null checked by caller
             CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
             if (!bedXAttrs.assignedPawnsOverlay.Any()) {
                 return true;

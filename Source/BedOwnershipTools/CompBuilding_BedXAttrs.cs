@@ -100,6 +100,9 @@ namespace BedOwnershipTools {
                     continue;
                 }
                 CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                if (bedXAttrs == null) {
+                    continue;
+                }
                 AssignmentGroup oldAssignmentGroup = bedXAttrs.MyAssignmentGroup;
                 if(assignmentGroup != oldAssignmentGroup) {
                     // get my Pawn owners and transfer ownership to the new group

@@ -17,6 +17,9 @@ namespace BedOwnershipTools {
         public class Patch_Pawn_Ownership_ClaimBedIfNonMedical {
             static bool Prefix(Pawn_Ownership __instance, ref bool __result, Building_Bed newBed) {
                 CompBuilding_BedXAttrs newBedAssignableXAttrs = newBed.GetComp<CompBuilding_BedXAttrs>();
+                if (newBedAssignableXAttrs == null) {
+                    return true;
+                }
 
                 // ClaimBedIfNotMedical handles mutating both Pawn_Ownership and CompAssignableToPawn_Bed so
                 // it should be safe to block its effects by not allowing it to execute (won't break sync between owner-bed pairs)
@@ -45,8 +48,11 @@ namespace BedOwnershipTools {
         public class Patch_RestUtility_CanUseBedNow {
             static bool CheckXAttrsIsAssignedToCommunity(Building_Bed bedThing) {
                 // 0.13 us/call
-                CompBuilding_BedXAttrs xAttrs = bedThing.GetComp<CompBuilding_BedXAttrs>();
-                return xAttrs.IsAssignedToCommunity;
+                CompBuilding_BedXAttrs bedXAttrs = bedThing.GetComp<CompBuilding_BedXAttrs>();
+                if (bedXAttrs == null) {
+                    return false;
+                }
+                return bedXAttrs.IsAssignedToCommunity;
             }
             // need to vector to IL_0188
             // bedThing is ARG 0
@@ -144,9 +150,13 @@ namespace BedOwnershipTools {
         [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.GetBedRestFloatMenuOption))]
         public class Patch_Building_Bed_GetBedRestFloatMenuOption {
             static bool MyMedicalGetterImpl(Building_Bed thiss) {
-                CompBuilding_BedXAttrs xAttrs = thiss.GetComp<CompBuilding_BedXAttrs>();
                 bool communalBedsSupportOrderedMedicalSleep = BedOwnershipTools.Singleton.settings.communalBedsSupportOrderedMedicalSleep;
-                return (communalBedsSupportOrderedMedicalSleep && xAttrs.IsAssignedToCommunity) || thiss.Medical;
+                CompBuilding_BedXAttrs bedXAttrs = thiss.GetComp<CompBuilding_BedXAttrs>();
+                if (bedXAttrs == null) {
+                    return thiss.Medical;
+                } else {
+                    return (communalBedsSupportOrderedMedicalSleep && bedXAttrs.IsAssignedToCommunity) || thiss.Medical;
+                }
             }
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
                 bool everMatched = false;
@@ -172,8 +182,12 @@ namespace BedOwnershipTools {
         public class Patch_Toils_LayDown_ApplyBedThoughts {
             static bool BedEqOwnedBedOrBedIsAssignedToCommunity(Building_Bed bed, Building_Bed ownedBed) {
                 // null check already performed earlier
-                CompBuilding_BedXAttrs xAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
-                return (bed == ownedBed) || xAttrs.IsAssignedToCommunity;
+                CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                if (bedXAttrs == null) {
+                    return bed == ownedBed;
+                } else {
+                    return (bed == ownedBed) || bedXAttrs.IsAssignedToCommunity;
+                }
             }
             // commandeer the bed == actor.ownership.OwnedBed comparison to insert our check
             // if (bed != null && bed == actor.ownership.OwnedBed && !bed.ForPrisoners && !actor.story.traits.HasTrait(TraitDefOf.Ascetic))
