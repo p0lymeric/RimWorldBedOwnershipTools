@@ -140,6 +140,15 @@ namespace BedOwnershipTools {
                 }
                 if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {
                     stringBuilder.AppendInNewLine("LoadID: " + __instance.GetUniqueLoadID());
+                    for (int sleepingSlot = 0; sleepingSlot < __instance.SleepingSlotsCount; sleepingSlot++) {
+                        stringBuilder.AppendInNewLine($"CurOccupant[{sleepingSlot}]: ");
+                        Pawn curOccupant = __instance.GetCurOccupant(sleepingSlot);
+                        if (curOccupant != null) {
+                            stringBuilder.Append(curOccupant.Label);
+                        } else {
+                            stringBuilder.Append("null");
+                        }
+                    }
                     StringBuilder_PrintOwnersList(stringBuilder, "assignedPawns", __instance.CompAssignableToPawn.AssignedPawnsForReading);
                     StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", Traverse.Create(__instance.GetComp<CompAssignableToPawn>()).Field("uninstalledAssignedPawns").GetValue<List<Pawn>>());
                     StringBuilder_PrintOwnersList(stringBuilder, "assignedPawnsOverlay", xAttrs.assignedPawnsOverlay);
@@ -188,6 +197,14 @@ namespace BedOwnershipTools {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append(__result);
                 if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {
+                    stringBuilder.AppendInNewLine("CurrentBed: ");
+                    int? sleepingSlotPos = -1;
+                    Building_Bed bed = __instance.CurrentBed(out sleepingSlotPos);
+                    if (bed != null) {
+                        stringBuilder.Append($"{bed.GetUniqueLoadID()} {sleepingSlotPos}");
+                    } else {
+                        stringBuilder.Append("null");
+                    }
                     if (__instance.ownership.OwnedBed != null) {
                         stringBuilder.AppendInNewLine("INTERNAL " + __instance.ownership.OwnedBed.GetUniqueLoadID());
                     }
@@ -196,8 +213,8 @@ namespace BedOwnershipTools {
                         __result = stringBuilder.ToString();
                         return;
                     }
-                    foreach(var (assignmentGroup, bed) in xAttrs.assignmentGroupToOwnedBedMap) {
-                        stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed.GetUniqueLoadID());
+                    foreach(var (assignmentGroup, bed2) in xAttrs.assignmentGroupToOwnedBedMap) {
+                        stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed2.GetUniqueLoadID());
                     }
                 }
                 __result = stringBuilder.ToString();

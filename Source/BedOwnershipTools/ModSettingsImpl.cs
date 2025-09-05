@@ -19,6 +19,7 @@ namespace BedOwnershipTools {
 
         public bool enableHospitalityModCompatPatches = true;
         public bool enableOneBedToSleepWithAllModCompatPatches = true;
+        public bool enableLoftBedModCompatPatches = true;
         // TODO bed linking in Dubs Hygiene is not aware of overlay owners
 
         public bool devEnableDebugInspectStringListings = false;
@@ -39,6 +40,7 @@ namespace BedOwnershipTools {
 
             Scribe_Values.Look(ref this.enableHospitalityModCompatPatches, "enableHospitalityModCompatPatches", true);
             Scribe_Values.Look(ref this.enableOneBedToSleepWithAllModCompatPatches, "enableOneBedToSleepWithAllModCompatPatches", true);
+            Scribe_Values.Look(ref this.enableLoftBedModCompatPatches, "enableLoftBedModCompatPatches", true);
 
             Scribe_Values.Look(ref this.devEnableDebugInspectStringListings, "devEnableDebugInspectStringListings", false);
             Scribe_Values.Look(ref this.devEnableUnaccountedCaseLogging, "devEnableUnaccountedCaseLogging", false);

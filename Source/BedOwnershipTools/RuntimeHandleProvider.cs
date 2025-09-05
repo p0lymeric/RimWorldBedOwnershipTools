@@ -17,6 +17,9 @@ namespace BedOwnershipTools {
         public Type typeOneBedToSleepWithAll_CompPolygamyMode = null;
         public Type typeOneBedToSleepWithAll_PolygamyModeUtility = null;
 
+        public bool modLoftBedLoadedForCompatPatching;
+        public Type typeLoftBed_Building_LoftBed;
+
         public RuntimeHandleProvider(ModSettingsImpl settings) {
             if (settings.enableHospitalityModCompatPatches) {
                 typeHospitalityBuilding_GuestBed = Type.GetType("Hospitality.Building_GuestBed, Hospitality");
@@ -29,6 +32,12 @@ namespace BedOwnershipTools {
                 typeOneBedToSleepWithAll_PolygamyModeUtility = Type.GetType("OneBedToSleepWithAll.PolygamyModeUtility, OneBedToSleepWithAll");
                 if (typeOneBedToSleepWithAll_CompPolygamyMode != null && typeOneBedToSleepWithAll_PolygamyModeUtility != null) {
                     modOneBedToSleepWithAllLoadedForCompatPatching = true;
+                }
+            }
+            if (settings.enableLoftBedModCompatPatches) {
+                typeLoftBed_Building_LoftBed = Type.GetType("Nekoemi.LoftBed.Building_LoftBed, LoftBed");
+                if (typeLoftBed_Building_LoftBed != null) {
+                    modLoftBedLoadedForCompatPatching = true;
                 }
             }
         }

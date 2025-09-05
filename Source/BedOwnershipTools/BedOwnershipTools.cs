@@ -85,6 +85,11 @@ namespace BedOwnershipTools {
                 ref settings.enableOneBedToSleepWithAllModCompatPatches,
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.EnableModCompatPatches".Translate("Loft Bed (Continued)"),
+                ref settings.enableLoftBedModCompatPatches,
+                "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
+            );
 
             if (Prefs.DevMode) {
                 listingStandard.GapLine();
