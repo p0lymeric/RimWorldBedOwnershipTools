@@ -86,7 +86,7 @@ namespace BedOwnershipTools {
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );
             listingStandard.CheckboxLabeled(
-                "BedOwnershipTools.EnableModCompatPatches".Translate("Loft Bed (Continued)"),
+                "BedOwnershipTools.EnableModCompatPatches".Translate("Loft Bed"),
                 ref settings.enableLoftBedModCompatPatches,
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );

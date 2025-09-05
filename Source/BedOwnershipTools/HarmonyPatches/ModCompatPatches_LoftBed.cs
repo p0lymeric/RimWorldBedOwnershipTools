@@ -35,11 +35,11 @@ namespace BedOwnershipTools {
             class Patch_RestUtility_CurrentBed {
                 static void Postfix(ref Building_Bed __result, Pawn p, ref int? sleepingSlot) {
                     // iterate through the sleeping Pawns and Building_Beds at the given pawn's position
-                    // and map sleeping owners to their beds
-                    // and sleeping communal users to the bed in their job's TargetA
+                    // and map sleepers to the bed in their job's TargetA
 
-                    // CurrentBed is called every tick per sleeper in a bed
-                    // let's pray we don't trash TPS
+                    // this implementation differs from Loft Bed's implementation because it checks the bed listed in the Pawn's job
+                    // and trusts that reservation conflicts are dealt by other systems in the game
+                    // so we check jobs instead of ownership lists to determine who should be sleeping where
 
                     // short-circuit since the base method would've
                     // called GetCurOccupant on one of the beds at the Pawn's position
@@ -65,33 +65,13 @@ namespace BedOwnershipTools {
                         return;
                     }
 
-                    // assigned owner search
-                    for (int num = beds.Count - 1; num >= 0; num--) {
-                        List<Pawn> owners = beds[num].OwnersForReading;
-                        for (int i = 0; i < owners.Count; i++) {
-                            if (owners[i] == p) {
-                                int sleepingSlotTmp = BedUtility.GetSlotFromPosition(p.Position, beds[num].Position, beds[num].Rotation, beds[num].def.size);
-                                if (sleepingSlotTmp >= 0) {
-                                    __result = beds[num];
-                                    sleepingSlot = sleepingSlotTmp;
-                                    return;
-                                }
-                            }
-                        }
-                        if (beds[num].OwnersForReading.Count > 0) {
-                            beds.RemoveAt(num);
-                        }
-                    }
-
-                    // communal bed search
-                    // beds with owners were filtered above
-                    // a bit looser since we don't check isAssignedToCommunity but that should be OK (might fix medical beds as well)
-                    if (p.CurJob != null && p.CurJobDef == JobDefOf.LayDown) {
+                    // bed search
+                    if (/*p.Spawned && p.CurJob != null && p.GetPosture().InBed() &&*/ p.CurJobDef == JobDefOf.LayDown) {
                         if (p.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
                             if (beds.Contains(bed)) {
-                                // Log.Message($"{p.Label} called CurrentBed and matched {bed.GetUniqueLoadID()}");
                                 int sleepingSlotTmp = BedUtility.GetSlotFromPosition(p.Position, bed.Position, bed.Rotation, bed.def.size);
                                 if (sleepingSlotTmp >= 0) {
+                                    // Log.Message($"{p.Label} called CurrentBed and matched {bed.GetUniqueLoadID()}");
                                     __result = bed;
                                     sleepingSlot = sleepingSlotTmp;
                                     return;
@@ -108,57 +88,42 @@ namespace BedOwnershipTools {
             [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.GetCurOccupant))]
             class Patch_Building_Bed_GetCurOccupant {
                 static void Postfix(Building_Bed __instance, ref Pawn __result, int slotIndex) {
+                    // the base function is more eager to report a positive than this function
                     // short-circuit since if the base function couldn't identify a Pawn,
                     // we're assured there are zero sleepers on the vertical stack
                     if (__result == null) {
                         return;
                     }
 
+                    // covered by short-circuit
+                    // if (!__instance.Spawned) {
+                    //    __result = null;
+                    //     return;
+                    // }
+
                     IntVec3 sleepingSlotPos = __instance.GetSleepingSlotPos(slotIndex);
                     List<Thing> list = __instance.Map.thingGrid.ThingsListAt(sleepingSlotPos);
                     // declaring initial capacity seems to reduce Add call overhead
-                    List<Building_Bed> beds = new List<Building_Bed>(2);
+                    int bedsCnt = 0;
                     List<Pawn> pawns = new List<Pawn>(2);
                     for (int i = 0; i < list.Count; i++){
                         if (list[i] is Building_Bed bed) {
-                            beds.Add(bed);
-                        } else if (list[i] is Pawn pawn && pawn.Spawned && pawn.CurJob != null && pawn.GetPosture().InBed()) {
+                            bedsCnt++;
+                        } else if (list[i] is Pawn pawn) {
                             pawns.Add(pawn);
                         }
                     }
 
-                    // if we are the only bed at specified coords => keep original result
-                    if (beds.Count <= 1 || pawns.Count == 0) {
+                    // keep base result if there is only one bed
+                    if (bedsCnt <= 1 || pawns.Count == 0) {
                         return;
                     }
 
-                    // there is at least one other bed and at least one pawn
-                    List<Pawn> owners = __instance.OwnersForReading;
+                    // bed search
                     foreach (Pawn pawn in pawns) {
-                        if (owners.Contains(pawn)) {
-                            // if pawn is assigned to this bed => return it
-                            __result = pawn;
-                            return;
-                        }
-                    }
-
-                    // apply bed list filtering in alignment with CurrentBed
-                    // may be unnecessary
-                    for (int num = beds.Count - 1; num >= 0; num--) {
-                        if (beds[num].OwnersForReading.Count > 0) {
-                            beds.RemoveAt(num);
-                        }
-                    }
-
-                    // communal bed search
-                    // beds with owners were filtered above
-                    // a bit looser since we don't check isAssignedToCommunity but that should be OK (might fix medical beds as well)
-                    foreach (Pawn pawn in pawns) {
-                        if (pawn.CurJob != null && pawn.CurJobDef == JobDefOf.LayDown) {
+                        if (pawn.Spawned && pawn.CurJob != null && pawn.GetPosture().InBed() && pawn.CurJobDef == JobDefOf.LayDown) {
                             if (pawn.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
-                                if (beds.Contains(bed) && bed == __instance) {
-                                    // we might not catch cases where two Pawns are sleeping in the same slot
-                                    // but there seems to be other systems in parallel that mitigate or prevent any issues (ReservationManager?)
+                                if (bed == __instance) {
                                     // Log.Message($"{__instance.GetUniqueLoadID()} called GetCurOccupant and matched {pawn.Label}");
                                     __result = pawn;
                                     return;
