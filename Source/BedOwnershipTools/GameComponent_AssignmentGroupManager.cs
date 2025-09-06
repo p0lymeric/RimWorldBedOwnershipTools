@@ -146,7 +146,7 @@ namespace BedOwnershipTools {
                     CompAssignableToPawn catp = bed.GetComp<CompAssignableToPawn>();
                     if(!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
                         // bedXAttrs.assignedPawnsOverlay.AddRange(catp.AssignedPawns.Except(assignedPawnsOverlay)); // done by TryAssignPawn
-                        bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(Traverse.Create(catp).Field("uninstalledAssignedPawns").GetValue<List<Pawn>>().Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
+                        bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
                         foreach (Pawn pawn in bed.CompAssignableToPawn.AssignedPawnsForReading) {
                             if (!bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
                                 Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) in its internal ownership list but not its overlay list.");
@@ -188,12 +188,15 @@ namespace BedOwnershipTools {
             foreach (CompPawnXAttrs pawnXAttrs in compPawnXAttrsRegistry) {
                 if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                     // to generate the message that a pawn has become unlinked from a bed
-                    Traverse.Create(bed).Method("RemoveAllOwners", false).GetValue();
+                    HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
                 }
             }
             foreach (CompBuilding_BedXAttrs bedXAttrs in compBuilding_BedXAttrsRegistry) {
-                bedXAttrs.MyAssignmentGroup = defaultAssignmentGroup;
-                // bedXAttrs.assignedPawnsOverlay.Clear();
+                if (bedXAttrs.MyAssignmentGroup == assignmentGroup) {
+                    bedXAttrs.MyAssignmentGroup = defaultAssignmentGroup;
+                    // should've been cleared by RemoveAllOwners above
+                    // bedXAttrs.assignedPawnsOverlay.Clear();
+                }
             }
         }
 

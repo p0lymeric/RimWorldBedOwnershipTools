@@ -115,7 +115,7 @@ namespace BedOwnershipTools {
                             if (pawn.ownership.OwnedBed == oldBed) {
                                 oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
                                 bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                Traverse.Create(pawn.ownership).Field("intOwnedBed").SetValue(bed);
+                                HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
                             }
                         }
                         CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, assignmentGroup);
@@ -214,7 +214,7 @@ namespace BedOwnershipTools {
                 toggleIsAssignedToCommunity.isActive = () => this.isAssignedToCommunity;
                 toggleIsAssignedToCommunity.toggleAction = delegate {
                     if (!this.isAssignedToCommunity) {
-                        Traverse.Create(bed).Method("RemoveAllOwners", false).GetValue();
+                        HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
                     }
                     this.isAssignedToCommunity = !this.isAssignedToCommunity;
                 };

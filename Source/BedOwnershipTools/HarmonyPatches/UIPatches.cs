@@ -150,7 +150,7 @@ namespace BedOwnershipTools {
                         }
                     }
                     StringBuilder_PrintOwnersList(stringBuilder, "assignedPawns", __instance.CompAssignableToPawn.AssignedPawnsForReading);
-                    StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", Traverse.Create(__instance.GetComp<CompAssignableToPawn>()).Field("uninstalledAssignedPawns").GetValue<List<Pawn>>());
+                    StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(__instance.GetComp<CompAssignableToPawn>()));
                     StringBuilder_PrintOwnersList(stringBuilder, "assignedPawnsOverlay", xAttrs.assignedPawnsOverlay);
                     StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawnsOverlay", xAttrs.uninstalledAssignedPawnsOverlay);
                 }
@@ -282,7 +282,7 @@ namespace BedOwnershipTools {
                                 bool active = __instance.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn2);
                                 GenMapUI.DrawThingLabel(GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, active ? defaultThingLabelColor : grey);
                             } else {
-                                GenMapUI.DrawThingLabel(Traverse.Create(__instance).Method("GetMultiOwnersLabelScreenPosFor", i).GetValue<Vector3>(), pawn2.LabelShort, defaultThingLabelColor);
+                                GenMapUI.DrawThingLabel(HarmonyPatches.DelegatesAndRefs.Building_Bed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, defaultThingLabelColor);
                             }
                         }
                     }

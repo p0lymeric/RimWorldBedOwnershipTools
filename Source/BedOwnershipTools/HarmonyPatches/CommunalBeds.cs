@@ -32,7 +32,7 @@ namespace BedOwnershipTools {
 
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (enableBedAssignmentGroups) {
-                    Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
+                    Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                     CATPBAndPOMethodReplacements.ClaimBedIfNotMedical(pawn, newBed);
                 }
 
