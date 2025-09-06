@@ -23,6 +23,11 @@ namespace BedOwnershipTools {
             public static AccessTools.FieldRef<CompAssignableToPawn, List<Pawn>> CompAssignableToPawn_uninstalledAssignedPawns =
                 AccessTools.FieldRefAccess<CompAssignableToPawn, List<Pawn>>("uninstalledAssignedPawns");
 
+            // ThingWithComps.GetInspectString (non-virtual call)
+            public delegate string MethodDelegateNonVirtual_ThingWithComps_GetInspectString(ThingWithComps thiss);
+            public static MethodDelegateNonVirtual_ThingWithComps_GetInspectString NonVirtual_ThingWithComps_GetInspectString =
+                AccessTools.MethodDelegate<MethodDelegateNonVirtual_ThingWithComps_GetInspectString>(AccessTools.Method(typeof(ThingWithComps), nameof(ThingWithComps.GetInspectString)), null, false, null);
+
             // Pawn_Ownership.intOwnedBed
             public static AccessTools.FieldRef<Pawn_Ownership, Building_Bed> Pawn_Ownership_intOwnedBed =
                 AccessTools.FieldRefAccess<Pawn_Ownership, Building_Bed>("intOwnedBed");

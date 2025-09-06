@@ -17,53 +17,22 @@ namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
         [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.GetInspectString))]
         public class Patch_Building_Bed_GetInspectString {
-            // Dubs Performance Analyzer doesn't play well with reverse patches for some reason
-            // this is overwritten with its stub implementation during analyzer instrumentation
-            // [HarmonyReversePatch]
-            // [HarmonyPatch(typeof(ThingWithComps), nameof(ThingWithComps.GetInspectString))]
-            // [MethodImpl(MethodImplOptions.NoInlining)]
-            // static string RP_ThingWithComps_GetInspectString(ThingWithComps thiss) => throw new NotImplementedException("ReversePatch stub");
-
-            // // StringBuilder stringBuilder = new StringBuilder();
-            // IL_0000: newobj instance void [mscorlib]System.Text.StringBuilder::.ctor()
-            // IL_0005: stloc.0
-            // // stringBuilder.Append(base.GetInspectString());
-            // IL_0006: ldloc.0
-            // IL_0007: ldarg.0
-            // IL_0008: call instance string Verse.ThingWithComps::GetInspectString()
-            // IL_000d: callvirt instance class [mscorlib]System.Text.StringBuilder [mscorlib]System.Text.StringBuilder::Append(string) // (StringBuilder)
-            // + callvirt instance string [mscorlib]System.Object::ToString() (string)
-	        // + ret (string)
-            // - IL_0012: pop // ()
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
-                foreach (CodeInstruction instruction in instructions) {
-                    if (instruction.Calls(AccessTools.Method(typeof(StringBuilder), nameof(StringBuilder.Append), new Type[] { typeof(string) }))) {
-                        yield return instruction;
-                        yield return new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(StringBuilder),
-                            nameof(StringBuilder.ToString))
-                        );
-                        yield return new CodeInstruction(
-                            OpCodes.Ret
-                        );
-                        yield break;
-                    } else {
-                        yield return instruction;
-                    }
-                }
-            }
-
-            static void Postfix(Building_Bed __instance, ref string __result) {
+            static bool Prefix(Building_Bed __instance, ref string __result) {
                 if(ModsConfig.BiotechActive && __instance.def == ThingDefOf.DeathrestCasket) {
-                    return;
+                    return true;
                 }
                 CompBuilding_BedXAttrs xAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
                 if (xAttrs == null) {
-                    return;
+                    return true;
                 }
+
+                __result = GetInspectStringImpl(__instance, xAttrs, HarmonyPatches.DelegatesAndRefs.NonVirtual_ThingWithComps_GetInspectString(__instance));
+                return false;
+            }
+
+            static string GetInspectStringImpl(Building_Bed __instance, CompBuilding_BedXAttrs xAttrs, string toPrepend) {
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(__result);
+                stringBuilder.Append(toPrepend);
                 if (__instance.def.building.bed_humanlike && __instance.def.building.bed_DisplayOwnerType && __instance.Faction == Faction.OfPlayer) {
                     switch (__instance.ForOwnerType)
                     {
@@ -154,7 +123,7 @@ namespace BedOwnershipTools {
                     StringBuilder_PrintOwnersList(stringBuilder, "assignedPawnsOverlay", xAttrs.assignedPawnsOverlay);
                     StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawnsOverlay", xAttrs.uninstalledAssignedPawnsOverlay);
                 }
-                __result = stringBuilder.ToString();
+                return stringBuilder.ToString();
             }
 
             public static void StringBuilder_PrintOwnersList(StringBuilder stringBuilder, string prefix, List<Pawn> ownersList) {
