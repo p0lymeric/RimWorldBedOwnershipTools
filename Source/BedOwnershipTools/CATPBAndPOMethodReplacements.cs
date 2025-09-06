@@ -9,7 +9,7 @@ namespace BedOwnershipTools {
                 return false;
             }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
-            if (pawnXAttrs == null) {
+            if (pawnXAttrs != null) {
                 return pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
             }
             return false;
