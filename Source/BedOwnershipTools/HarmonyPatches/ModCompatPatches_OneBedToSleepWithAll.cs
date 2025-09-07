@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using RimWorld;
 using Verse;
 using UnityEngine;
@@ -8,32 +10,56 @@ using HarmonyLib;
 namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
         public static class ModCompatPatches_OneBedToSleepWithAll {
-            public static void RemoteCall_IfIsPolygamyThenDefineMaster(Building_Bed bed) {
-                ThingComp polyComp = null;
-                // wish that compsByType was a public field but linear search is probably good enough
-                // it seems ThingWithComps doesn't expose a search method that works with dynamic Types (or I'm blind)
-                // ThingComp polyComp = bed.GetComp<BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode>();
-                foreach (ThingComp x in bed.AllComps) {
-                    if (BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode.IsInstanceOfType(x)) {
-                        polyComp = x;
-                        break;
-                    }
+            public static class DelegatesAndRefs {
+                // CompPolygamyMode.DefineMaster()
+                // public delegate void MethodDelegate_CompPolygamyMode_DefineMaster(object thiss);
+                // public static MethodDelegate_CompPolygamyMode_DefineMaster CompPolygamyMode_DefineMaster =
+                //     (object thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+                public static MethodInfo MethodInfo_CompPolygamyMode_DefineMaster = null;
+
+                // CompPolygamyMode.isPolygamy
+                public static AccessTools.FieldRef<object, bool> CompPolygamyMode_isPolygamy =
+                    (object thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+
+                // ThingWithComps.GetComp<CompPolygamyMode>()
+                public delegate object MethodDelegate_ThingWithComps_GetComp_SpecializedCompPolygamyMode(ThingWithComps thiss);
+                public static MethodDelegate_ThingWithComps_GetComp_SpecializedCompPolygamyMode ThingWithComps_GetComp_SpecializedCompPolygamyMode =
+                    (ThingWithComps thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+
+                public static void ApplyHarmonyPatches(Harmony harmony) {
+                    Type typeCompPolygamyMode = BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode;
+
+                    // CompPolygamyMode_DefineMaster =
+                    //     AccessTools.MethodDelegate<MethodDelegate_CompPolygamyMode_DefineMaster>(
+                    //         AccessTools.Method(typeCompPolygamyMode, "DefineMaster")
+                    //     );
+                    MethodInfo_CompPolygamyMode_DefineMaster = AccessTools.Method(typeCompPolygamyMode, "DefineMaster");
+
+                    CompPolygamyMode_isPolygamy = AccessTools.FieldRefAccess<bool>(typeCompPolygamyMode, "isPolygamy");
+
+                    ThingWithComps_GetComp_SpecializedCompPolygamyMode =
+                        AccessTools.MethodDelegate<MethodDelegate_ThingWithComps_GetComp_SpecializedCompPolygamyMode>(
+                            AccessTools.Method(typeof(ThingWithComps), nameof(ThingWithComps.GetComp), null, new Type[] { typeCompPolygamyMode })
+                        );
                 }
-                if (polyComp != null && Traverse.Create(polyComp).Field("isPolygamy").GetValue<bool>()) {
-                    Traverse.Create(polyComp).Method("DefineMaster").GetValue();
+            }
+
+            public static void RemoteCall_IfIsPolygamyThenDefineMaster(Building_Bed bed) {
+                object polyComp = DelegatesAndRefs.ThingWithComps_GetComp_SpecializedCompPolygamyMode(bed);
+
+                if (polyComp != null && DelegatesAndRefs.CompPolygamyMode_isPolygamy(polyComp)) {
+                    // DelegatesAndRefs.CompPolygamyMode_DefineMaster(polyComp);
+                    if (DelegatesAndRefs.MethodInfo_CompPolygamyMode_DefineMaster != null) {
+                        DelegatesAndRefs.MethodInfo_CompPolygamyMode_DefineMaster.Invoke(polyComp, null);
+                    }
                 }
             }
 
             public static bool RemoteCall_IsPolygamy(Building_Bed bed) {
-                ThingComp polyComp = null;
-                foreach (ThingComp x in bed.AllComps) {
-                    if (BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode.IsInstanceOfType(x)) {
-                        polyComp = x;
-                        break;
-                    }
-                }
+                object polyComp = DelegatesAndRefs.ThingWithComps_GetComp_SpecializedCompPolygamyMode(bed);
+
                 if (polyComp != null) {
-                    return Traverse.Create(polyComp).Field("isPolygamy").GetValue<bool>();
+                    return DelegatesAndRefs.CompPolygamyMode_isPolygamy(polyComp);
                 }
                 return false;
             }

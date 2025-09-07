@@ -16,6 +16,7 @@ namespace BedOwnershipTools {
             if (mod.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
                 mod.harmony.PatchCategory("OneBedToSleepWithAllModCompatPatches");
                 ModCompatPatches_OneBedToSleepWithAll.Patch_UnclaimBedCalls.ApplyHarmonyPatches(mod.harmony);
+                ModCompatPatches_OneBedToSleepWithAll.DelegatesAndRefs.ApplyHarmonyPatches(mod.harmony);
             }
             if (mod.runtimeHandles.modLoftBedLoadedForCompatPatching) {
                 mod.harmony.PatchCategory("LoftBedModCompatPatches");
