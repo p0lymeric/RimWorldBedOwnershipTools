@@ -20,6 +20,15 @@ namespace BedOwnershipTools {
             }
             if (mod.runtimeHandles.modLoftBedLoadedForCompatPatching) {
                 mod.harmony.PatchCategory("LoftBedModCompatPatches");
+                ModCompatPatches_LoftBed.Patch_Unpatches.ApplyHarmonyPatches(mod.harmony);
+            }
+            if (mod.runtimeHandles.modBunkBedsLoadedForCompatPatching) {
+                mod.harmony.PatchCategory("BunkBedsModCompatPatches");
+                ModCompatPatches_BunkBeds.Patch_Unpatches.ApplyHarmonyPatches(mod.harmony);
+                ModCompatPatches_BunkBeds.DelegatesAndRefs.ApplyHarmonyPatches(mod.harmony);
+            }
+            if (mod.runtimeHandles.modLoftBedLoadedForCompatPatching || mod.runtimeHandles.modBunkBedsLoadedForCompatPatching) {
+                mod.harmony.PatchCategory("LoftBedBunkBedsModCompatPatches");
             }
         }
     }

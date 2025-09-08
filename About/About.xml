@@ -21,4 +21,11 @@
             <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
         </li>
     </modDependencies>
+
+    <loadAfter>
+        <li>orion.hospitality</li>
+        <li>maeyanie.onebedtosleepwithall</li>
+        <li>nekoemi.loftbed</li>
+        <li>darknote.bunkbeds</li>
+    </loadAfter>
 </ModMetaData>

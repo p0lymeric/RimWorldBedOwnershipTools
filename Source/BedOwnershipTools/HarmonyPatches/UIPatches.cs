@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using RimWorld;
 using Verse;
+using Verse.AI;
 using UnityEngine;
 using HarmonyLib;
 
@@ -174,6 +175,14 @@ namespace BedOwnershipTools {
                     } else {
                         stringBuilder.Append("null");
                     }
+
+                    stringBuilder.AppendInNewLine("LayDownTargetA: ");
+                    if (__instance.CurJob != null && __instance.CurJobDef == JobDefOf.LayDown && __instance.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed2) {
+                        stringBuilder.Append($"{bed2.GetUniqueLoadID()}");
+                    } else {
+                        stringBuilder.Append("null");
+                    }
+
                     if (__instance.ownership.OwnedBed != null) {
                         stringBuilder.AppendInNewLine("INTERNAL " + __instance.ownership.OwnedBed.GetUniqueLoadID());
                     }
@@ -182,8 +191,8 @@ namespace BedOwnershipTools {
                         __result = stringBuilder.ToString();
                         return;
                     }
-                    foreach(var (assignmentGroup, bed2) in xAttrs.assignmentGroupToOwnedBedMap) {
-                        stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed2.GetUniqueLoadID());
+                    foreach(var (assignmentGroup, bed3) in xAttrs.assignmentGroupToOwnedBedMap) {
+                        stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed3.GetUniqueLoadID());
                     }
                 }
                 __result = stringBuilder.ToString();

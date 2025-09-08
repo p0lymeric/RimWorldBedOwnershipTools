@@ -229,7 +229,12 @@ namespace BedOwnershipTools {
                     return false;
                 }
                 if (!IsAnyOwnerLovePartnerOf(bed, sleeper)) {
-                    return false;
+                    if (BedOwnershipTools.Singleton.runtimeHandles.modBunkBedsLoadedForCompatPatching) {
+                        // so that Pawns will self-assign to bunk beds with non-lovers
+                        return HarmonyPatches.ModCompatPatches_BunkBeds.RemoteCall_IsBunkBed(bed);
+                    } else {
+                        return false;
+                    }
                 }
             }
             return true;

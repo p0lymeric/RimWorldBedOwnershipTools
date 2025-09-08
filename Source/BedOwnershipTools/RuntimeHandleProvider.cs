@@ -20,6 +20,9 @@ namespace BedOwnershipTools {
         public bool modLoftBedLoadedForCompatPatching;
         public Type typeLoftBed_Building_LoftBed;
 
+        public bool modBunkBedsLoadedForCompatPatching;
+        public Type typeBunkBeds_Utils;
+
         public RuntimeHandleProvider(ModSettingsImpl settings) {
             if (settings.enableHospitalityModCompatPatches) {
                 typeHospitalityBuilding_GuestBed = Type.GetType("Hospitality.Building_GuestBed, Hospitality");
@@ -38,6 +41,12 @@ namespace BedOwnershipTools {
                 typeLoftBed_Building_LoftBed = Type.GetType("Nekoemi.LoftBed.Building_LoftBed, LoftBed");
                 if (typeLoftBed_Building_LoftBed != null) {
                     modLoftBedLoadedForCompatPatching = true;
+                }
+            }
+            if (settings.enableBunkBedsModCompatPatches) {
+                typeBunkBeds_Utils = Type.GetType("BunkBeds.Utils, BunkBeds");
+                if (typeBunkBeds_Utils != null) {
+                    modBunkBedsLoadedForCompatPatching = true;
                 }
             }
         }

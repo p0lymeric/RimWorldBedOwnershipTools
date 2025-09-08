@@ -90,6 +90,11 @@ namespace BedOwnershipTools {
                 ref settings.enableLoftBedModCompatPatches,
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.EnableModCompatPatches".Translate("Bunk Beds"),
+                ref settings.enableBunkBedsModCompatPatches,
+                "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
+            );
 
             if (Prefs.DevMode) {
                 listingStandard.GapLine();
