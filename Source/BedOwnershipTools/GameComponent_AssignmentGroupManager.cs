@@ -195,7 +195,9 @@ namespace BedOwnershipTools {
                 if (bedXAttrs.MyAssignmentGroup == assignmentGroup) {
                     bedXAttrs.MyAssignmentGroup = defaultAssignmentGroup;
                     // should've been cleared by RemoveAllOwners above
-                    // bedXAttrs.assignedPawnsOverlay.Clear();
+                    bedXAttrs.assignedPawnsOverlay.Clear();
+                    // not cleared so do that
+                    bedXAttrs.uninstalledAssignedPawnsOverlay.Clear();
                 }
             }
         }
