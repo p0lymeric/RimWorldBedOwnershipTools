@@ -14,15 +14,13 @@ namespace BedOwnershipTools {
         public static class ModCompatPatches_LoftBed {
             public static class Patch_Unpatches {
                 public static void ApplyHarmonyPatches(Harmony harmony) {
-                    HarmonyPatches.Utils.UnpatchChecked(
-                        harmony,
-                        AccessTools.Method(typeof(RestUtility), nameof(RestUtility.CurrentBed), new Type[] { typeof(Pawn), typeof(int?).MakeByRefType() }),
-                        AccessTools.Method("Nekoemi.LoftBed.Patch_CurrentBed:Postfix")
+                    harmony.Patch(
+                        AccessTools.Method("Nekoemi.LoftBed.Patch_CurrentBed:Postfix"),
+                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubRetTranspiler)
                     );
-                    HarmonyPatches.Utils.UnpatchChecked(
-                        harmony,
-                        AccessTools.Method(typeof(Building_Bed), nameof(Building_Bed.GetCurOccupant)),
-                        AccessTools.Method("Nekoemi.LoftBed.Patch_GetCurOccupant:Postfix")
+                    harmony.Patch(
+                        AccessTools.Method("Nekoemi.LoftBed.Patch_GetCurOccupant:Postfix"),
+                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubRetTranspiler)
                     );
                 }
             }

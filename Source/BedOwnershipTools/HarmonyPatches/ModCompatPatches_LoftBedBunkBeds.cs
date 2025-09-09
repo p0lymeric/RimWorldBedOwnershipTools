@@ -22,7 +22,8 @@ namespace BedOwnershipTools {
             // Bunk Beds: 690-720 TPS
             // Loft Bed: 690-720 TPS
             // Bed Ownership Tools x Bunk Beds: 620-660 TPS
-            // Bed Ownership Tools x Loft Bed: 650-690 TPS
+            // Bed Ownership Tools (1.0.5) x Loft Bed: 680-720 TPS
+            // Bed Ownership Tools x Loft Bed: 680-710 TPS
 
             [HarmonyPatchCategory("LoftBedBunkBedsModCompatPatches")]
             [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.CurrentBed))]
@@ -92,9 +93,9 @@ namespace BedOwnershipTools {
                                 if (isSingleBunkBed) {
                                     // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
                                     int slotIndex = pawns.IndexOf(p);
-                                    if (slotIndex >= 0 && slotIndex < beds[0].SleepingSlotsCount) {
+                                    if (slotIndex >= 0 && slotIndex < bed.SleepingSlotsCount) {
                                         // Log.Message($"{p.Label} called CurrentBed and matched {bed.GetUniqueLoadID()}");
-                                        __result = beds[0];
+                                        __result = bed;
                                         sleepingSlot = slotIndex;
                                         return false;
                                     }
@@ -157,6 +158,7 @@ namespace BedOwnershipTools {
                     if (isBunkBed) {
                         sleepingSlotPos = __instance.Position;
                     } else {
+                        // Bunk Beds patches this function but not for returning the expected result
                         sleepingSlotPos = __instance.GetSleepingSlotPos(slotIndex);
                     }
                     List<Thing> list = __instance.Map.thingGrid.ThingsListAt(sleepingSlotPos);
@@ -188,7 +190,7 @@ namespace BedOwnershipTools {
                     }
 
                     // loft/bunk case handling
-                    if (isBunkBed && !isLoftBed && slotIndex < pawns.Count) {
+                    if (isBunkBed && !isLoftBed && slotIndex < pawnsCnt) {
                         Pawn pawn = pawns[slotIndex];
                         if (pawn.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
                             if (bed == __instance) {
@@ -210,7 +212,7 @@ namespace BedOwnershipTools {
                     } else if (isLoftBedXBunkBedsCrossing) {
                         List<Pawn> pawnsInThisBed = pawns.Where(x => x.CurJob.GetTarget(TargetIndex.A).Thing == __instance).ToList();
                         if (slotIndex < pawnsInThisBed.Count) {
-                            Pawn pawn = pawns[slotIndex];
+                            Pawn pawn = pawnsInThisBed[slotIndex];
                             if (pawn.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
                                 if (bed == __instance) {
                                     // Log.Message($"{__instance.GetUniqueLoadID()} called GetCurOccupant on slot {slotIndex} and matched {pawn.Label}");

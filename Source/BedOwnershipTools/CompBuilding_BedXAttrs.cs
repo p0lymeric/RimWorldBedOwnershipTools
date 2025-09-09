@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using RimWorld;
 using Verse;
 using UnityEngine;
@@ -227,6 +228,79 @@ namespace BedOwnershipTools {
                             yield return toggleIsAssignedToCommunity;
                         }
                     }
+                }
+            }
+        }
+
+        static void StringBuilder_PrintOwnersList(StringBuilder stringBuilder, string prefix, List<Pawn> ownersList) {
+            if (ownersList.Count == 0) {
+                stringBuilder.AppendInNewLine(prefix + "Owner".Translate() + ": " + "Nobody".Translate());
+            }
+            else if (ownersList.Count == 1) {
+                stringBuilder.AppendInNewLine(prefix + "Owner".Translate() + ": " + ownersList[0].Label);
+            }
+            else {
+                stringBuilder.AppendInNewLine(prefix + "Owners".Translate() + ": ");
+                bool flag = false;
+                for (int i = 0; i < ownersList.Count; i++) {
+                    if (flag) {
+                        stringBuilder.Append(", ");
+                    }
+                    flag = true;
+                    stringBuilder.Append(ownersList[i].LabelShort);
+                }
+            }
+
+        }
+
+        public override string CompInspectStringExtra() {
+            if (!Prefs.DevMode || !BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {
+                return "";
+            }
+            StringBuilder stringBuilder = new StringBuilder();
+            if (this.parent is Building_Bed bed) {
+                stringBuilder.AppendInNewLine("LoadID: " + bed.GetUniqueLoadID());
+                for (int sleepingSlot = 0; sleepingSlot < bed.SleepingSlotsCount; sleepingSlot++) {
+                    stringBuilder.AppendInNewLine($"CurOccupant[{sleepingSlot}]: ");
+                    Pawn curOccupant = bed.GetCurOccupant(sleepingSlot);
+                    if (curOccupant != null) {
+                        stringBuilder.Append(curOccupant.Label);
+                    } else {
+                        stringBuilder.Append("null");
+                    }
+                }
+                StringBuilder_PrintOwnersList(stringBuilder, "assignedPawns", bed.CompAssignableToPawn.AssignedPawnsForReading);
+                StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(bed.CompAssignableToPawn));
+                StringBuilder_PrintOwnersList(stringBuilder, "assignedPawnsOverlay", this.assignedPawnsOverlay);
+                StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawnsOverlay", this.uninstalledAssignedPawnsOverlay);
+            }
+            return stringBuilder.ToString();
+        }
+
+        // NOTE Building_Bed does not call ThingWithComps.DrawGUIOverlay so Comp labels need to be drawn in a patch
+
+        public void DrawPinnedAGLabel() {
+            if (this.parent is Building_Bed bed) {
+                string displayString = "(";
+                bool insertComma = false;
+                bool displayMe = false;
+                if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups && this.MyAssignmentGroup.showDisplay) {
+                    displayString += this.MyAssignmentGroup.name;
+                    insertComma = true;
+                    displayMe = true;
+                }
+                if (this.IsAssignmentPinned) {
+                    if (insertComma) {
+                        displayString += ", ";
+                    }
+                    displayString += "BedOwnershipTools.PinnedAbbrev".Translate();
+                    displayMe = true;
+                }
+                displayString += ")";
+                if (displayMe) {
+                    Vector2 labelPos = GenMapUI.LabelDrawPosFor(bed, -0.4f);
+                    labelPos.y += 13f;
+                    GenMapUI.DrawThingLabel(labelPos, displayString, GenMapUI.DefaultThingLabelColor);
                 }
             }
         }

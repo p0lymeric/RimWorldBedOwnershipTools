@@ -34,15 +34,128 @@ namespace BedOwnershipTools {
 
             public static class Patch_Unpatches {
                 public static void ApplyHarmonyPatches(Harmony harmony) {
-                    HarmonyPatches.Utils.UnpatchChecked(
-                        harmony,
-                        AccessTools.Method(typeof(Building_Bed), nameof(Building_Bed.GetCurOccupant)),
-                        AccessTools.Method("BunkBeds.Building_Bed_GetCurOccupant_Patch:Prefix")
+                    harmony.Patch(
+                        AccessTools.Method("BunkBeds.Building_Bed_GetCurOccupant_Patch:Prefix"),
+                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubPushI4OneRetTranspiler)
+                    );
+                    harmony.Patch(
+                        AccessTools.Method("BunkBeds.DrawPawnGUIOverlay_DrawPawnGUIOverlay_Patch:Prefix"),
+                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubPushI4OneRetTranspiler)
                     );
                 }
             }
 
-             // Replacements are defined in ModCompatPatches_LoftBedBunkBeds.cs
+             // Replacement for GetCurOccupant is defined in ModCompatPatches_LoftBedBunkBeds.cs
+
+            [HarmonyPatchCategory("BunkBedsModCompatPatches")]
+            [HarmonyPatch(typeof(GenMapUI), nameof(GenMapUI.LabelDrawPosFor))]
+            [HarmonyPatch(new Type[] { typeof(Thing), typeof(float) })]
+            public class Patch_GenMapUI_LabelDrawPosFor {
+                static void Prefix(ref Vector2 __result, Thing thing, ref float worldOffsetZ) {
+                    if (thing is Pawn pawn) {
+                        int? sleepingSlot;
+                        Building_Bed bed = pawn.CurrentBed(out sleepingSlot);
+                        if (bed != null && sleepingSlot != null && HarmonyPatches.ModCompatPatches_BunkBeds.RemoteCall_IsBunkBed(bed)) {
+                            if (!bed.Rotation.IsHorizontal) {
+                                switch (sleepingSlot) {
+                                    case 0:
+                                        worldOffsetZ += -0.7f;
+                                        break;
+                                    case 1:
+                                        worldOffsetZ += -0.1f;
+                                        break;
+                                    case 2:
+                                        worldOffsetZ += 0.55f;
+                                        break;
+                                }
+                            } else {
+                                worldOffsetZ += 0.4f;
+                                switch (sleepingSlot) {
+                                    case 0:
+                                        worldOffsetZ += -0.2f;
+                                        break;
+                                    case 1:
+                                        worldOffsetZ += 0.5f;
+                                        break;
+                                    case 2:
+                                        worldOffsetZ += 1.2f;
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // mmm don't like this mingling and mangling of edits
+            // that's the story of UIPatches.cs too...
+            [HarmonyPatchCategory("BunkBedsModCompatPatches")]
+            [HarmonyPatch("BunkBeds.CompBunkBed", "DrawGUIOverlay")]
+            public class Patch_CompBunkBed_DrawGUIOverlay {
+                static bool Prefix(object __instance, ThingWithComps ___parent) {
+                    Building_Bed building_Bed = ___parent as Building_Bed;
+
+                    CompBuilding_BedXAttrs xAttrs = building_Bed.GetComp<CompBuilding_BedXAttrs>();
+                    if (xAttrs == null) {
+                        return true;
+                    }
+
+                    bool showCommunalGUIOverlayInsteadOfBlankUnderBed = BedOwnershipTools.Singleton.settings.showCommunalGUIOverlayInsteadOfBlankUnderBed;
+                    bool hideDisplayStringForNonHumanlikeBeds = !building_Bed.def.building.bed_humanlike && BedOwnershipTools.Singleton.settings.hideGUIOverlayOnNonHumanlikeBeds;
+
+                    // base.DrawGUIOverlay();
+
+                    if (building_Bed.Medical || Find.CameraDriver.CurrentZoom != CameraZoomRange.Closest || !building_Bed.CompAssignableToPawn.PlayerCanSeeAssignments) {
+                        return false;
+                    }
+                    Color defaultThingLabelColor = GenMapUI.DefaultThingLabelColor;
+                    Color grey = new Color(0.5f, 0.5f, 0.5f, 1f);
+                    List<Pawn> assignedPawns = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ? xAttrs.assignedPawnsOverlay : building_Bed.CompAssignableToPawn.AssignedPawnsForReading;
+                    Type Building_Bed_DrawGUIOverlay_Patch_guestBedType = Traverse.CreateWithType("BunkBeds.Building_Bed_DrawGUIOverlay_Patch").Field("guestBedType").GetValue<Type>();
+                    if (!building_Bed.ForPrisoners && !building_Bed.Medical && xAttrs.IsAssignedToCommunity) {
+                        if (showCommunalGUIOverlayInsteadOfBlankUnderBed && !hideDisplayStringForNonHumanlikeBeds) {
+                            GenMapUI.DrawThingLabel(building_Bed, "BedOwnershipTools.CommunalAbbrevBrackets".Translate(), defaultThingLabelColor);
+                        }
+                    } else if (!building_Bed.OwnersForReading.Any() && ((object)Building_Bed_DrawGUIOverlay_Patch_guestBedType == null || !Building_Bed_DrawGUIOverlay_Patch_guestBedType.IsAssignableFrom(___parent.def.thingClass))) {
+                        GenMapUI.DrawThingLabel(building_Bed, "Unowned".Translate(), defaultThingLabelColor);
+                    }
+                    else if (building_Bed.OwnersForReading.Count == 1) {
+                        Pawn pawn = building_Bed.OwnersForReading[0];
+                        if ((!pawn.InBed() || pawn.CurrentBed() != building_Bed) && (!pawn.RaceProps.Animal || Prefs.AnimalNameMode.ShouldDisplayAnimalName(pawn))) {
+                            if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+                                bool active = building_Bed.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn);
+                                GenMapUI.DrawThingLabel(building_Bed, pawn.LabelShort, active ? defaultThingLabelColor : grey);
+                            } else {
+                                GenMapUI.DrawThingLabel(building_Bed, pawn.LabelShort, defaultThingLabelColor);
+                            }
+                        }
+                    } else {
+                        for (int i = 0; i < assignedPawns.Count; i++) {
+                            Pawn pawn2 = assignedPawns[i];
+                            if (!pawn2.InBed() || assignedPawns[i].CurrentBed() != building_Bed || !(pawn2.Position == building_Bed.Position)) {
+                                if (pawn2.RaceProps.Animal && !Prefs.AnimalNameMode.ShouldDisplayAnimalName(pawn2)) {
+                                    break;
+                                }
+                                if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+                                    bool active = building_Bed.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn2);
+                                    GenMapUI.DrawThingLabel(Traverse.Create(__instance).Method("GetMultiOwnersLabelScreenPosFor", i).GetValue<Vector3>(), pawn2.LabelShort, active ? defaultThingLabelColor : grey);
+                                } else {
+                                    GenMapUI.DrawThingLabel(Traverse.Create(__instance).Method("GetMultiOwnersLabelScreenPosFor", i).GetValue<Vector3>(), pawn2.LabelShort, defaultThingLabelColor);
+                                }
+                            }
+                        }
+                    }
+
+                    if (!building_Bed.ForPrisoners && !building_Bed.Medical) {
+                        if (!xAttrs.IsAssignedToCommunity && !hideDisplayStringForNonHumanlikeBeds) {
+                            xAttrs.DrawPinnedAGLabel();
+                        }
+                    }
+
+                    return false;
+                }
+            }
+
         }
     }
 }

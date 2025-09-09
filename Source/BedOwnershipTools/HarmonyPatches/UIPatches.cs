@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using RimWorld;
 using Verse;
-using Verse.AI;
 using UnityEngine;
 using HarmonyLib;
 
@@ -82,16 +81,12 @@ namespace BedOwnershipTools {
                         }
                     }
                     if (!__instance.ForPrisoners) {
-                        // Before this print the overlay owners and whether assignment is active or not
                         if (xAttrs.IsAssignedToCommunity) {
-                            // TODO translate
                             stringBuilder.Append(" " + "BedOwnershipTools.CommunalBrackets".Translate());
                         } else if (xAttrs.IsAssignmentPinned) {
-                            // TODO pawnsMayTakeVacantPinnedBeds
                             stringBuilder.Append(" " + "BedOwnershipTools.PinnedBrackets".Translate());
                         }
                         if (!xAttrs.IsAssignedToCommunity && BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
-                            //stringBuilder.AppendInNewLine($"Assignment group: {xAttrs.MyAssignmentGroup.name} (ID {xAttrs.MyAssignmentGroup.id})");
                             stringBuilder.AppendInNewLine("BedOwnershipTools.AssignmentGroup".Translate() + ": " + xAttrs.MyAssignmentGroup.name);
                         }
                     }
@@ -108,94 +103,7 @@ namespace BedOwnershipTools {
                         }
                     }
                 }
-                if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {
-                    stringBuilder.AppendInNewLine("LoadID: " + __instance.GetUniqueLoadID());
-                    for (int sleepingSlot = 0; sleepingSlot < __instance.SleepingSlotsCount; sleepingSlot++) {
-                        stringBuilder.AppendInNewLine($"CurOccupant[{sleepingSlot}]: ");
-                        Pawn curOccupant = __instance.GetCurOccupant(sleepingSlot);
-                        if (curOccupant != null) {
-                            stringBuilder.Append(curOccupant.Label);
-                        } else {
-                            stringBuilder.Append("null");
-                        }
-                    }
-                    StringBuilder_PrintOwnersList(stringBuilder, "assignedPawns", __instance.CompAssignableToPawn.AssignedPawnsForReading);
-                    StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(__instance.GetComp<CompAssignableToPawn>()));
-                    StringBuilder_PrintOwnersList(stringBuilder, "assignedPawnsOverlay", xAttrs.assignedPawnsOverlay);
-                    StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawnsOverlay", xAttrs.uninstalledAssignedPawnsOverlay);
-                }
                 return stringBuilder.ToString();
-            }
-
-            public static void StringBuilder_PrintOwnersList(StringBuilder stringBuilder, string prefix, List<Pawn> ownersList) {
-                if (ownersList.Count == 0) {
-                    stringBuilder.AppendInNewLine(prefix + "Owner".Translate() + ": " + "Nobody".Translate());
-                }
-                else if (ownersList.Count == 1) {
-                    stringBuilder.AppendInNewLine(prefix + "Owner".Translate() + ": " + ownersList[0].Label);
-                }
-                else {
-                    stringBuilder.AppendInNewLine(prefix + "Owners".Translate() + ": ");
-                    bool flag = false;
-                    for (int i = 0; i < ownersList.Count; i++) {
-                        if (flag) {
-                            stringBuilder.Append(", ");
-                        }
-                        flag = true;
-                        stringBuilder.Append(ownersList[i].LabelShort);
-                    }
-                }
-
-            }
-            // public static void StringBuilder_PrintSafeCribInfo(StringBuilder stringBuilder, string prefix, List<Pawn> ownersList) {
-            //     if (ownersList.Count == 1 && ChildcareUtility.CanSuckle(ownersList[0], out var _)) {
-            //         Pawn p = ownersList[0];
-            //         float ambientTemperature = base.AmbientTemperature;
-            //         if (!p.SafeTemperatureRange().IncludesEpsilon(ambientTemperature)) {
-            //             stringBuilder.AppendInNewLine("BedUnsafeTemperature".Translate().Colorize(ColoredText.WarningColor));
-            //         }
-            //         else if (!p.ComfortableTemperatureRange().IncludesEpsilon(ambientTemperature)) {
-            //             stringBuilder.AppendInNewLine("BedUncomfortableTemperature".Translate());
-            //         }
-            //     }
-            // }
-        }
-
-        [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetInspectString))]
-        public class Patch_Pawn_GetInspectString {
-            static void Postfix(Pawn __instance, ref string __result) {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(__result);
-                if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {
-                    stringBuilder.AppendInNewLine("CurrentBed: ");
-                    int? sleepingSlotPos = -1;
-                    Building_Bed bed = __instance.CurrentBed(out sleepingSlotPos);
-                    if (bed != null) {
-                        stringBuilder.Append($"{bed.GetUniqueLoadID()} {sleepingSlotPos}");
-                    } else {
-                        stringBuilder.Append("null");
-                    }
-
-                    stringBuilder.AppendInNewLine("LayDownTargetA: ");
-                    if (__instance.CurJob != null && __instance.CurJobDef == JobDefOf.LayDown && __instance.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed2) {
-                        stringBuilder.Append($"{bed2.GetUniqueLoadID()}");
-                    } else {
-                        stringBuilder.Append("null");
-                    }
-
-                    if (__instance.ownership.OwnedBed != null) {
-                        stringBuilder.AppendInNewLine("INTERNAL " + __instance.ownership.OwnedBed.GetUniqueLoadID());
-                    }
-                    CompPawnXAttrs xAttrs = __instance.GetComp<CompPawnXAttrs>();
-                    if (xAttrs == null) {
-                        __result = stringBuilder.ToString();
-                        return;
-                    }
-                    foreach(var (assignmentGroup, bed3) in xAttrs.assignmentGroupToOwnedBedMap) {
-                        stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed3.GetUniqueLoadID());
-                    }
-                }
-                __result = stringBuilder.ToString();
             }
         }
 
@@ -217,7 +125,7 @@ namespace BedOwnershipTools {
                 if (__instance.Medical || Find.CameraDriver.CurrentZoom != CameraZoomRange.Closest || !__instance.CompAssignableToPawn.PlayerCanSeeAssignments) {
                     return false;
                 }
-                if(ModsConfig.BiotechActive && __instance.def == ThingDefOf.DeathrestCasket) {
+                if (ModsConfig.BiotechActive && __instance.def == ThingDefOf.DeathrestCasket) {
                     return true;
                 }
 
@@ -266,31 +174,9 @@ namespace BedOwnershipTools {
                     }
                 }
 
-                // TODO can move this to CompBuilding_BedXAttrs
                 if (!__instance.ForPrisoners && !__instance.Medical) {
-                    if (xAttrs.IsAssignedToCommunity || hideDisplayStringForNonHumanlikeBeds) {
-                    } else {
-                        string displayString = "(";
-                        bool insertComma = false;
-                        bool displayMe = false;
-                        if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups && xAttrs.MyAssignmentGroup.showDisplay) {
-                            displayString += xAttrs.MyAssignmentGroup.name;
-                            insertComma = true;
-                            displayMe = true;
-                        }
-                        if (xAttrs.IsAssignmentPinned) {
-                            if (insertComma) {
-                                displayString += ", ";
-                            }
-                            displayString += "BedOwnershipTools.PinnedAbbrev".Translate();
-                            displayMe = true;
-                        }
-                        displayString += ")";
-                        if (displayMe) {
-                            Vector2 labelPos = GenMapUI.LabelDrawPosFor(__instance, -0.4f);
-                            labelPos.y += 13f;
-                            GenMapUI.DrawThingLabel(labelPos, displayString, defaultThingLabelColor);
-                        }
+                    if (!xAttrs.IsAssignedToCommunity && !hideDisplayStringForNonHumanlikeBeds) {
+                        xAttrs.DrawPinnedAGLabel();
                     }
                 }
                 return false;
@@ -337,9 +223,10 @@ namespace BedOwnershipTools {
                 return screenPos;
             }
         }
+
         // TODO refactor changes into transpiler
         [HarmonyPatch(typeof(CompAssignableToPawn_Bed), "AssigningCandidates", MethodType.Getter)]
-        public class Patch_CompAssignableToPawn_Bed_Bed_AssigningCandidatesGetterImpl {
+        public class Patch_CompAssignableToPawn_Bed_AssigningCandidatesGetterImpl {
             static IEnumerable<Pawn> MyAssigningCandidatesGetterImpl(CompAssignableToPawn_Bed thiss) {
                 if (!thiss.parent.Spawned) {
                     return Enumerable.Empty<Pawn>();
