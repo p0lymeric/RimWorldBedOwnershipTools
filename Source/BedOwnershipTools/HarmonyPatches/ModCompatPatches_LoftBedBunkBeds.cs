@@ -23,21 +23,21 @@ namespace BedOwnershipTools {
             // Loft Bed: 690-720 TPS
             // Bed Ownership Tools x Bunk Beds: 620-660 TPS
             // Bed Ownership Tools (1.0.5) x Loft Bed: 680-720 TPS
-            // Bed Ownership Tools x Loft Bed: 680-710 TPS
+            // Bed Ownership Tools x Loft Bed: 650-690 TPS
 
             [HarmonyPatchCategory("LoftBedBunkBedsModCompatPatches")]
             [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.CurrentBed))]
             [HarmonyPatch(new System.Type[] { typeof(Pawn), typeof(int?) }, new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
             class Patch_RestUtility_CurrentBed {
                 static bool Prefix(ref Building_Bed __result, Pawn p, ref int? sleepingSlot) {
-                    // Iterate through the sleeping Pawns and Building_Beds at the given pawn's position
+                    // Iterate through the sleeping Pawns and Building_Beds at the given Pawn p's position
                     // and map sleepers to the bed in their job's TargetA
 
                     // This implementation differs from Loft Bed and Bunk Beds' implementations
                     // because it checks the bed listed in the Pawn's job instead of ownership lists
                     // and trusts that reservation conflicts are handled by other systems in the games
 
-                    // side-effect: Pawns won't sleep in the same order as their assignments with Bunk Beds
+                    // NOTE for owned beds, the game expects Pawns to sleep in their assigned sleeping slot
 
                     if (!p.Spawned || p.CurJob == null || !p.GetPosture().InBed()) {
                         __result = null;
@@ -91,17 +91,26 @@ namespace BedOwnershipTools {
                         if (p.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
                             if (beds.Contains(bed)) {
                                 if (isSingleBunkBed) {
-                                    // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
-                                    int slotIndex = pawns.IndexOf(p);
+                                    int slotIndex = -1;
+                                    CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                                    if (bed.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
+                                        // non-owned bed
+                                        // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
+                                        slotIndex = pawns.IndexOf(p);
+                                    } else {
+                                        // owned bed
+                                        // the game expects the pawn to sleep at the same slot as their bed's assignedPawns idx
+                                        slotIndex = bed.OwnersForReading.IndexOf(p);
+                                    }
                                     if (slotIndex >= 0 && slotIndex < bed.SleepingSlotsCount) {
                                         // Log.Message($"{p.Label} called CurrentBed and matched {bed.GetUniqueLoadID()}");
                                         __result = bed;
                                         sleepingSlot = slotIndex;
                                         return false;
                                     }
-                                // vanilla-like case handling with 1 bed OR Loft Bed handling
-                                // main difference is that we don't call GetCurOccupant for a modest perf win
                                 } else if (bedsCnt == 1 || (isLoftBed && !couldBeLoftBedXBunkBedsCrossing)) {
+                                    // vanilla-like case handling with 1 bed OR Loft Bed handling
+                                    // main difference is that we don't call GetCurOccupant for a modest perf win
                                     int sleepingSlotTmp = BedUtility.GetSlotFromPosition(p.Position, bed.Position, bed.Rotation, bed.def.size);
                                     if (sleepingSlotTmp >= 0) {
                                         // Log.Message($"{p.Label} called CurrentBed and matched {bed.GetUniqueLoadID()}");
@@ -114,7 +123,17 @@ namespace BedOwnershipTools {
                                     // this requires extra filtering that are deferred to this scope and isn't expected to be common case
                                     if (HarmonyPatches.ModCompatPatches_BunkBeds.RemoteCall_IsBunkBed(bed)) {
                                         List<Pawn> pawnsInThisBed = pawns.Where(x => x.CurJob.GetTarget(TargetIndex.A).Thing == bed).ToList();
-                                        int slotIndex = pawnsInThisBed.IndexOf(p);
+                                        int slotIndex = -1;
+                                        CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                                        if (bed.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
+                                            // non-owned bed
+                                            // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
+                                            slotIndex = pawnsInThisBed.IndexOf(p);
+                                        } else {
+                                            // owned bed
+                                            // the game expects the pawn to sleep at the same slot as their bed's assignedPawns idx
+                                            slotIndex = bed.OwnersForReading.IndexOf(p);
+                                        }
                                         if (slotIndex >= 0 && slotIndex < bed.SleepingSlotsCount) {
                                             // Log.Message($"{p.Label} called CurrentBed and matched {bed.GetUniqueLoadID()}");
                                             __result = bed;
@@ -191,7 +210,18 @@ namespace BedOwnershipTools {
 
                     // loft/bunk case handling
                     if (isBunkBed && !isLoftBed && slotIndex < pawnsCnt) {
-                        Pawn pawn = pawns[slotIndex];
+                        List<Pawn> indexingList = null;
+                        CompBuilding_BedXAttrs bedXAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
+                        if (__instance.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
+                            // non-owned bed
+                            // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
+                            indexingList = pawns;
+                        } else {
+                            // owned bed
+                            // the game expects the pawn to sleep at the same slot as their bed's assignedPawns idx
+                            indexingList = __instance.OwnersForReading;
+                        }
+                        Pawn pawn = indexingList[slotIndex];
                         if (pawn.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
                             if (bed == __instance) {
                                 // Log.Message($"{__instance.GetUniqueLoadID()} called GetCurOccupant on slot {slotIndex} and matched {pawn.Label}");
@@ -210,9 +240,19 @@ namespace BedOwnershipTools {
                             }
                         }
                     } else if (isLoftBedXBunkBedsCrossing) {
-                        List<Pawn> pawnsInThisBed = pawns.Where(x => x.CurJob.GetTarget(TargetIndex.A).Thing == __instance).ToList();
-                        if (slotIndex < pawnsInThisBed.Count) {
-                            Pawn pawn = pawnsInThisBed[slotIndex];
+                        List<Pawn> indexingList = null;
+                        CompBuilding_BedXAttrs bedXAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
+                        if (__instance.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
+                            // non-owned bed
+                            // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
+                            indexingList = pawns.Where(x => x.CurJob.GetTarget(TargetIndex.A).Thing == __instance).ToList();
+                        } else {
+                            // owned bed
+                            // the game expects the pawn to sleep at the same slot as their bed's assignedPawns idx
+                            indexingList = __instance.OwnersForReading;
+                        }
+                        if (slotIndex < indexingList.Count) {
+                            Pawn pawn = indexingList[slotIndex];
                             if (pawn.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed) {
                                 if (bed == __instance) {
                                     // Log.Message($"{__instance.GetUniqueLoadID()} called GetCurOccupant on slot {slotIndex} and matched {pawn.Label}");
