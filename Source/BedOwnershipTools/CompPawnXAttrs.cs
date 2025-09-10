@@ -55,9 +55,9 @@ namespace BedOwnershipTools {
                     stringBuilder.Append("null");
                 }
 
-                stringBuilder.AppendInNewLine("LayDownTargetA: ");
-                if (pawn.CurJob != null && pawn.CurJobDef == JobDefOf.LayDown && pawn.CurJob.GetTarget(TargetIndex.A).Thing is Building_Bed bed2) {
-                    stringBuilder.Append($"{bed2.GetUniqueLoadID()}");
+                stringBuilder.AppendInNewLine("TargetA: ");
+                if (pawn.CurJob != null && pawn.CurJob.GetTarget(TargetIndex.A).Thing is Thing thing) {
+                    stringBuilder.Append($"{thing.GetUniqueLoadID()}");
                 } else {
                     stringBuilder.Append("null");
                 }
