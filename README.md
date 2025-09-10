@@ -4,47 +4,39 @@
 
 # Bed Ownership Tools
 
-![communal beds](About/Preview.png)
-
 Bed Ownership Tools reduces micromanagement of colonists' bed assignments by introducing new ownership controls on beds.
 
-In my RimWorld playthroughs, I didn't like how sending colonists on quests or designating emergency sleeping quarters often led to them forgetting home bed assignments.
+Designate beds for communal use. Pin bed owner assignments so they aren't forgotten. Assign multiple beds per colonist.
 
-With the release of Odyssey, I started to love questing around the world. But in that love was still pain, and after bumping my head fixing bed assignments too many times, I broke.
-
-A brief psychotic wander later...
+![communal beds](About/Preview.png)
 
 ## Communal beds
 
 Communal beds are good for situations when colonists need a bed, but cannot access a permanent bed due to travel, zoning restrictions, or limited availability of permanent bedrooms.
 
-![communal beds](Collateral/DocMedia/ReadmeCommunal.png)
-
 Instead of assigning named owners to beds, you can now mark a bed for "communal" use. When a colonist cannot access or claim an owned bed, they'll use a communal bed before sleeping on the ground. While using a communal bed, they'll still remember their previous bed.
 
-Communal beds are highly versatile for early to late game use. Use cases for communal beds include: Odyssey gravship bedrooms, Anomaly incident shelters, or Royalty guest barracks.
+![communal beds](Collateral/DocMedia/ReadmeCommunal.png)
 
 ## Pinned assignments
 
-Pinned assignments prevent colonists from forgetting prior bed assignments, unless manually reassigned by the player (or arrested, killed, divorced, etc.)
-
-![pinned assignments](Collateral/DocMedia/ReadmePinned.png)
-
 Perhaps you've sent several colonists to a quest site and mass-claimed buildings before. A brief undraft to have the (exhausted) troops perform some deconstruction, and half of your colony has suddenly forgotten their home beds in favour of some dead tribals' bed rolls.
 
-By pinning those colonists' home bed assignments beforehand, they'll sleep on the ground instead. This gives you a chance to intervene by designating those bed rolls as communal beds (or you could push them to finish their tasks). In any case, you wouldn't need to fix their bed assignments when they return home.
+Pinned assignments prevent colonists from forgetting prior bed assignments, unless manually reassigned by the player (or arrested, killed, divorced, etc.) By pinning those colonists' home bed assignments beforehand, they'll sleep on the ground instead. This gives you a chance to intervene.
+
+![pinned assignments](Collateral/DocMedia/ReadmePinned.png)
 
 ## Assignment groups
 
 Assignment groups allow colonists to own and automatically switch between multiple beds based on priority rankings.
-
-![assignment groups](Collateral/DocMedia/ReadmeAssignmentGroup.png)
 
 You may find multiple assignments useful for late-game colonies where colonists have personalized bedrooms.
 
 Perhaps you have a large gravship and wish to build second bedrooms on the ship. But, you might have a greedy colonist whose bedrooms should be just slightly fancier than your archon's. Or many couples whose bed assignments are painful to redo.
 
 With assignment groups, you can set up ownership associations once per bed and have the game automatically switch between them.
+
+![assignment groups](Collateral/DocMedia/ReadmeAssignmentGroup.png)
 
 ### Getting started with assignment groups
 
@@ -70,11 +62,7 @@ Maybe the captain got malaria and is out of commission for an urgent quest. No w
 - While the ship is away, the captain will automatically use their Home bed instead.
 - The crew members who leave for the quest will switch from their Home to Ship beds on the first night out.
 
-In the starter set, the Default group exists separately from the Home and Ship groups, and has no clear use.
-This is so that newly claimed or constructed beds are placed by default in a separate group from the Home group.
-It's also valid to use the Default group to hold home bed assignments, and use pinning to protect assignments.
-
-### Brief technical explanation of assignment groups
+### Technical aside for assignment groups
 
 When the mod is first initialized, it creates three assignment groups (Default, Home, Ship).
 All beds start in the Default assignment group unless you designate otherwise. The other two groups carry no initial meaning other than serving as a starting template.
@@ -85,13 +73,26 @@ Hence, a colonist may own one bed in each assignment group. The groups themselve
 
 When a colonist needs rest, it will initiate a bed search, looking through all beds they own to pick the highest priority bed they can reach. They will internally set that bed to be their owned bed and hand off to the vanilla game's single-bed ownership system. Vanilla game bedroom quality evaluation and mood effects then apply as normal.
 
-## Issues
-Please post in the Bug Reports thread on the mod's [Steam Workshop bug thread](https://steamcommunity.com/workshop/filedetails/discussion/3558407174/600787986327757372/), or [file an issue on GitHub](https://github.com/p0lymeric/RimWorldBedOwnershipTools/issues).
+In the starter set, the Default group exists separately from the Home and Ship groups, and has no clear use. This is so that newly claimed or constructed beds are placed by default in a separate group from the Home group. It's also valid to use the Default group to hold home bed assignments, and use pinning to protect assignments.
 
 ## Save compatibility
 It's safe to add or remove this mod at any time. You may see harmless one-time errors printed to the game's console following mod removal.
 
 Upon mod removal, colonists with multiple bed assignments will keep the last non-communal bed they used.
+
+## Mod compatibility
+Bed Ownership Tools has built-in support for a growing list of mods that interact with bed assignments. These include:
+- Hospitality
+- One bed to sleep with all - Polycule Edition
+- Loft Bed
+- Bunk Beds
+
+An updated list is available on [GitHub](https://github.com/p0lymeric/RimWorldBedOwnershipTools/blob/master/Documentation/ModCompatibility.md).
+
+If you encounter a compatibility problem with another mod, please report it as an issue.
+
+## Issue reporting
+Please post in the Bug Reports thread on the mod's [Steam Workshop bug thread](https://steamcommunity.com/workshop/filedetails/discussion/3558407174/600787986327757372/), or [file an issue on GitHub](https://github.com/p0lymeric/RimWorldBedOwnershipTools/issues).
 
 ## Licensing
 This mod is released under the terms of the MIT license.
