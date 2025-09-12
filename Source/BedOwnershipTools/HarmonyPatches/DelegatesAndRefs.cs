@@ -3,6 +3,7 @@ using RimWorld;
 using Verse;
 using UnityEngine;
 using HarmonyLib;
+using Verse.AI;
 
 // Delegates and refs that belong to the base game and hence can be populated before mod init
 
@@ -43,6 +44,11 @@ namespace BedOwnershipTools {
             // Pawn_IdeoTracker.pawn
             public static AccessTools.FieldRef<Pawn_IdeoTracker, Pawn> Pawn_IdeoTracker_pawn =
                 AccessTools.FieldRefAccess<Pawn_IdeoTracker, Pawn>("pawn");
+
+            // JobDriver.curToil (getter call)
+            public delegate Toil MethodDelegatePropertyGetter_JobDriver_CurToil(JobDriver thiss);
+            public static MethodDelegatePropertyGetter_JobDriver_CurToil JobDriver_CurToil_Get =
+                AccessTools.MethodDelegate<MethodDelegatePropertyGetter_JobDriver_CurToil>(AccessTools.PropertyGetter(typeof(JobDriver), "CurToil"));
         }
     }
 }

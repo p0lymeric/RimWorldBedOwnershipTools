@@ -55,26 +55,26 @@ namespace BedOwnershipTools {
                     stringBuilder.Append("null");
                 }
 
-                stringBuilder.AppendInNewLine("CurJob: ");
-                if (pawn.CurJob != null) {
-                    stringBuilder.Append($"{pawn.CurJob}");
+                stringBuilder.AppendInNewLine("CurrentJobDriver: ");
+                if (pawn.jobs.curDriver != null) {
+                    stringBuilder.Append($"{pawn.jobs.curDriver}");
                 } else {
                     stringBuilder.Append("null");
                 }
 
                 stringBuilder.AppendInNewLine("TargetBed: ");
-                if (pawn.CurJob != null && HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.GetJobTargetedBedFromPawn(pawn, false) is Thing thing) {
+                if (pawn.CurJob != null && HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.GetJobTargetedBedFromPawn(pawn, false, false) is Thing thing) {
                     stringBuilder.Append($"{thing.GetUniqueLoadID()}");
                 } else {
                     stringBuilder.Append("null");
                 }
 
                 if (pawn.ownership.OwnedBed != null) {
-                    stringBuilder.AppendInNewLine("INTERNAL " + pawn.ownership.OwnedBed.GetUniqueLoadID());
+                    stringBuilder.AppendInNewLine("INTERNAL: " + pawn.ownership.OwnedBed.GetUniqueLoadID());
                 }
 
                 foreach(var (assignmentGroup, bed3) in this.assignmentGroupToOwnedBedMap) {
-                    stringBuilder.AppendInNewLine(assignmentGroup.name + " " + bed3.GetUniqueLoadID());
+                    stringBuilder.AppendInNewLine(assignmentGroup.name + ": " + bed3.GetUniqueLoadID());
                 }
             }
             return stringBuilder.ToString();

@@ -11,16 +11,16 @@ using Verse;
 namespace BedOwnershipTools {
     public class RuntimeHandleProvider {
         public bool modHospitalityLoadedForCompatPatching = false;
-        public Type typeHospitalityBuilding_GuestBed = null;
+        public Type typeHospitalityBuilding_GuestBed;
 
         public bool modOneBedToSleepWithAllLoadedForCompatPatching = false;
-        public Type typeOneBedToSleepWithAll_CompPolygamyMode = null;
-        public Type typeOneBedToSleepWithAll_PolygamyModeUtility = null;
+        public Type typeOneBedToSleepWithAll_CompPolygamyMode;
+        public Type typeOneBedToSleepWithAll_PolygamyModeUtility;
 
-        public bool modLoftBedLoadedForCompatPatching;
+        public bool modLoftBedLoadedForCompatPatching = false;
         public Type typeLoftBed_Building_LoftBed;
 
-        public bool modBunkBedsLoadedForCompatPatching;
+        public bool modBunkBedsLoadedForCompatPatching = false;
         public Type typeBunkBeds_Utils;
 
         public RuntimeHandleProvider(ModSettingsImpl settings) {

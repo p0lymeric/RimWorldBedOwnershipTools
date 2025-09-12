@@ -56,6 +56,12 @@ namespace BedOwnershipTools {
 
         public GameComponent_AssignmentGroupManager(Game game) {
             Singleton = this;
+
+            // Clear some static structures that don't technically need to be cleared
+            // (to avoid mysterious issues that could occur on subsequent new games/save reloads)
+            HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.ClearHints();
+            HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.JobDriverToLayDownBedTargetIndexCache.Clear();
+            HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.JobDriverDevWarningFilter.Clear();
         }
 
         public void Notify_WriteSettings() {

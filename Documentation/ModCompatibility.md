@@ -1,9 +1,9 @@
 ## Mod compatibility with Bed Ownership Tools
 
 Bed Ownership Tools patches much of RimWorld's code related to building ownership and Pawn sleeping routines.
-Since many other mods also do similar things, it's inevitiable that there are conflicts.
+Since many other mods also do similar things, some conflicts are unavoidable.
 
-This page lists mods where support has been added by Bed Ownership Tools.
+This page lists mods for which support has been added by Bed Ownership Tools.
 
 | Date       | Status | BOT fix version | Mod name                                     | Mod URL                                                           | Remarks                                                                                                                                                                                |
 |------------|--------|-----------------|----------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
