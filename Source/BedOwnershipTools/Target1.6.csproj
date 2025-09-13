@@ -1,13 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
-        <LangVersion>12.0</LangVersion>
-        <ImplicitUsings>disable</ImplicitUsings>
-        <Nullable>disable</Nullable>
-        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-        <PathMap>$(SolutionDir)=.\</PathMap>
         <DefineConstants>RIMWORLD__1_6</DefineConstants>
-        <AssemblyName>BedOwnershipTools</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

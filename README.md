@@ -8,7 +8,7 @@ Bed Ownership Tools reduces micromanagement of colonists' bed assignments by int
 
 Designate beds for communal use. Pin bed owner assignments so they aren't forgotten. Assign multiple beds per colonist.
 
-![communal beds](About/Preview.png)
+![hero banner](About/Preview.png)
 
 ## Communal beds
 
@@ -51,7 +51,7 @@ When a crew member is on a mission, or if they've been zoned into the gravship, 
 
 Let's say you want your ship's captain to sleep in their quarters when possible (for the fun of it), while the rest of the crew prefer to sleep at home. To do this, you can create another assignment group.
 
-![assignment groups](Collateral/DocMedia/ReadmeAssignmentGroupEditDialog.png)
+![assignment groups edit dialog](Collateral/DocMedia/ReadmeAssignmentGroupEditDialog.png)
 
 1. To do this, click on any bed, and select "Assign group" > "Edit...".
 2. A dialog will appear where you can add/rename/remove groups, and reorder their priorities.

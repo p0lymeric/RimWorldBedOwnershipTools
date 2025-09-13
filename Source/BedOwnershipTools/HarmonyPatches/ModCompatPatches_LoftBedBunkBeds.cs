@@ -468,7 +468,7 @@ namespace BedOwnershipTools {
                         }
                     }
                     if (!everMatched) {
-                        Log.Error("[BOT] Transpiler never found a ReservationUtility.ReserveSittableOrSpot getter call");
+                        Log.Error("[BOT] Transpiler never found a ReservationUtility.ReserveSittableOrSpot call");
                     }
                 }
             }

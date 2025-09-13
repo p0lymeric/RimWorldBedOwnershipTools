@@ -1,6 +1,21 @@
 <Project>
     <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
     <PropertyGroup>
+        <AssemblyName>BedOwnershipTools</AssemblyName>
+        <Product>Bed Ownership Tools</Product>
+        <AssemblyTitle>$(Product)</AssemblyTitle>
+        <Description>A RimWorld mod assembly</Description>
+        <Company>polymeric</Company>
+        <Copyright>Copyright © polymeric. All rights reserved.</Copyright>
+        <Version>1.0.7</Version>
+        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+
+        <TargetFramework>net472</TargetFramework>
+        <LangVersion>12.0</LangVersion>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <PathMap>$(MSBuildThisFileDirectory)=.\</PathMap>
+
         <ArtifactsPath>$(MSBuildThisFileDirectory)Artifacts</ArtifactsPath>
     </PropertyGroup>
 </Project>
