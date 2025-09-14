@@ -30,6 +30,10 @@ namespace BedOwnershipTools {
             if (mod.runtimeHandles.modLoftBedLoadedForCompatPatching || mod.runtimeHandles.modBunkBedsLoadedForCompatPatching) {
                 mod.harmony.PatchCategory("LoftBedBunkBedsModCompatPatches");
             }
+            if (mod.runtimeHandles.modMultiFloorsLoadedForCompatPatching) {
+                mod.harmony.PatchCategory("MultiFloorsModCompatPatches");
+                ModCompatPatches_MultiFloors.DelegatesAndRefs.ApplyHarmonyPatches(mod.harmony);
+            }
         }
     }
 }

@@ -275,6 +275,25 @@ namespace BedOwnershipTools {
                 __result = MyAssigningCandidatesGetterImpl(__instance);
                 return false;
             }
+
+            [HarmonyPriority(Priority.Last)]
+            static IEnumerable<Pawn> Postfix(IEnumerable<Pawn> __result) {
+                if (!BedOwnershipTools.Singleton.settings.showColonistsAcrossAllMapsInAssignmentDialog) {
+                    foreach (Pawn pawn in __result) {
+                        yield return pawn;
+                    }
+                }
+
+                // for compatibility with other mods that insert additional Pawns into the colonist list
+                // e.g. MultiFloors
+                // we'll take a deduplicated superset if we also touched the list
+                HashSet<Pawn> seenPawns = new HashSet<Pawn>();
+                foreach (Pawn pawn in __result) {
+                    if (seenPawns.Add(pawn)) {
+                        yield return pawn;
+                    }
+                }
+            }
         }
     }
 }

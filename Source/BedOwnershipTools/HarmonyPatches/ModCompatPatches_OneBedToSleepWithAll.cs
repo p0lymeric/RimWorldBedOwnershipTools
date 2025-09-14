@@ -4,6 +4,7 @@ using RimWorld;
 using Verse;
 using UnityEngine;
 using HarmonyLib;
+using Whathecode.System;
 
 // Summary of patches
 
@@ -12,10 +13,9 @@ namespace BedOwnershipTools {
         public static class ModCompatPatches_OneBedToSleepWithAll {
             public static class DelegatesAndRefs {
                 // CompPolygamyMode.DefineMaster()
-                // public delegate void MethodDelegate_CompPolygamyMode_DefineMaster(object thiss);
-                // public static MethodDelegate_CompPolygamyMode_DefineMaster CompPolygamyMode_DefineMaster =
-                //     (object thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-                public static MethodInfo MethodInfo_CompPolygamyMode_DefineMaster = null;
+                public delegate void MethodDelegate_CompPolygamyMode_DefineMaster(object thiss);
+                public static MethodDelegate_CompPolygamyMode_DefineMaster CompPolygamyMode_DefineMaster =
+                    (object thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
                 // CompPolygamyMode.isPolygamy
                 public static AccessTools.FieldRef<object, bool> CompPolygamyMode_isPolygamy =
@@ -29,11 +29,11 @@ namespace BedOwnershipTools {
                 public static void ApplyHarmonyPatches(Harmony harmony) {
                     Type typeCompPolygamyMode = BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode;
 
-                    // CompPolygamyMode_DefineMaster =
-                    //     AccessTools.MethodDelegate<MethodDelegate_CompPolygamyMode_DefineMaster>(
-                    //         AccessTools.Method(typeCompPolygamyMode, "DefineMaster")
-                    //     );
-                    MethodInfo_CompPolygamyMode_DefineMaster = AccessTools.Method(typeCompPolygamyMode, "DefineMaster");
+                    CompPolygamyMode_DefineMaster =
+                        DelegateHelper.CreateOpenInstanceDelegate<MethodDelegate_CompPolygamyMode_DefineMaster>(
+                            AccessTools.Method(typeCompPolygamyMode, "DefineMaster"),
+                            DelegateHelper.CreateOptions.Downcasting
+                        );
 
                     CompPolygamyMode_isPolygamy = AccessTools.FieldRefAccess<bool>(typeCompPolygamyMode, "isPolygamy");
 
@@ -48,10 +48,7 @@ namespace BedOwnershipTools {
                 object polyComp = DelegatesAndRefs.ThingWithComps_GetComp_SpecializedCompPolygamyMode(bed);
 
                 if (polyComp != null && DelegatesAndRefs.CompPolygamyMode_isPolygamy(polyComp)) {
-                    // DelegatesAndRefs.CompPolygamyMode_DefineMaster(polyComp);
-                    if (DelegatesAndRefs.MethodInfo_CompPolygamyMode_DefineMaster != null) {
-                        DelegatesAndRefs.MethodInfo_CompPolygamyMode_DefineMaster.Invoke(polyComp, null);
-                    }
+                    DelegatesAndRefs.CompPolygamyMode_DefineMaster(polyComp);
                 }
             }
 
