@@ -9,7 +9,7 @@ using System.Linq;
 // The library is distributed under the terms of the MIT license (http://opensource.org/licenses/mit-license).
 // More information can be found in "LICENSE"
 
-namespace Whathecode.System.Linq
+namespace BedOwnershipTools.Whathecode.System.Linq
 {
 	/// <summary>
 	/// TODO: Create ExceptionHelper to build and throw common exceptions.

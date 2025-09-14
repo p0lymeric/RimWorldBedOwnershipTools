@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-// using Whathecode.System.Linq;
+// using BedOwnershipTools.Whathecode.System.Linq;
 
 // https://github.com/Whathecode/NET-Standard-Library-Extension/blob/1f296b0ff7f44eedadf39854e3c94e6002c5775a/src/Whathecode.System/Reflection/Extensions.TypeInfo.cs
 
@@ -10,7 +10,7 @@ using System.Reflection;
 // The library is distributed under the terms of the MIT license (http://opensource.org/licenses/mit-license).
 // More information can be found in "LICENSE"
 
-namespace Whathecode.System.Reflection
+namespace BedOwnershipTools.Whathecode.System.Reflection
 {
 	public static partial class Extensions
 	{

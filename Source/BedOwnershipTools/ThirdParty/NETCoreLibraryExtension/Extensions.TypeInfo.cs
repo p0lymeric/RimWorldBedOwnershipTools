@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Whathecode.System.Linq;
+using BedOwnershipTools.Whathecode.System.Linq;
 
 // https://github.com/Whathecode/NET-Core-Library-Extension/blob/ba69ef355557bf0abc13a188c74557fbcb99ffba/src/Whathecode.System/Reflection/Extensions.TypeInfo.cs
 
@@ -12,7 +12,7 @@ using Whathecode.System.Linq;
 // The library is distributed under the terms of the MIT license (http://opensource.org/licenses/mit-license).
 // More information can be found in "LICENSE"
 
-namespace Whathecode.System.Reflection
+namespace BedOwnershipTools.Whathecode.System.Reflection
 {
     public static partial class Extensions
     {

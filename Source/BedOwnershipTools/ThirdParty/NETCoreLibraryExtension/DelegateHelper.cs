@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Whathecode.System.Reflection;
+using BedOwnershipTools.Whathecode.System.Reflection;
 
 // https://github.com/Whathecode/NET-Core-Library-Extension/blob/ba69ef355557bf0abc13a188c74557fbcb99ffba/src/Whathecode.System/DelegateHelper.cs
 
@@ -12,7 +12,7 @@ using Whathecode.System.Reflection;
 // The library is distributed under the terms of the MIT license (http://opensource.org/licenses/mit-license).
 // More information can be found in "LICENSE"
 
-namespace Whathecode.System
+namespace BedOwnershipTools.Whathecode.System
 {
 	/// <summary>
 	/// A helper class to do common <see cref="Delegate" /> operations.

@@ -5,7 +5,7 @@
 // The library is distributed under the terms of the MIT license (http://opensource.org/licenses/mit-license).
 // More information can be found in "LICENSE"
 
-namespace Whathecode.System
+namespace BedOwnershipTools.Whathecode.System
 {
 	/// <summary>
 	/// Helper class to do common operations on variables.

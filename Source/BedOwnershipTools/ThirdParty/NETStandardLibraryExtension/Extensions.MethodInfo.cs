@@ -8,7 +8,7 @@ using System.Reflection;
 // The library is distributed under the terms of the MIT license (http://opensource.org/licenses/mit-license).
 // More information can be found in "LICENSE"
 
-namespace Whathecode.System.Reflection
+namespace BedOwnershipTools.Whathecode.System.Reflection
 {
 	public static partial class Extensions
 	{

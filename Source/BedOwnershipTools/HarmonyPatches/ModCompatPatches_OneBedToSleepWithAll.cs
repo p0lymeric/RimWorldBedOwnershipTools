@@ -4,7 +4,7 @@ using RimWorld;
 using Verse;
 using UnityEngine;
 using HarmonyLib;
-using Whathecode.System;
+using BedOwnershipTools.Whathecode.System;
 
 // Summary of patches
 
