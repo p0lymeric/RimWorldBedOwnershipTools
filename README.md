@@ -86,6 +86,7 @@ Bed Ownership Tools has built-in support for a growing list of mods that interac
 - One bed to sleep with all - Polycule Edition
 - Loft Bed
 - Bunk Beds
+- MultiFloors
 
 An updated list is available on [GitHub](https://github.com/p0lymeric/RimWorldBedOwnershipTools/blob/master/Documentation/ModCompatibility.md).
 
