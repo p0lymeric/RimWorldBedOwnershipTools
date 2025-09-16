@@ -45,25 +45,25 @@ namespace BedOwnershipTools {
             outRect.yMin += 20f;
             outRect.yMax -= 40f + 35f + 7f + 7f;
             float num = 0f;
-            num += (float)GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority.Count * 24f;
+            num += (float)GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority.Count * 24f;
             // num += 24f * 20f;
             Rect viewRect = new Rect(0f, 0f, outRect.width, num);
             Widgets.AdjustRectsForScrollView(inRect, ref outRect, ref viewRect);
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             float y = 0f;
-            for (int i = 0; i < GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority.Count; i++) {
+            for (int i = 0; i < GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority.Count; i++) {
                 Rect rect = new Rect(0f, y, viewRect.width, 24f);
-                DoRow(rect, GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority[i], i);
+                DoRow(rect, GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority[i], i);
                 y += 24f;
             }
             Widgets.EndScrollView();
 
             Rect newAssignmentGroupButtonRect = new Rect(0f, inRect.y + inRect.height - 35f - 35f - 7f, inRect.width, 35f);
             if(Widgets.ButtonText(newAssignmentGroupButtonRect, "BedOwnershipTools.NewAssignmentGroupButton".Translate())) {
-                if (GameComponent_AssignmentGroupManager.Singleton.NewAtEnd() != null) {
+                if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.NewAtEnd() != null) {
                     SoundDefOf.Click.PlayOneShotOnCamera();
                 } else {
-                    Messages.Message("BedOwnershipTools.MaxAssignmentGroupsReached".Translate(GameComponent_AssignmentGroupManager.MAXIMUM_NONDEFAULT_GROUPS + 1), MessageTypeDefOf.RejectInput);
+                    Messages.Message("BedOwnershipTools.MaxAssignmentGroupsReached".Translate(AGMCompartment_AssignmentGroups.MAXIMUM_NONDEFAULT_GROUPS + 1), MessageTypeDefOf.RejectInput);
                     SoundDefOf.ClickReject.PlayOneShotOnCamera();
                 }
             }
@@ -104,7 +104,7 @@ namespace BedOwnershipTools {
             WidgetRow widgetRow = new WidgetRow(0f, 0f);
             if (i > 0) {
                 if (widgetRow.ButtonIcon(TexButton.ReorderUp, "BedOwnershipTools.IncreasePriorityAssignmentGroupTip".Translate(), GenUI.SubtleMouseoverColor)) {
-                    GameComponent_AssignmentGroupManager.Singleton.ExchangeByIdx(i - 1, i);
+                    GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.ExchangeByIdx(i - 1, i);
 			        SoundDefOf.Tick_High.PlayOneShotOnCamera();
 		        }
             } else {
@@ -113,9 +113,9 @@ namespace BedOwnershipTools {
                 }
                 // widgetRow.Gap(24f);
             }
-            if (i < GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority.Count - 1) {
+            if (i < GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority.Count - 1) {
                 if (widgetRow.ButtonIcon(TexButton.ReorderDown, "BedOwnershipTools.DecreasePriorityAssignmentGroupTip".Translate(), GenUI.SubtleMouseoverColor)) {
-                    GameComponent_AssignmentGroupManager.Singleton.ExchangeByIdx(i, i + 1);
+                    GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.ExchangeByIdx(i, i + 1);
                     SoundDefOf.Tick_Low.PlayOneShotOnCamera();
                 }
 		    } else {
@@ -132,7 +132,7 @@ namespace BedOwnershipTools {
             widgetRow.Gap(4f);
             using (new TextBlock(TextAnchor.LowerLeft)) {
                 // widgetRow.LabelEllipses($"{assignmentGroup.name} (ID {assignmentGroup.id})", 160f - 24f);
-                if (assignmentGroup == GameComponent_AssignmentGroupManager.Singleton.defaultAssignmentGroup) {
+                if (assignmentGroup == GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup) {
                     widgetRow.LabelEllipses(assignmentGroup.name + "*".Colorize(Color.gray), 160f - 24f);
                 } else {
                     widgetRow.LabelEllipses(assignmentGroup.name, 160f - 24f);
@@ -169,17 +169,17 @@ namespace BedOwnershipTools {
             //         Messages.Message("MaxAreasReached".Translate(10), MessageTypeDefOf.RejectInput);
             //     }
             // }
-            if (assignmentGroup != GameComponent_AssignmentGroupManager.Singleton.defaultAssignmentGroup) {
+            if (assignmentGroup != GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup) {
                 if (widgetRow.ButtonIcon(TexButton.Delete, "BedOwnershipTools.DeleteAssignmentGroupTip".Translate(), GenUI.SubtleMouseoverColor)) {
                     if (Input.GetKey(KeyCode.LeftControl)) {
-                        GameComponent_AssignmentGroupManager.Singleton.DeleteByIdx(i);
+                        GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.DeleteByIdx(i);
                     } else {
                         // TODO perhaps only issue warning if group is used like
                         // RimWorld.DrugPolicyDatabase.TryDelete
                         // NOTE the game will capitalize the formatted name for some reason
                         TaggedString taggedString = "BedOwnershipTools.DeleteAssignmentGroupConfirm".Translate(assignmentGroup.name);
                         TaggedString taggedString2 = "BedOwnershipTools.DeleteAssignmentGroupConfirmButton".Translate();
-                        Find.WindowStack.Add(new Dialog_Confirm(taggedString, taggedString2, delegate { GameComponent_AssignmentGroupManager.Singleton.DeleteByIdx(i); }));
+                        Find.WindowStack.Add(new Dialog_Confirm(taggedString, taggedString2, delegate { GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.DeleteByIdx(i); }));
                     }
                 }
             } else {

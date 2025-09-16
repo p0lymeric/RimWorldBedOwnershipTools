@@ -29,7 +29,7 @@ namespace BedOwnershipTools {
                 if (sleeperXAttrs == null) {
                     return;
                 }
-                foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority) {
+                foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
                     if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                         if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
                             sleeper.ownership.ClaimBedIfNonMedical(bed);

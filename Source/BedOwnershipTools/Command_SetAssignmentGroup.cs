@@ -17,7 +17,7 @@ namespace BedOwnershipTools {
         public override void ProcessInput(Event ev) {
             base.ProcessInput(ev);
             List<FloatMenuOption> list = new List<FloatMenuOption>();
-            foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.allAssignmentGroupsByPriority) {
+            foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
                 list.Add(new FloatMenuOption(assignmentGroup.name, delegate {
                     xAttrs.SetAssignmentGroupByInterface(assignmentGroup);
                 }, (Texture2D)null, Color.white));

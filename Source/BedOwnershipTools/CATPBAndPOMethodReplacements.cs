@@ -108,7 +108,7 @@ namespace BedOwnershipTools {
             if (newBedXAttrs == null) {
                 return false;
             }
-            if (GameComponent_AssignmentGroupManager.Singleton.defaultAssignmentGroup == null) {
+            if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup == null) {
                 // the AGM is set up during FinalizeInit when the mod is freshly added
                 // if that's the case, any bed assignments that occur prior to this point must necessarily target the default group (which will be registered during FinalizeInit)
                 // when the mod is already present in the save, AGM state will be loaded before PostLoadInit so there won't be a problem then

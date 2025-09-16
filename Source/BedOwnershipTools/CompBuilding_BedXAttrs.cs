@@ -37,13 +37,13 @@ namespace BedOwnershipTools {
         public AssignmentGroup MyAssignmentGroup {
             get {
                 if (myAssignmentGroup == null) {
-                    return GameComponent_AssignmentGroupManager.Singleton.defaultAssignmentGroup;
+                    return GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup;
                 } else {
                     return myAssignmentGroup;
                 }
             }
             set {
-                if (value == GameComponent_AssignmentGroupManager.Singleton.defaultAssignmentGroup) {
+                if (value == GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup) {
                     myAssignmentGroup = null;
                 } else {
                     myAssignmentGroup = value;
