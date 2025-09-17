@@ -41,74 +41,94 @@ namespace BedOwnershipTools {
 
         public void FinalizeInit() {
             isSubsystemActive = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
-            // allAssignmentGroupsByPriority.Count == 0 shouldn't ever be triggered unless save is corrupted
+
+            // allAssignmentGroupsByPriority == null occurs in a new game or when the mod is newly added to the save
+            // allAssignmentGroupsByPriority.Count == 0 should never happen but is checked out of prudence
             if (allAssignmentGroupsByPriority == null || allAssignmentGroupsByPriority.Count == 0) {
                 allAssignmentGroupsByPriority = new List<AssignmentGroup>();
-                // These are starter custom groups created on first init
+                // Starter custom groups created on first init
                 defaultAssignmentGroup = new AssignmentGroup(0, "BedOwnershipTools.Default".Translate(), false);
                 allAssignmentGroupsByPriority.Add(defaultAssignmentGroup);
                 allAssignmentGroupsByPriority.Add(new AssignmentGroup(1, "BedOwnershipTools.Home".Translate(), true));
                 allAssignmentGroupsByPriority.Add(new AssignmentGroup(2, "BedOwnershipTools.Ship".Translate(), true));
             }
 
-            // shouldn't ever be triggered unless save is corrupted
+            // Should never happen since we don't allow deletion of the default assignment group
             if (defaultAssignmentGroup == null) {
                 defaultAssignmentGroup = allAssignmentGroupsByPriority[0];
             }
 
-            // could also use PawnsFinder.AllMapsWorldAndTemporary_AliveOrDead
-            foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
-                Pawn pawn = (Pawn)pawnXAttrs.parent;
-                Building_Bed ownedBed = pawn.ownership.OwnedBed;
-                if (ownedBed != null) {
-                    CompBuilding_BedXAttrs bedXAttrs = ownedBed.GetComp<CompBuilding_BedXAttrs>();
-                    if (bedXAttrs == null) {
-                        Log.Warning($"[BOT] A Pawn ({pawn.Label}) owns a bed ({ownedBed.GetUniqueLoadID()}) in its internal ownership list that doesn't have a CompBuilding_BedXAttrs component.");
-                    } else if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
-                        // just out of paranoia
-                        if (ownedBed != otherBed) {
-                            Log.Warning("[BOT] Pawn has inconsistent beds stored in internal and overlay ownership fields.");
+            // None of the following fixups are necessary if the subsystem is deactivated as:
+            // 1) on a save reload past a disable, relevant structures will not be loaded and will be initialized as empty
+            // 2) on a settings toggle during the game, Notify_WriteSettings will clear the relevant structures
+            if (isSubsystemActive) {
+                foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
+                    Pawn pawn = (Pawn)pawnXAttrs.parent;
+                    // The game does not always call destroy routines on "practically" destroyed Things
+                    // e.g. abandoning a map tile will not trigger ownership unassignment routines
+                    // Null refs are saved and then removed after the next load, following the game's actual handling
+                    List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
+                    foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
+                        if (bed == null) {
+                            Log.Warning($"[BOT] A Pawn ({pawn.Label}) has a null bed reference stored in its overlay ownership field. This may occur if you've recently abandoned a settlement before your last save.");
+                            assignmentGroupsToRemove.Add(assignmentGroup);
                         }
-                    } else {
-                        if (isSubsystemActive) {
-                            // needed to reconcile upon first introducing mod to a save
-                            // should technically be redundant with the TryAssignPawn call, but in the case of a desync,
-                            // TryAssignPawn won't resynchronize the map because of an IsOwner check that only checks the bed's overlay
+                    }
+                    foreach (AssignmentGroup assignmentGroup in assignmentGroupsToRemove) {
+                        pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
+                    }
+
+                    Building_Bed ownedBed = pawn.ownership.OwnedBed;
+                    if (ownedBed != null) {
+                        CompBuilding_BedXAttrs bedXAttrs = ownedBed.GetComp<CompBuilding_BedXAttrs>();
+                        if (bedXAttrs == null) {
+                            // Should never happen since we patch CompBuilding_BedXAttrs to be added onto Building_Bed instances
+                            Log.Warning($"[BOT] A Pawn ({pawn.Label}) owns a bed ({ownedBed.GetUniqueLoadID()}) in its internal ownership list that doesn't have a CompBuilding_BedXAttrs component.");
+                        } else if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
+                            // Should never happen since we ensure that if a Pawn owns a bed in the overlay,
+                            // its internally assigned bed will either be null or one of the beds in the overlay
+                            if (ownedBed != otherBed) {
+                                Log.Warning($"[BOT] A Pawn has inconsistent beds stored in internal ({ownedBed.GetUniqueLoadID()}) and overlay ({otherBed.GetUniqueLoadID()}) ownership fields.");
+                            }
+                        } else {
+                            // Setting assignmentGroupToOwnedBedMap is technically redundant with the TryAssignPawn call
+                            // (however, corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to prisoners or babies, "tri86" for repro)
                             pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] = ownedBed;
-                            // needed during same save reinit
+                            // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                             CATPBAndPOMethodReplacements.TryAssignPawn(ownedBed.CompAssignableToPawn, pawn);
                         }
+                    } else {
+                        // Ensures that a Pawn always has an active bed if they own at least one bed
+                        // (corrects save data from mod versions before and including 1.0.8)
+                        foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
+                            if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                                bed.CompAssignableToPawn.ForceAddPawn(pawn);
+                                HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
+                                break;
+                            }
+                        }
                     }
-                }
-                // just out of paranoia
-                // actually the paranoia is real
-                // abandoning a map tile will not trigger ownership unassignment routines
-                // we'll encounter null references to the former settlement's beds after the next load
-                List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
-                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
-                    if (bed == null) {
-                        Log.Warning("[BOT] Pawn has a null bed reference stored in overlay ownership field. This is expected if you've recently abandoned a settlement before your last save.");
-                        assignmentGroupsToRemove.Add(assignmentGroup);
-                    }
-                }
-                foreach (AssignmentGroup assignmentGroup in assignmentGroupsToRemove) {
-                    pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
                 }
             }
 
-            foreach (CompBuilding_BedXAttrs bedXAttrs in parent.compBuilding_BedXAttrsRegistry) {
-                Building_Bed bed = (Building_Bed)bedXAttrs.parent;
-                if (isSubsystemActive) {
+            if (isSubsystemActive) {
+                foreach (CompBuilding_BedXAttrs bedXAttrs in parent.compBuilding_BedXAttrsRegistry) {
+                    Building_Bed bed = (Building_Bed)bedXAttrs.parent;
                     CompAssignableToPawn catp = bed.GetComp<CompAssignableToPawn>();
-                    if(!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
-                        // bedXAttrs.assignedPawnsOverlay.AddRange(catp.AssignedPawns.Except(assignedPawnsOverlay)); // done by TryAssignPawn
+                    if (catp == null) {
+                        // Should never happen since Building_Bed's base implementation fundamentally depends on having a CompAssignableToPawn instance
+                        Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) doesn't have a CompAssignableToPawn component.");
+                    } else if (!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
+                        // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                         bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
+                        // assignedPawnsOverlay is initialized by save data load or by calling TryAssignPawn through the compPawnXAttrsRegistry loop above
                         foreach (Pawn pawn in bed.CompAssignableToPawn.AssignedPawnsForReading) {
                             if (!bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
+                                // Should never happen because we ensure that the overlay is a superset of the internal ownership list
                                 Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) in its internal ownership list but not its overlay list.");
                             }
                         }
-                        // if I am initted and my owner doesn't actually have a map entry for me, unlink me from them
+                        // Remove any pawns from assignedPawnsOverlay who don't have the bed assigned in their overlay assignedPawns tracker
                         List<Pawn> pawnsToRemove = new List<Pawn>();
                         foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
                             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
@@ -116,6 +136,8 @@ namespace BedOwnershipTools {
                                 continue;
                             }
                             if (!pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
+                                // (corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to babies becoming children, "tri88" for repro)
+                                // sometimes occurs with Hospitality too--seems to be harmless, "tri96" for repro
                                 Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
                                 pawnsToRemove.Add(pawn);
                             }

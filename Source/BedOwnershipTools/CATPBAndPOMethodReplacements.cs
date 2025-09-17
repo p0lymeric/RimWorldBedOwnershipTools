@@ -109,10 +109,11 @@ namespace BedOwnershipTools {
                 return false;
             }
             if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup == null) {
-                // the AGM is set up during FinalizeInit when the mod is freshly added
-                // if that's the case, any bed assignments that occur prior to this point must necessarily target the default group (which will be registered during FinalizeInit)
-                // when the mod is already present in the save, AGM state will be loaded before PostLoadInit so there won't be a problem then
-                Log.Warning("[BOT] Something tried to claim a bed but the AssigmentGroupManager hasn't been set up in this save yet. (This should be harmless if Bed Ownership Tools was newly added, in which case the claim will be placed in the default group.)");
+                // When the mod is freshly added, AGMCompartment_AssignmentGroups state is invalid until FinalizeInit.
+                // If that is the case when the function is called, we return and trust that the claim will be handled during FinalizeInit.
+                // When the mod is already present in the save, AGM state will be loaded before PostLoadInit, so the claim would would be processed normally.
+                // Hospitality is an example of a mod that can claim beds before FinalizeInit.
+                Log.Warning($"[BOT] A Pawn ({pawn.Label}) tried to claim a bed but the AssigmentGroupManager hasn't been set up in this save yet. (This is harmless if Bed Ownership Tools was newly added, in which case the claim will be placed in the default group.)");
                 return false;
             }
             if (IsOwner(newBed, pawn) || newBed.Medical) {

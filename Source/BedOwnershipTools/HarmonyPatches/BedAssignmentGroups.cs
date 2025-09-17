@@ -151,20 +151,38 @@ namespace BedOwnershipTools {
                 setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
             }
 
-            static void Postfix(Pawn_Ownership __instance, ref bool __result) {
+            static void Prefix(Pawn_Ownership __instance, ref bool __result, out Building_Bed __state) {
+                __state = __instance.OwnedBed;
+            }
+
+            static void Postfix(Pawn_Ownership __instance, ref bool __result, Building_Bed __state) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (!enableBedAssignmentGroups) {
                     ClearHints();
                     return;
                 }
+                Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                 if (!setBeforeCallingToNotInvalidateAllOverlays) {
-                    Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                     if (!setBeforeCallingToInvalidateAllOverlaysWithoutWarning) {
                         if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging) {
                             Log.Warning($"[BOT] Pawn_Ownership.UnclaimBed was called, but Bed Ownership Tools doesn't have special handling for the calling case. All of {pawn.Label}'s beds have been unassigned, as it is the safest default way to proceed.");
                         }
                     }
                     CATPBAndPOMethodReplacements.UnclaimBedAll(pawn);
+                } else if (__result) {
+                    // activate another bed if possible
+                    CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                    if (pawnXAttrs != null) {
+                        foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
+                            if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                                if (bed != __state) {
+                                    bed.CompAssignableToPawn.ForceAddPawn(pawn);
+                                    HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
                 ClearHints();
             }
