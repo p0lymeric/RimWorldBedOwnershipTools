@@ -118,7 +118,7 @@ namespace BedOwnershipTools {
                     if (catp == null) {
                         // Should never happen since Building_Bed's base implementation fundamentally depends on having a CompAssignableToPawn instance
                         Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) doesn't have a CompAssignableToPawn component.");
-                    } else if (!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
+                    } else if (!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                         // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                         bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
                         // assignedPawnsOverlay is initialized by save data load or by calling TryAssignPawn through the compPawnXAttrsRegistry loop above

@@ -59,7 +59,7 @@ namespace BedOwnershipTools {
                     if (x.parent.GetComp<CompBuilding_BedXAttrs>() == null) {
                         return;
                     }
-                    if(ModsConfig.BiotechActive && x.parent.def == ThingDefOf.DeathrestCasket) {
+                    if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(x.parent.def)) {
                         return;
                     }
                     __instance = new CATPBGroupAssignmentOverlayAdapter(x);

@@ -120,7 +120,7 @@ namespace BedOwnershipTools {
                 return false;
             }
             // no support for deathrest caskets
-            if (ModsConfig.BiotechActive && newBed.def == ThingDefOf.DeathrestCasket) {
+            if (IsDefOfDeathrestCasket(newBed.def)) {
             //     UnclaimDeathrestCasket();
             //     newBed.CompAssignableToPawn.ForceAddPawn(pawn);
             //     AssignedDeathrestCasket = newBed;
@@ -239,6 +239,10 @@ namespace BedOwnershipTools {
                 }
             }
             return true;
+        }
+
+        public static bool IsDefOfDeathrestCasket(ThingDef thingDef) {
+            return ModsConfig.BiotechActive && thingDef == ThingDefOf.DeathrestCasket;
         }
     }
 }

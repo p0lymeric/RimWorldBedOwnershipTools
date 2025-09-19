@@ -100,7 +100,7 @@ namespace BedOwnershipTools {
             }
             LastInterfaceActionFrame = Time.frameCount;
             foreach (Building_Bed bed in Find.Selector.SelectedObjects.OfType<Building_Bed>()) {
-                if(ModsConfig.BiotechActive && bed.def == ThingDefOf.DeathrestCasket) {
+                if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                     continue;
                 }
                 CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
@@ -187,7 +187,7 @@ namespace BedOwnershipTools {
                 }
                 if (BedOwnershipTools.Singleton.settings.enableBedAssignmentPinning) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
+                        if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                             if(!this.isAssignedToCommunity) {
                                 yield return toggleIsAssignmentPinned;
                             }
@@ -198,7 +198,7 @@ namespace BedOwnershipTools {
                 Command_SetAssignmentGroup selectAssignmentGroup = new Command_SetAssignmentGroup(this);
                 if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
+                        if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                             if (disableGizmos) {
                                 selectAssignmentGroup.Disable();
                             }
@@ -227,7 +227,7 @@ namespace BedOwnershipTools {
                 }
                 if (BedOwnershipTools.Singleton.settings.enableCommunalBeds) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!ModsConfig.BiotechActive || bed.def != ThingDefOf.DeathrestCasket) {
+                        if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                             yield return toggleIsAssignedToCommunity;
                         }
                     }

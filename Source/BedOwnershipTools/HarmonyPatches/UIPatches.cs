@@ -18,7 +18,7 @@ namespace BedOwnershipTools {
         [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.GetInspectString))]
         public class Patch_Building_Bed_GetInspectString {
             static bool Prefix(Building_Bed __instance, ref string __result) {
-                if(ModsConfig.BiotechActive && __instance.def == ThingDefOf.DeathrestCasket) {
+                if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(__instance.def)) {
                     return true;
                 }
                 CompBuilding_BedXAttrs xAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
@@ -125,7 +125,7 @@ namespace BedOwnershipTools {
                 if (__instance.Medical || Find.CameraDriver.CurrentZoom != CameraZoomRange.Closest || !__instance.CompAssignableToPawn.PlayerCanSeeAssignments) {
                     return false;
                 }
-                if (ModsConfig.BiotechActive && __instance.def == ThingDefOf.DeathrestCasket) {
+                if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(__instance.def)) {
                     return true;
                 }
 

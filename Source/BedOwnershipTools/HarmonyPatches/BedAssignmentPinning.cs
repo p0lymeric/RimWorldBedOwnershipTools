@@ -24,7 +24,7 @@ namespace BedOwnershipTools {
                         return;
                     }
                     // pass through original results for deathrest caskets, medical beds, prisoner beds, and communal beds
-                    if ((ModsConfig.BiotechActive && building_Bed.def == ThingDefOf.DeathrestCasket) || building_Bed.Medical || building_Bed.ForPrisoners || bedThingXAttrs.IsAssignedToCommunity) {
+                    if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(building_Bed.def) || building_Bed.Medical || building_Bed.ForPrisoners || bedThingXAttrs.IsAssignedToCommunity) {
                         return;
                     }
 
