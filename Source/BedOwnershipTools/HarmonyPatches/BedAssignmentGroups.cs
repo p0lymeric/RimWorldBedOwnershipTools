@@ -30,7 +30,7 @@ namespace BedOwnershipTools {
                     return;
                 }
                 foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                    if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                    if (sleeperXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                         if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
                             sleeper.ownership.ClaimBedIfNonMedical(bed);
                             if (BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
@@ -174,7 +174,7 @@ namespace BedOwnershipTools {
                     CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
                     if (pawnXAttrs != null) {
                         foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                            if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                                 if (bed != __state) {
                                     bed.CompAssignableToPawn.ForceAddPawn(pawn);
                                     HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
@@ -423,7 +423,7 @@ namespace BedOwnershipTools {
                     return;
                 }
                 List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
-                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
+                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                     if (pawn.ageTracker.CurLifeStage.bodySizeFactor > bed.def.building.bed_maxBodySize) {
                         assignmentGroupsToRemove.Add(assignmentGroup);
                     }
@@ -448,7 +448,7 @@ namespace BedOwnershipTools {
                     return;
                 }
                 List<AssignmentGroup> bedsAGToDistribute = new List<AssignmentGroup>();
-                foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupToOwnedBedMap) {
+                foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
                     if (bedXAttrs == null) {
                         continue;
@@ -479,7 +479,7 @@ namespace BedOwnershipTools {
                     return;
                 }
                 List<AssignmentGroup> bedsAGToDistribute = new List<AssignmentGroup>();
-                foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupToOwnedBedMap) {
+                foreach (var (assignmentGroup, bed) in initXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                     CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
                     if (bedXAttrs == null) {
                         continue;
@@ -514,7 +514,7 @@ namespace BedOwnershipTools {
                     return;
                 }
                 List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
-                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
+                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                     // if (pawn.ownership.OwnedBed.CompAssignableToPawn.IdeoligionForbids(pawn)) {
                     //     assignmentGroupsToRemove.Add(assignmentGroup);
                     // }
@@ -548,7 +548,7 @@ namespace BedOwnershipTools {
                     return;
                 }
                 List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
-                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
+                foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                     if (((bed.ForPrisoners && !pawn.IsPrisoner && !PawnUtility.IsBeingArrested(pawn)) || (!bed.ForPrisoners && pawn.IsPrisoner) || (bed.ForColonists && pawn.HostFaction == null))) {
                         assignmentGroupsToRemove.Add(assignmentGroup);
                     }

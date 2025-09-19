@@ -150,7 +150,7 @@ namespace BedOwnershipTools {
                     // pick and activate the highest priority reachable bed
                     if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                         foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                            if (sleeperXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed candidateBed)) {
+                            if (sleeperXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed candidateBed)) {
                                 if (sleeper.Map == candidateBed.Map && sleeper.CanReach(candidateBed, PathEndMode.OnCell, Danger.Deadly)) {
                                     return candidateBed;
                                 } else if (DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, candidateBed, null)) {

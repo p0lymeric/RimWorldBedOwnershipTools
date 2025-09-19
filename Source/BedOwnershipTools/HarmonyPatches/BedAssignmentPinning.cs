@@ -47,7 +47,7 @@ namespace BedOwnershipTools {
                         if (sleeperXAttrs == null) {
                             return;
                         }
-                        foreach(var (assignmentGroup, bed) in sleeperXAttrs.assignmentGroupToOwnedBedMap) {
+                        foreach(var (assignmentGroup, bed) in sleeperXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                             if (building_Bed == bed) {
                                 return;
                             }

@@ -63,7 +63,7 @@ namespace BedOwnershipTools {
 
         public override void ExposeData() {
 		    base.ExposeData();
-            agmCompartment_AssignmentGroups.ExposeData();
+            agmCompartment_AssignmentGroups.ShallowExposeData();
 	    }
     }
 }

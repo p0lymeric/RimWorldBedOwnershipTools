@@ -8,13 +8,16 @@ using Verse.AI;
 
 namespace BedOwnershipTools {
     public class CompPawnXAttrs : ThingComp {
-        // Augments Pawn_Ownership.intOwnedBed
-        // A pawn's internal tracker of all beds that it owns
-        public Dictionary<AssignmentGroup, Building_Bed> assignmentGroupToOwnedBedMap = new Dictionary<AssignmentGroup, Building_Bed>();
-        private List<AssignmentGroup> assignmentGroupTmpListForScribing = new List<AssignmentGroup>();
-        private List<Building_Bed> ownedBedTmpListForScribing = new List<Building_Bed>();
+        public PawnXAttrs_AssignmentGroupTracker assignmentGroupTracker;
+
+        public CompPawnXAttrs() : base() {
+            this.assignmentGroupTracker = new(this);
+        }
 
         public override void Initialize(CompProperties props) {
+            if (this.parent is not Pawn) {
+                Log.Error("[BOT] Tried to create CompPawnXAttrs under a non-Pawn parent ThingWithComps.");
+            }
             GameComponent_AssignmentGroupManager.Singleton.compPawnXAttrsRegistry.Add(this);
         }
 
@@ -24,20 +27,8 @@ namespace BedOwnershipTools {
 
         public override void PostExposeData() {
 		    base.PostExposeData();
-            if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
-                Scribe_Collections.Look(
-                    ref this.assignmentGroupToOwnedBedMap,
-                    "BedOwnershipTools_assignmentGroupToOwnedBedMap",
-                    LookMode.Reference, LookMode.Reference,
-                    ref assignmentGroupTmpListForScribing, ref ownedBedTmpListForScribing
-                );
-            }
-            if (Scribe.mode == LoadSaveMode.PostLoadInit) {
-                if (assignmentGroupToOwnedBedMap == null) {
-                    assignmentGroupToOwnedBedMap = new Dictionary<AssignmentGroup, Building_Bed>();
-                }
-                // rest of fixup including null handling is done in GameComponent_AssignmentGroupManager
-		    }
+
+            assignmentGroupTracker.ShallowExposeData();
 	    }
 
         public override string CompInspectStringExtra() {
@@ -73,8 +64,16 @@ namespace BedOwnershipTools {
                     stringBuilder.AppendInNewLine("INTERNAL: " + pawn.ownership.OwnedBed.GetUniqueLoadID());
                 }
 
-                foreach(var (assignmentGroup, bed3) in this.assignmentGroupToOwnedBedMap) {
+                foreach(var (assignmentGroup, bed3) in this.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                     stringBuilder.AppendInNewLine(assignmentGroup.name + ": " + bed3.GetUniqueLoadID());
+                }
+
+                if (pawn.ownership.AssignedDeathrestCasket != null) {
+                    stringBuilder.AppendInNewLine("INTERNALDC: " + pawn.ownership.AssignedDeathrestCasket.GetUniqueLoadID());
+                }
+
+                foreach(var (assignmentGroup, deathrestCasket) in this.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap) {
+                    stringBuilder.AppendInNewLine(assignmentGroup.name + "DC: " + deathrestCasket.GetUniqueLoadID());
                 }
             }
             return stringBuilder.ToString();

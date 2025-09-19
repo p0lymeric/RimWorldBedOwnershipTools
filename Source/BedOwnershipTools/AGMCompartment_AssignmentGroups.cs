@@ -27,7 +27,7 @@ namespace BedOwnershipTools {
             if (isSubsystemActive ^ BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                 foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
                     Pawn pawn = (Pawn)pawnXAttrs.parent;
-                    pawnXAttrs.assignmentGroupToOwnedBedMap.Clear();
+                    pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Clear();
                 }
                 foreach (CompBuilding_BedXAttrs bedXAttrs in parent.compBuilding_BedXAttrsRegistry) {
                     Building_Bed bed = (Building_Bed)bedXAttrs.parent;
@@ -68,14 +68,14 @@ namespace BedOwnershipTools {
                     // e.g. abandoning a map tile will not trigger ownership unassignment routines
                     // Null refs are saved and then removed after the next load, following the game's actual handling
                     List<AssignmentGroup> assignmentGroupsToRemove = new List<AssignmentGroup>();
-                    foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
+                    foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                         if (bed == null) {
                             Log.Warning($"[BOT] A Pawn ({pawn.Label}) has a null bed reference stored in its overlay ownership field. This may occur if you've recently abandoned a settlement before your last save.");
                             assignmentGroupsToRemove.Add(assignmentGroup);
                         }
                     }
                     foreach (AssignmentGroup assignmentGroup in assignmentGroupsToRemove) {
-                        pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
+                        pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
                     }
 
                     Building_Bed ownedBed = pawn.ownership.OwnedBed;
@@ -84,7 +84,7 @@ namespace BedOwnershipTools {
                         if (bedXAttrs == null) {
                             // Should never happen since we patch CompBuilding_BedXAttrs to be added onto Building_Bed instances
                             Log.Warning($"[BOT] A Pawn ({pawn.Label}) owns a bed ({ownedBed.GetUniqueLoadID()}) in its internal ownership list that doesn't have a CompBuilding_BedXAttrs component.");
-                        } else if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
+                        } else if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
                             // Should never happen since we ensure that if a Pawn owns a bed in the overlay,
                             // its internally assigned bed will either be null or one of the beds in the overlay
                             if (ownedBed != otherBed) {
@@ -93,7 +93,7 @@ namespace BedOwnershipTools {
                         } else {
                             // Setting assignmentGroupToOwnedBedMap is technically redundant with the TryAssignPawn call
                             // (however, corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to prisoners or babies, "tri86" for repro)
-                            pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] = ownedBed;
+                            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] = ownedBed;
                             // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                             CATPBAndPOMethodReplacements.TryAssignPawn(ownedBed.CompAssignableToPawn, pawn);
                         }
@@ -101,7 +101,7 @@ namespace BedOwnershipTools {
                         // Ensures that a Pawn always has an active bed if they own at least one bed
                         // (corrects save data from mod versions before and including 1.0.8)
                         foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                            if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                                 bed.CompAssignableToPawn.ForceAddPawn(pawn);
                                 HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
                                 break;
@@ -135,7 +135,7 @@ namespace BedOwnershipTools {
                             if (pawnXAttrs == null) {
                                 continue;
                             }
-                            if (!pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
+                            if (!pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
                                 // (corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to babies becoming children, "tri88" for repro)
                                 // sometimes occurs with Hospitality too--seems to be harmless, "tri96" for repro
                                 Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
@@ -164,7 +164,7 @@ namespace BedOwnershipTools {
 
         public void UnlinkAllRefsTo(AssignmentGroup assignmentGroup) {
             foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
-                if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                     // to generate the message that a pawn has become unlinked from a bed
                     HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
                 }
@@ -201,7 +201,7 @@ namespace BedOwnershipTools {
             return newAG;
         }
 
-        public void ExposeData() {
+        public void ShallowExposeData() {
             Scribe_Collections.Look(ref this.allAssignmentGroupsByPriority, "allAssignmentGroupsByPriority", LookMode.Deep);
             Scribe_References.Look(ref this.defaultAssignmentGroup, "defaultAssignmentGroup");
 	    }

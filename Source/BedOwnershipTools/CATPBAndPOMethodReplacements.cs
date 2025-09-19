@@ -10,7 +10,7 @@ namespace BedOwnershipTools {
             }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
             if (pawnXAttrs != null) {
-                return pawnXAttrs.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
+                return pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
             }
             return false;
         }
@@ -91,7 +91,7 @@ namespace BedOwnershipTools {
             if (pawnXAttrs == null) {
                 return;
             }
-            // Building_Bed ownedBed = pawnXAttrs.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup]; // need null check
+            // Building_Bed ownedBed = pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup]; // need null check
             UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
             // ownedBed?.NotifyRoomAssignedPawnsChanged();
             if (uninstall && !bedXAttrs.uninstalledAssignedPawnsOverlay.Contains(pawn)) {
@@ -136,7 +136,7 @@ namespace BedOwnershipTools {
                 }
             }
             ForceAddPawn(newBed.CompAssignableToPawn, pawn); // newBed.CompAssignableToPawn.ForceAddPawn(pawn);
-            pawnXAttrs.assignmentGroupToOwnedBedMap[newBedXAttrs.MyAssignmentGroup] = newBed; //OwnedBed = newBed;
+            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[newBedXAttrs.MyAssignmentGroup] = newBed; //OwnedBed = newBed;
             // if (pawn.IsFreeman && newBed.CompAssignableToPawn.IdeoligionForbids(pawn)) {
             //     Log.Error("Assigned " + pawn.GetUniqueLoadID() + " to a bed against their or occupants' ideo.");
             // }
@@ -154,12 +154,12 @@ namespace BedOwnershipTools {
                 return false;
             }
             bool unassignedAtLeastOneBed = false;
-            foreach(var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupToOwnedBedMap) {
+            foreach(var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap) {
                 ForceRemovePawn(bed.CompAssignableToPawn, pawn);
-                // pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
+                // pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
                 unassignedAtLeastOneBed = true;
             }
-            pawnXAttrs.assignmentGroupToOwnedBedMap.Clear();
+            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Clear();
             return unassignedAtLeastOneBed;
         }
 
@@ -168,9 +168,9 @@ namespace BedOwnershipTools {
             if (pawnXAttrs == null) {
                 return false;
             }
-            if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
+            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
                 ForceRemovePawn(oldBed.CompAssignableToPawn, pawn);
-                pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
+                pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
                 return true;
             }
             return false;

@@ -58,6 +58,9 @@ namespace BedOwnershipTools {
         private static int LastInterfaceActionFrame = -1;
 
         public override void Initialize(CompProperties props) {
+            if (this.parent is not Building_Bed) {
+                Log.Error("[BOT] Tried to create CompBuilding_BedXAttrs under a non-Building_Bed parent ThingWithComps.");
+            }
             GameComponent_AssignmentGroupManager.Singleton.compBuilding_BedXAttrsRegistry.Add(this);
         }
 
@@ -112,7 +115,7 @@ namespace BedOwnershipTools {
                         if (pawnXAttrs == null) {
                             continue;
                         }
-                        if (pawnXAttrs.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
+                        if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
                             if (pawn.ownership.OwnedBed == oldBed) {
                                 oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
                                 bed.CompAssignableToPawn.ForceAddPawn(pawn);
@@ -120,8 +123,8 @@ namespace BedOwnershipTools {
                             }
                         }
                         CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, assignmentGroup);
-                        pawnXAttrs.assignmentGroupToOwnedBedMap.Remove(oldAssignmentGroup);
-                        pawnXAttrs.assignmentGroupToOwnedBedMap[assignmentGroup] = bed;
+                        pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(oldAssignmentGroup);
+                        pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[assignmentGroup] = bed;
                     }
                     bedXAttrs.MyAssignmentGroup = assignmentGroup;
                 }
