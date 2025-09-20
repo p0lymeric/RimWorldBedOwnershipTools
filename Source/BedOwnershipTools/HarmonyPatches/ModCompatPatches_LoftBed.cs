@@ -16,11 +16,11 @@ namespace BedOwnershipTools {
                 public static void ApplyHarmonyPatches(Harmony harmony) {
                     harmony.Patch(
                         AccessTools.Method("Nekoemi.LoftBed.Patch_CurrentBed:Postfix"),
-                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubRetTranspiler)
+                        transpiler: new HarmonyMethod(HarmonyPatches.TranspilerTemplates.StubRetTranspiler)
                     );
                     harmony.Patch(
                         AccessTools.Method("Nekoemi.LoftBed.Patch_GetCurOccupant:Postfix"),
-                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubRetTranspiler)
+                        transpiler: new HarmonyMethod(HarmonyPatches.TranspilerTemplates.StubRetTranspiler)
                     );
                 }
             }

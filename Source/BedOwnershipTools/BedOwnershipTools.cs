@@ -56,6 +56,11 @@ namespace BedOwnershipTools {
                 ref settings.enableBedAssignmentGroups,
                 "BedOwnershipTools.EnableBedAssignmentGroups_Tooltip".Translate()
             );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.UseAssignmentGroupsForDeathrestCaskets".Translate(),
+                ref settings.useAssignmentGroupsForDeathrestCaskets,
+                "BedOwnershipTools.UseAssignmentGroupsForDeathrestCaskets_Tooltip".Translate()
+            );
 
             listingStandard.GapLine();
             listingStandard.CheckboxLabeled(

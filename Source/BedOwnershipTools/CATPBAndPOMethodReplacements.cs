@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
@@ -10,7 +11,10 @@ namespace BedOwnershipTools {
             }
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
             if (pawnXAttrs != null) {
-                return pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup);
+                return thiss switch {
+                    CompAssignableToPawn_DeathrestCasket => pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.ContainsKey(bedXAttrs.MyAssignmentGroup),
+                    _ => pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup)
+                };
             }
             return false;
         }
@@ -78,8 +82,16 @@ namespace BedOwnershipTools {
                 return;
             }
             Building_Bed building_Bed = (Building_Bed)thiss.parent;
-            ClaimBedIfNotMedical(pawn, building_Bed);
+            switch (thiss) {
+                case CompAssignableToPawn_DeathrestCasket:
+                    ClaimDeathrestCasket(pawn, building_Bed);
+                    break;
+                default:
+                    ClaimBedIfNonMedical(pawn, building_Bed);
+                    break;
+            }
             // building_Bed.NotifyRoomAssignedPawnsChanged();
+            // NOTE base game implementation doesn't call this for deathrest caskets
             bedXAttrs.uninstalledAssignedPawnsOverlay.Remove(pawn);
         }
         public static void TryUnassignPawn(CompAssignableToPawn thiss, Pawn pawn, bool sort = true, bool uninstall = false) {
@@ -92,14 +104,22 @@ namespace BedOwnershipTools {
                 return;
             }
             // Building_Bed ownedBed = pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup]; // need null check
-            UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
+            switch (thiss) {
+                case CompAssignableToPawn_DeathrestCasket:
+                    UnclaimDeathrestCasketDirected(pawn, bedXAttrs.MyAssignmentGroup);
+                    break;
+                default:
+                    UnclaimBedDirected(pawn, bedXAttrs.MyAssignmentGroup);
+                    break;
+            }
             // ownedBed?.NotifyRoomAssignedPawnsChanged();
+            // NOTE base game implementation doesn't call this for deathrest caskets
             if (uninstall && !bedXAttrs.uninstalledAssignedPawnsOverlay.Contains(pawn)) {
                 bedXAttrs.uninstalledAssignedPawnsOverlay.Add(pawn);
             }
         }
 
-        public static bool ClaimBedIfNotMedical(Pawn pawn, Building_Bed newBed) {
+        public static bool ClaimBedIfNonMedical(Pawn pawn, Building_Bed newBed) {
             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
             if (pawnXAttrs == null) {
                 return false;
@@ -119,13 +139,11 @@ namespace BedOwnershipTools {
             if (IsOwner(newBed, pawn) || newBed.Medical) {
                 return false;
             }
-            // no support for deathrest caskets
             if (IsDefOfDeathrestCasket(newBed.def)) {
-            //     UnclaimDeathrestCasket();
-            //     newBed.CompAssignableToPawn.ForceAddPawn(pawn);
-            //     AssignedDeathrestCasket = newBed;
-            //     return true;
-                return false;
+                UnclaimDeathrestCasketDirected(pawn, newBedXAttrs.MyAssignmentGroup);
+                ForceAddPawn(newBed.CompAssignableToPawn, pawn);
+                pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[newBedXAttrs.MyAssignmentGroup] = newBed;
+                return true;
             }
             UnclaimBedDirected(pawn, newBedXAttrs.MyAssignmentGroup);
             if (newBedXAttrs.assignedPawnsOverlay.Count == newBed.SleepingSlotsCount) {
@@ -135,8 +153,8 @@ namespace BedOwnershipTools {
                     UnclaimBedDirected(pawnToEvict, newBedXAttrs.MyAssignmentGroup);
                 }
             }
-            ForceAddPawn(newBed.CompAssignableToPawn, pawn); // newBed.CompAssignableToPawn.ForceAddPawn(pawn);
-            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[newBedXAttrs.MyAssignmentGroup] = newBed; //OwnedBed = newBed;
+            ForceAddPawn(newBed.CompAssignableToPawn, pawn);
+            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[newBedXAttrs.MyAssignmentGroup] = newBed;
             // if (pawn.IsFreeman && newBed.CompAssignableToPawn.IdeoligionForbids(pawn)) {
             //     Log.Error("Assigned " + pawn.GetUniqueLoadID() + " to a bed against their or occupants' ideo.");
             // }
@@ -145,6 +163,41 @@ namespace BedOwnershipTools {
             //     Log.Warning(pawn.LabelCap + " claimed medical bed.");
             //     UnclaimBedDirected(pawn, newBedRDA.innerParentXAttrs.MyAssignmentGroup);
             // }
+            return true;
+        }
+
+        public static bool ClaimDeathrestCasket(Pawn pawn, Building_Bed deathrestCasket) {
+            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return false;
+            }
+            CompBuilding_BedXAttrs bedXAttrs = deathrestCasket.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return false;
+            }
+            if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.defaultAssignmentGroup == null) {
+                Log.Warning($"[BOT] A Pawn ({pawn.Label}) tried to claim a deathrest casket but the AssigmentGroupManager hasn't been set up in this save yet. (This is harmless if Bed Ownership Tools was newly added, in which case the claim will be placed in the default group.)");
+                return false;
+            }
+            if (!ModsConfig.BiotechActive) {
+                return false;
+            }
+            if (bedXAttrs.assignedPawnsOverlay.Contains(pawn))
+            {
+                return false;
+            }
+            UnclaimDeathrestCasketDirected(pawn, bedXAttrs.MyAssignmentGroup);
+            if (bedXAttrs.assignedPawnsOverlay.Count == 0) {
+                List<Pawn> pawnsToRemove = new();
+                foreach (Pawn oldPawn in bedXAttrs.assignedPawnsOverlay) {
+                    pawnsToRemove.Add(oldPawn);
+                }
+                foreach (Pawn oldPawn in pawnsToRemove) {
+                    UnclaimDeathrestCasketDirected(oldPawn, bedXAttrs.MyAssignmentGroup);
+                }
+            }
+            ForceAddPawn(deathrestCasket.CompAssignableToPawn, pawn);
+            pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[bedXAttrs.MyAssignmentGroup] = deathrestCasket;
             return true;
         }
 
@@ -171,6 +224,37 @@ namespace BedOwnershipTools {
             if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
                 ForceRemovePawn(oldBed.CompAssignableToPawn, pawn);
                 pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool UnclaimDeathrestCasketAll(Pawn pawn) {
+            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return false;
+            }
+            bool unassignedAtLeastOneBed = false;
+            foreach(var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap) {
+                ForceRemovePawn(bed.CompAssignableToPawn, pawn);
+                // pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Remove(assignmentGroup);
+                unassignedAtLeastOneBed = true;
+            }
+            pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Clear();
+            return unassignedAtLeastOneBed;
+        }
+
+        public static bool UnclaimDeathrestCasketDirected(Pawn pawn, AssignmentGroup assignmentGroup) {
+            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return false;
+            }
+            if (!ModsConfig.BiotechActive) {
+                return false;
+            }
+            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
+                ForceRemovePawn(oldBed.CompAssignableToPawn, pawn);
+                pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Remove(assignmentGroup);
                 return true;
             }
             return false;

@@ -33,6 +33,11 @@ namespace BedOwnershipTools {
             public static AccessTools.FieldRef<Pawn_Ownership, Building_Bed> Pawn_Ownership_intOwnedBed =
                 AccessTools.FieldRefAccess<Pawn_Ownership, Building_Bed>("intOwnedBed");
 
+            // Pawn_Ownership.AssignedDeathrestCasket (setter call)
+            public delegate void MethodDelegatePropertySetter_Pawn_Ownership_AssignedDeathrestCasket(Pawn_Ownership thiss, Building_Bed value);
+            public static MethodDelegatePropertySetter_Pawn_Ownership_AssignedDeathrestCasket Pawn_Ownership_AssignedDeathrestCasket_Set =
+                AccessTools.MethodDelegate<MethodDelegatePropertySetter_Pawn_Ownership_AssignedDeathrestCasket>(AccessTools.PropertySetter(typeof(Pawn_Ownership), nameof(Pawn_Ownership.AssignedDeathrestCasket)));
+
             // Pawn_Ownership.pawn
             public static AccessTools.FieldRef<Pawn_Ownership, Pawn> Pawn_Ownership_pawn =
                 AccessTools.FieldRefAccess<Pawn_Ownership, Pawn>("pawn");

@@ -28,6 +28,7 @@ namespace BedOwnershipTools {
                 foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
                     Pawn pawn = (Pawn)pawnXAttrs.parent;
                     pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Clear();
+                    pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Clear();
                 }
                 foreach (CompBuilding_BedXAttrs bedXAttrs in parent.compBuilding_BedXAttrsRegistry) {
                     Building_Bed bed = (Building_Bed)bedXAttrs.parent;
@@ -78,6 +79,17 @@ namespace BedOwnershipTools {
                         pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(assignmentGroup);
                     }
 
+                    assignmentGroupsToRemove.Clear();
+                    foreach (var (assignmentGroup, bed) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap) {
+                        if (bed == null) {
+                            Log.Warning($"[BOT] A Pawn ({pawn.Label}) has a null deathrest casket reference stored in its overlay ownership field. This may occur if you've recently abandoned a settlement before your last save.");
+                            assignmentGroupsToRemove.Add(assignmentGroup);
+                        }
+                    }
+                    foreach (AssignmentGroup assignmentGroup in assignmentGroupsToRemove) {
+                        pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Remove(assignmentGroup);
+                    }
+
                     Building_Bed ownedBed = pawn.ownership.OwnedBed;
                     if (ownedBed != null) {
                         CompBuilding_BedXAttrs bedXAttrs = ownedBed.GetComp<CompBuilding_BedXAttrs>();
@@ -108,6 +120,37 @@ namespace BedOwnershipTools {
                             }
                         }
                     }
+
+                    ownedBed = pawn.ownership.AssignedDeathrestCasket;
+                    if (ownedBed != null) {
+                        CompBuilding_BedXAttrs bedXAttrs = ownedBed.GetComp<CompBuilding_BedXAttrs>();
+                        if (bedXAttrs == null) {
+                            // Should never happen since we patch CompBuilding_BedXAttrs to be added onto Building_Bed instances
+                            Log.Warning($"[BOT] A Pawn ({pawn.Label}) owns a deathrest casket ({ownedBed.GetUniqueLoadID()}) in its internal ownership list that doesn't have a CompBuilding_BedXAttrs component.");
+                        } else if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(bedXAttrs.MyAssignmentGroup, out Building_Bed otherBed)) {
+                            // Should never happen since we ensure that if a Pawn owns a bed in the overlay,
+                            // its internally assigned bed will either be null or one of the beds in the overlay
+                            if (ownedBed != otherBed) {
+                                Log.Warning($"[BOT] A Pawn has inconsistent deathrest caskets stored in internal ({ownedBed.GetUniqueLoadID()}) and overlay ({otherBed.GetUniqueLoadID()}) ownership fields.");
+                            }
+                        } else {
+                            // Setting assignmentGroupToAssignedDeathrestCasketMap is technically redundant with the TryAssignPawn call
+                            // (however, corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to prisoners or babies, "tri86" for repro)
+                            pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[bedXAttrs.MyAssignmentGroup] = ownedBed;
+                            // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
+                            CATPBAndPOMethodReplacements.TryAssignPawn(ownedBed.CompAssignableToPawn, pawn);
+                        }
+                    } else {
+                        // Ensures that a Pawn always has an active bed if they own at least one bed
+                        // (corrects save data from mod versions before and including 1.0.8)
+                        foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
+                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
+                                bed.CompAssignableToPawn.ForceAddPawn(pawn);
+                                HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_AssignedDeathrestCasket_Set(pawn.ownership, bed);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -118,7 +161,7 @@ namespace BedOwnershipTools {
                     if (catp == null) {
                         // Should never happen since Building_Bed's base implementation fundamentally depends on having a CompAssignableToPawn instance
                         Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) doesn't have a CompAssignableToPawn component.");
-                    } else if (!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                    } else {
                         // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                         bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
                         // assignedPawnsOverlay is initialized by save data load or by calling TryAssignPawn through the compPawnXAttrsRegistry loop above
@@ -129,21 +172,40 @@ namespace BedOwnershipTools {
                             }
                         }
                         // Remove any pawns from assignedPawnsOverlay who don't have the bed assigned in their overlay assignedPawns tracker
-                        List<Pawn> pawnsToRemove = new List<Pawn>();
-                        foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
-                            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
-                            if (pawnXAttrs == null) {
-                                continue;
+                        if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                            List<Pawn> pawnsToRemove = new List<Pawn>();
+                            foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
+                                CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                                if (pawnXAttrs == null) {
+                                    continue;
+                                }
+                                if (!pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[bedXAttrs.MyAssignmentGroup] != bed) {
+                                    // (corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to babies becoming children, "tri88" for repro)
+                                    // sometimes occurs with Hospitality too--seems to be harmless, "tri96" for repro
+                                    Log.Warning($"[BOT] A deathrest casket ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
+                                    pawnsToRemove.Add(pawn);
+                                }
                             }
-                            if (!pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
-                                // (corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to babies becoming children, "tri88" for repro)
-                                // sometimes occurs with Hospitality too--seems to be harmless, "tri96" for repro
-                                Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
-                                pawnsToRemove.Add(pawn);
+                            foreach (Pawn pawn in pawnsToRemove) {
+                                bedXAttrs.assignedPawnsOverlay.Remove(pawn);
                             }
-                        }
-                        foreach (Pawn pawn in pawnsToRemove) {
-                            bedXAttrs.assignedPawnsOverlay.Remove(pawn);
+                        } else {
+                            List<Pawn> pawnsToRemove = new List<Pawn>();
+                            foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {
+                                CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                                if (pawnXAttrs == null) {
+                                    continue;
+                                }
+                                if (!pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.ContainsKey(bedXAttrs.MyAssignmentGroup) || pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[bedXAttrs.MyAssignmentGroup] != bed) {
+                                    // (corrects save data from mod versions before and not including 1.0.0 RC where some logic did not apply to babies becoming children, "tri88" for repro)
+                                    // sometimes occurs with Hospitality too--seems to be harmless, "tri96" for repro
+                                    Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) has a Pawn ({pawn.Label}) stored in its overlay ownership field, but that Pawn doesn't own it.");
+                                    pawnsToRemove.Add(pawn);
+                                }
+                            }
+                            foreach (Pawn pawn in pawnsToRemove) {
+                                bedXAttrs.assignedPawnsOverlay.Remove(pawn);
+                            }
                         }
                     }
                 }
@@ -167,6 +229,9 @@ namespace BedOwnershipTools {
                 if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                     // to generate the message that a pawn has become unlinked from a bed
                     HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
+                }
+                if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed2)) {
+                    CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected((Pawn)pawnXAttrs.parent, assignmentGroup);
                 }
             }
             foreach (CompBuilding_BedXAttrs bedXAttrs in parent.compBuilding_BedXAttrsRegistry) {
