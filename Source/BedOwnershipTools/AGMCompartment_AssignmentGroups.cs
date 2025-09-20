@@ -26,7 +26,6 @@ namespace BedOwnershipTools {
         public void Notify_WriteSettings() {
             if (isSubsystemActive ^ BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                 foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
-                    Pawn pawn = (Pawn)pawnXAttrs.parent;
                     pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Clear();
                     pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Clear();
                 }
@@ -64,7 +63,7 @@ namespace BedOwnershipTools {
             // 2) on a settings toggle during the game, Notify_WriteSettings will clear the relevant structures
             if (isSubsystemActive) {
                 foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
-                    Pawn pawn = (Pawn)pawnXAttrs.parent;
+                    Pawn pawn = pawnXAttrs.parentPawn;
                     // The game does not always call destroy routines on "practically" destroyed Things
                     // e.g. abandoning a map tile will not trigger ownership unassignment routines
                     // Null refs are saved and then removed after the next load, following the game's actual handling
@@ -231,7 +230,7 @@ namespace BedOwnershipTools {
                     HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
                 }
                 if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed2)) {
-                    CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected((Pawn)pawnXAttrs.parent, assignmentGroup);
+                    CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected(pawnXAttrs.parentPawn, assignmentGroup);
                 }
             }
             foreach (CompBuilding_BedXAttrs bedXAttrs in parent.compBuilding_BedXAttrsRegistry) {

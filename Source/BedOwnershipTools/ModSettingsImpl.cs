@@ -14,9 +14,12 @@ namespace BedOwnershipTools {
         public bool enableBedAssignmentGroups = true;
         public bool useAssignmentGroupsForDeathrestCaskets = true;
 
+        public bool enableAutomaticDeathrest = true;
+
         public bool showCommunalGUIOverlayInsteadOfBlankUnderBed = true;
         public bool hideGUIOverlayOnNonHumanlikeBeds = true;
         public bool showColonistsAcrossAllMapsInAssignmentDialog = true;
+        public bool showDeathrestAutoControlsWhenAwake = true;
 
         public bool enableHospitalityModCompatPatches = true;
         public bool enableOneBedToSleepWithAllModCompatPatches = true;
@@ -35,12 +38,15 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref this.enableBedAssignmentPinning, "enableBedAssignmentPinning", true);
             Scribe_Values.Look(ref this.pawnsMaySelfAssignToUnownedPinnedBeds, "pawnsMaySelfAssignToUnownedPinnedBeds", true);
 
+            Scribe_Values.Look(ref this.enableBedAssignmentGroups, "enableBedAssignmentGroups", true);
+            Scribe_Values.Look(ref this.useAssignmentGroupsForDeathrestCaskets, "useAssignmentGroupsForDeathrestCaskets", true);
+
+            Scribe_Values.Look(ref this.enableAutomaticDeathrest, "enableAutomaticDeathrest", true);
+
             Scribe_Values.Look(ref this.showCommunalGUIOverlayInsteadOfBlankUnderBed, "showCommunalGUIOverlayInsteadOfBlankUnderBed", true);
             Scribe_Values.Look(ref this.hideGUIOverlayOnNonHumanlikeBeds, "hideGUIOverlayOnNonHumanlikeBeds", true);
             Scribe_Values.Look(ref this.showColonistsAcrossAllMapsInAssignmentDialog, "showColonistsAcrossAllMapsInAssignmentDialog", true);
-
-            Scribe_Values.Look(ref this.enableBedAssignmentGroups, "enableBedAssignmentGroups", true);
-            Scribe_Values.Look(ref this.useAssignmentGroupsForDeathrestCaskets, "useAssignmentGroupsForDeathrestCaskets", true);
+            Scribe_Values.Look(ref this.showDeathrestAutoControlsWhenAwake, "showDeathrestAutoControlsWhenAwake", true);
 
             Scribe_Values.Look(ref this.enableHospitalityModCompatPatches, "enableHospitalityModCompatPatches", true);
             Scribe_Values.Look(ref this.enableOneBedToSleepWithAllModCompatPatches, "enableOneBedToSleepWithAllModCompatPatches", true);

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+    <ThinkTreeDef MayRequire="Ludeon.RimWorld.Biotech">
+        <defName>BedOwnershipTools_AutomaticDeathrest</defName>
+        <insertTag>Humanlike_PreMain</insertTag>
+        <insertPriority>100</insertPriority> <!-- TODO review priority -->
+        <thinkRoot Class="ThinkNode_ConditionalColonist">
+            <subNodes>
+                <li Class="BedOwnershipTools.JobGiver_AutomaticDeathrest" />
+            </subNodes>
+        </thinkRoot>
+    </ThinkTreeDef>
+</Defs>

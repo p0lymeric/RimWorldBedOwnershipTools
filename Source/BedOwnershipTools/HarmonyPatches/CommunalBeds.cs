@@ -214,7 +214,7 @@ namespace BedOwnershipTools {
                             yield return new CodeInstruction(OpCodes.Brfalse, instruction.operand);
                             currentOpReplaceBneUn = false;
                         } else {
-                            Log.Error("[BOT] Transpile failed to locate bne.un after call to get_OwnedBed");
+                            Log.Error("[BOT] Transpiler failed to locate bne.un after call to get_OwnedBed");
                         }
                     } else {
                         yield return instruction;
