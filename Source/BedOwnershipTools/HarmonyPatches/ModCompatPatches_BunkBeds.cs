@@ -36,11 +36,11 @@ namespace BedOwnershipTools {
                 public static void ApplyHarmonyPatches(Harmony harmony) {
                     harmony.Patch(
                         AccessTools.Method("BunkBeds.Building_Bed_GetCurOccupant_Patch:Prefix"),
-                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubPushI4OneRetTranspiler)
+                        transpiler: new HarmonyMethod(HarmonyPatches.TranspilerTemplates.StubPushI4OneRetTranspiler)
                     );
                     harmony.Patch(
                         AccessTools.Method("BunkBeds.DrawPawnGUIOverlay_DrawPawnGUIOverlay_Patch:Prefix"),
-                        transpiler: new HarmonyMethod(HarmonyPatches.Utils.StubPushI4OneRetTranspiler)
+                        transpiler: new HarmonyMethod(HarmonyPatches.TranspilerTemplates.StubPushI4OneRetTranspiler)
                     );
                 }
             }

@@ -4,7 +4,6 @@ using System.Text;
 using RimWorld;
 using Verse;
 using UnityEngine;
-using HarmonyLib;
 
 // New state attached to Building_Bed
 
@@ -100,9 +99,6 @@ namespace BedOwnershipTools {
             }
             LastInterfaceActionFrame = Time.frameCount;
             foreach (Building_Bed bed in Find.Selector.SelectedObjects.OfType<Building_Bed>()) {
-                if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
-                    continue;
-                }
                 CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
                 if (bedXAttrs == null) {
                     continue;
@@ -115,16 +111,29 @@ namespace BedOwnershipTools {
                         if (pawnXAttrs == null) {
                             continue;
                         }
-                        if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
-                            if (pawn.ownership.OwnedBed == oldBed) {
-                                oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
-                                bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
+                        if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
+                                if (pawn.ownership.AssignedDeathrestCasket == oldBed) {
+                                    oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
+                                    bed.CompAssignableToPawn.ForceAddPawn(pawn);
+                                    HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_AssignedDeathrestCasket_Set(pawn.ownership, bed);
+                                }
                             }
+                            CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected(pawn, assignmentGroup);
+                            pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.Remove(oldAssignmentGroup);
+                            pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[assignmentGroup] = bed;
+                        } else {
+                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed oldBed)) {
+                                if (pawn.ownership.OwnedBed == oldBed) {
+                                    oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
+                                    bed.CompAssignableToPawn.ForceAddPawn(pawn);
+                                    HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
+                                }
+                            }
+                            CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, assignmentGroup);
+                            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(oldAssignmentGroup);
+                            pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[assignmentGroup] = bed;
                         }
-                        CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, assignmentGroup);
-                        pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.Remove(oldAssignmentGroup);
-                        pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap[assignmentGroup] = bed;
                     }
                     bedXAttrs.MyAssignmentGroup = assignmentGroup;
                 }
@@ -198,7 +207,7 @@ namespace BedOwnershipTools {
                 Command_SetAssignmentGroup selectAssignmentGroup = new Command_SetAssignmentGroup(this);
                 if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                        if(BedOwnershipTools.Singleton.settings.useAssignmentGroupsForDeathrestCaskets || !CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                             if (disableGizmos) {
                                 selectAssignmentGroup.Disable();
                             }

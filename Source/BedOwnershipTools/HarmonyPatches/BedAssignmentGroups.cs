@@ -59,10 +59,11 @@ namespace BedOwnershipTools {
                     if (x.parent.GetComp<CompBuilding_BedXAttrs>() == null) {
                         return;
                     }
-                    if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(x.parent.def)) {
-                        return;
+                    if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(x.parent.def) && __instance is CompAssignableToPawn_DeathrestCasket y) {
+                        __instance = new CATPDCAssignmentGroupOverlayAdapter(y);
+                    } else {
+                        __instance = new CATPBAssignmentGroupOverlayAdapter(x);
                     }
-                    __instance = new CATPBGroupAssignmentOverlayAdapter(x);
                 }
             }
         }
@@ -81,12 +82,17 @@ namespace BedOwnershipTools {
         // All users of this path should set one of the UnclaimBed hints because this function will call UnclaimBed exactly once
         [HarmonyPatch(typeof(CompAssignableToPawn_Bed), nameof(CompAssignableToPawn_Bed.TryUnassignPawn))]
         public class Patch_CompAssignableToPawn_Bed_TryUnassignPawn {
+            static void Prefix(CompAssignableToPawn_Bed __instance, Pawn pawn, bool sort = true, bool uninstall = false) {
+                Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays();
+            }
+
             static void Postfix(CompAssignableToPawn_Bed __instance, Pawn pawn, bool sort = true, bool uninstall = false) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (!enableBedAssignmentGroups) {
                     return;
                 }
                 CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, pawn, sort, uninstall);
+                Patch_Pawn_Ownership_UnclaimBed.ClearHints();
             }
         }
 
@@ -187,39 +193,8 @@ namespace BedOwnershipTools {
                 ClearHints();
             }
 
-            static IEnumerable<CodeInstruction> InsertCodeInstructionsBeforePredicate(
-                IEnumerable<CodeInstruction> instructions,
-                System.Predicate<CodeInstruction> predicate,
-                IEnumerable<CodeInstruction> toInsert,
-                bool firstMatchOnly,
-                bool errorOnNonMatch
-            ) {
-                bool everMatched = false;
-                foreach (CodeInstruction instruction in instructions) {
-                    bool skipInsert = firstMatchOnly && everMatched;
-                    if (!skipInsert && predicate(instruction)) {
-                        foreach (CodeInstruction newInstruction in toInsert) {
-                            yield return newInstruction;
-                        }
-                        yield return instruction;
-                        everMatched = true;
-                    } else {
-                        yield return instruction;
-                    }
-                }
-                if (!everMatched) {
-                    if (errorOnNonMatch) {
-                        // we will be proactively accountable for patches to the base game
-                        Log.Error("[BOT] Transpiler never found the predicate instruction to trigger code modification");
-                    } else if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging) {
-                        // to not grab attention when patches to other mods fail to apply
-                        Log.Warning("[BOT] Transpiler never found the predicate instruction to trigger code modification");
-                    }
-                }
-            }
-
             public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
                     instructions,
                     (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))),
                     new[] {
@@ -234,7 +209,7 @@ namespace BedOwnershipTools {
                 );
             }
             public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
                     instructions,
                     (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))),
                     new[] {
@@ -249,7 +224,7 @@ namespace BedOwnershipTools {
                 );
             }
             public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
                     instructions,
                     (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))),
                     new[] {
@@ -264,82 +239,9 @@ namespace BedOwnershipTools {
                 );
             }
             public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
                     instructions,
                     (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimBed))),
-                    new[] {
-                        new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
-                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlays))
-                        )
-                    },
-                    false,
-                    false
-                );
-            }
-
-            public static void HintDontInvalidateOverlaysWithCompAssignableToPawn(CompAssignableToPawn catp) {
-                if (catp is CompAssignableToPawn_Bed) {
-                    setBeforeCallingToNotInvalidateAllOverlays = true;
-                }
-            }
-            public static void HintInvalidateAllOverlaysWithCompAssignableToPawn(CompAssignableToPawn catp) {
-                if (catp is CompAssignableToPawn_Bed) {
-                    setBeforeCallingToInvalidateAllOverlaysWithoutWarning = true;
-                }
-            }
-            public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTryUnassignPawnTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
-                    instructions,
-                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
-                    new[] {
-                        new CodeInstruction(OpCodes.Ldarg_0),
-                        new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
-                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlaysWithCompAssignableToPawn))
-                        )
-                    },
-                    false,
-                    true
-                );
-            }
-            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTryUnassignPawnTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
-                    instructions,
-                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
-                    new[] {
-                        new CodeInstruction(OpCodes.Ldarg_0),
-                        new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
-                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlaysWithCompAssignableToPawn))
-                        )
-                    },
-                    false,
-                    true
-                );
-            }
-            public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTryUnassignPawnUncheckedNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
-                    instructions,
-                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
-                    new[] {
-                        new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Pawn_Ownership_UnclaimBed),
-                            nameof(Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays))
-                        )
-                    },
-                    false,
-                    false
-                );
-            }
-            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTryUnassignPawnUncheckedNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return InsertCodeInstructionsBeforePredicate(
-                    instructions,
-                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
                     new[] {
                         new CodeInstruction(
                             OpCodes.Call,
@@ -394,16 +296,8 @@ namespace BedOwnershipTools {
                 //RimWorld.Building_Bed.RemoveAllOwners -- directed, HIT
                 harmony.Patch(AccessTools.Method(typeof(Building_Bed), "RemoveAllOwners"), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
 
-                // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.CompAssignableToPawn.PostDeSpawn -- directed, HIT
-                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostDeSpawn)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTryUnassignPawnTranspiler));
-
-                // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.CompAssignableToPawn.PostSwapMap -- invall, pawn was destroyed check, HIT
-#if RIMWORLD__1_6
-                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostSwapMap)), transpiler: new HarmonyMethod(InsertHintInvalidateAllOverlaysTryUnassignPawnTranspiler));
-#endif
-
-                // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.Dialog_AssignBuildingOwner.DrawAssignedRow -- directed, other calling paths shouldn't exist, HIT
-                // OK hint already inserted in CATPBGroupAssignmentOverlayAdapter
+                // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn -- directed, HIT
+                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn_Bed), nameof(CompAssignableToPawn_Bed.TryUnassignPawn)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
             }
         }
 
@@ -556,46 +450,16 @@ namespace BedOwnershipTools {
                 foreach (AssignmentGroup assignmentGroup in assignmentGroupsToRemove) {
                     CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, assignmentGroup);
                 }
-            }
-        }
-
-        [HarmonyPatch(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostDeSpawn))]
-        public class Patch_CompAssignableToPawn_PostDeSpawn {
-#if RIMWORLD__1_6
-            static void Postfix(CompAssignableToPawn __instance, Map map, DestroyMode mode = DestroyMode.Vanish) {
-                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
-                if (!enableBedAssignmentGroups) {
-                    return;
+                assignmentGroupsToRemove.Clear();
+                foreach (var (assignmentGroup, deathrestCasket) in pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap) {
+                    if (((deathrestCasket.ForPrisoners && !pawn.IsPrisoner && !PawnUtility.IsBeingArrested(pawn)) || (!deathrestCasket.ForPrisoners && pawn.IsPrisoner) || (deathrestCasket.ForColonists && pawn.HostFaction == null))) {
+                        assignmentGroupsToRemove.Add(assignmentGroup);
+                    }
                 }
-                if (__instance is CompAssignableToPawn_Bed) {
-                    CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
-                    if (bedXAttrs == null) {
-                        return;
-                    }
-                    if (mode != DestroyMode.WillReplace) {
-                        for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
-                            CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num], sort: false, !__instance.parent.DestroyedOrNull());
-                        }
-                    }
+                foreach (AssignmentGroup assignmentGroup in assignmentGroupsToRemove) {
+                    CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected(pawn, assignmentGroup);
                 }
             }
-#else
-            static void Postfix(CompAssignableToPawn __instance, Map map) {
-                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
-                if (!enableBedAssignmentGroups) {
-                    return;
-                }
-                if (__instance is CompAssignableToPawn_Bed) {
-                    CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
-                    if (bedXAttrs == null) {
-                        return;
-                    }
-                    for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
-                        CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num], sort: false, !__instance.parent.DestroyedOrNull());
-                    }
-                }
-            }
-#endif
         }
 
         [HarmonyPatch(typeof(Building_Bed), "RemoveAllOwners")]
@@ -605,6 +469,7 @@ namespace BedOwnershipTools {
                 if (!enableBedAssignmentGroups) {
                     return;
                 }
+                // this call won't cover deathrest caskets but neither does the base implementation
                 CATPBAndPOMethodReplacements.RemoveAllOwners(__instance, destroyed);
             }
         }

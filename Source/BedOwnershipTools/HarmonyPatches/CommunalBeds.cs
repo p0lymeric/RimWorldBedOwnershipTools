@@ -6,8 +6,8 @@ using HarmonyLib;
 
 // Summary of patches
 // Communal beds
-// - block pawns from claiming communal beds via ClaimBedIfNotMedical
-// - (also one stray overlay update call for the assignment groups feature in ClaimBedIfNotMedical)
+// - block pawns from claiming communal beds via ClaimBedIfNonMedical
+// - (also one stray overlay update call for the assignment groups feature in ClaimBedIfNonMedical)
 // - allow pawns to sleep in the bed via CanUseBedNow (otherwise they lie awake)
 // - allow a Pawn to gain thoughts regarding the quality of the bedroom/barracks after sleeping in a communal bed via ApplyBedThoughts
 
@@ -21,7 +21,7 @@ namespace BedOwnershipTools {
                     return true;
                 }
 
-                // ClaimBedIfNotMedical handles mutating both Pawn_Ownership and CompAssignableToPawn_Bed so
+                // ClaimBedIfNonMedical handles mutating both Pawn_Ownership and CompAssignableToPawn_Bed so
                 // it should be safe to block its effects by not allowing it to execute (won't break sync between owner-bed pairs)
 
                 // Pawn has been consigned to a community bed--don't mark them as owner of the bed
@@ -33,7 +33,7 @@ namespace BedOwnershipTools {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (enableBedAssignmentGroups) {
                     Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
-                    CATPBAndPOMethodReplacements.ClaimBedIfNotMedical(pawn, newBed);
+                    CATPBAndPOMethodReplacements.ClaimBedIfNonMedical(pawn, newBed);
                 }
 
                 // Cascade into the base implementation if above check fails

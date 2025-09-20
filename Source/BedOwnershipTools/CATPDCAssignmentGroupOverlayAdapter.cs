@@ -13,10 +13,10 @@ using Verse;
 // update 2: you haven't seen the worst of it (actually it's mostly been moved to CATPBAndPOMethodReplacements)
 
 namespace BedOwnershipTools {
-    public class CATPBGroupAssignmentOverlayAdapter : CompAssignableToPawn_Bed {
-        private CompAssignableToPawn_Bed inner = null;
+    public class CATPDCAssignmentGroupOverlayAdapter : CompAssignableToPawn_DeathrestCasket {
+        private CompAssignableToPawn_DeathrestCasket inner = null;
 
-        public CATPBGroupAssignmentOverlayAdapter(CompAssignableToPawn_Bed inner) {
+        public CATPDCAssignmentGroupOverlayAdapter(CompAssignableToPawn_DeathrestCasket inner) {
             this.inner = inner;
             // xattrs null check performed in patch--this class shouldn't be instantiated unless
             // the inner object actually has a CompBuilding_BedXAttrs component
@@ -38,7 +38,6 @@ namespace BedOwnershipTools {
         }
 
         public override void TryUnassignPawn(Pawn pawn, bool sort = true, bool uninstall = false) {
-            HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays();
             inner.TryUnassignPawn(pawn, sort, uninstall);
         }
     }

@@ -32,7 +32,7 @@ namespace BedOwnershipTools {
                 );
                 Scribe_Collections.Look(
                     ref this.assignmentGroupToAssignedDeathrestCasketMap,
-                    "BedOwnershipTools_assignmentGroupToOwnedDeathrestCasketMap",
+                    "BedOwnershipTools_assignmentGroupToAssignedDeathrestCasketMap",
                     LookMode.Reference, LookMode.Reference,
                     ref assignmentGroupToAssignedDeathrestCasketMapKListForScribing, ref assignmentGroupToAssignedDeathrestCasketMapVListForScribing
                 );

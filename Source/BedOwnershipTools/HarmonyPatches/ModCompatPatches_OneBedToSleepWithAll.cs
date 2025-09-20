@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using RimWorld;
 using Verse;
 using UnityEngine;
@@ -64,10 +63,6 @@ namespace BedOwnershipTools {
             public static class Patch_UnclaimBedCalls {
                 // TODO can accomplish this with TargetMethods
                 public static void ApplyHarmonyPatches(Harmony harmony) {
-                    harmony.Patch(
-                        AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_PolygamyModeUtility, "AddMakeMasterButton"),
-                        transpiler: new HarmonyMethod(Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysTryUnassignPawnUncheckedNoErrorTranspiler)
-                    );
                     harmony.Patch(
                         AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode, "AssignesUpdated"),
                         transpiler: new HarmonyMethod(Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
