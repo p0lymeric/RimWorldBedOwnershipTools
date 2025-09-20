@@ -54,6 +54,10 @@ namespace BedOwnershipTools {
             public delegate Toil MethodDelegatePropertyGetter_JobDriver_CurToil(JobDriver thiss);
             public static MethodDelegatePropertyGetter_JobDriver_CurToil JobDriver_CurToil_Get =
                 AccessTools.MethodDelegate<MethodDelegatePropertyGetter_JobDriver_CurToil>(AccessTools.PropertyGetter(typeof(JobDriver), "CurToil"));
+
+            // Gene_Deathrest.AutoWakeCommandTex
+            public static AccessTools.FieldRef<CachedTexture> Gene_Deathrest_AutoWakeCommandTex =
+                AccessTools.StaticFieldRefAccess<CachedTexture>(AccessTools.Field(typeof(Gene_Deathrest), "AutoWakeCommandTex"));
         }
     }
 }

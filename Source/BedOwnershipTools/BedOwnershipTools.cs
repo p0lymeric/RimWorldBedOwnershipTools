@@ -64,6 +64,13 @@ namespace BedOwnershipTools {
 
             listingStandard.GapLine();
             listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.EnableAutomaticDeathrest".Translate(),
+                ref settings.enableAutomaticDeathrest,
+                "BedOwnershipTools.EnableAutomaticDeathrest_Tooltip".Translate()
+            );
+
+            listingStandard.GapLine();
+            listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed".Translate(),
                 ref settings.showCommunalGUIOverlayInsteadOfBlankUnderBed,
                 "BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed_Tooltip".Translate()
@@ -77,6 +84,11 @@ namespace BedOwnershipTools {
                 "BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog".Translate(),
                 ref settings.showColonistsAcrossAllMapsInAssignmentDialog,
                 "BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog_Tooltip".Translate()
+            );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.ShowDeathrestAutoControlsWhenAwake".Translate(),
+                ref settings.showDeathrestAutoControlsWhenAwake,
+                "BedOwnershipTools.ShowDeathrestAutoControlsWhenAwake_Tooltip".Translate()
             );
 
             listingStandard.GapLine();
