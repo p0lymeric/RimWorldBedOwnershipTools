@@ -25,8 +25,14 @@ namespace BedOwnershipTools {
         }
 
         public override void DoSettingsWindowContents(Rect inRect) {
-            Listing_Standard listingStandard = new Listing_Standard();
-            listingStandard.Begin(inRect);
+            const float MIDDLE_MARGIN = 8f;
+            Rect rectLeftCol = new(inRect.x, inRect.y, inRect.width / 2 - MIDDLE_MARGIN, inRect.height);
+            Rect rectRightCol = new(inRect.x + inRect.width / 2 + MIDDLE_MARGIN, inRect.y, inRect.width / 2 - MIDDLE_MARGIN, inRect.height);
+
+            Listing_Standard listingStandard = new();
+
+            listingStandard.Begin(rectLeftCol);
+            listingStandard.Label("BedOwnershipTools.CommunalBedsHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableCommunalBeds".Translate(),
                 ref settings.enableCommunalBeds,
@@ -39,6 +45,7 @@ namespace BedOwnershipTools {
             );
 
             listingStandard.GapLine();
+            listingStandard.Label("BedOwnershipTools.AssignmentPinningHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableBedAssignmentPinning".Translate(),
                 ref settings.enableBedAssignmentPinning,
@@ -51,6 +58,7 @@ namespace BedOwnershipTools {
             );
 
             listingStandard.GapLine();
+            listingStandard.Label("BedOwnershipTools.AssignmentGroupsHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableBedAssignmentGroups".Translate(),
                 ref settings.enableBedAssignmentGroups,
@@ -63,13 +71,17 @@ namespace BedOwnershipTools {
             );
 
             listingStandard.GapLine();
+            listingStandard.Label("BedOwnershipTools.AutomaticDeathrestHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableAutomaticDeathrest".Translate(),
                 ref settings.enableAutomaticDeathrest,
                 "BedOwnershipTools.EnableAutomaticDeathrest_Tooltip".Translate()
             );
+            listingStandard.End();
 
-            listingStandard.GapLine();
+            listingStandard = new();
+            listingStandard.Begin(rectRightCol);
+            listingStandard.Label("BedOwnershipTools.UICustomizationsHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed".Translate(),
                 ref settings.showCommunalGUIOverlayInsteadOfBlankUnderBed,
@@ -86,12 +98,18 @@ namespace BedOwnershipTools {
                 "BedOwnershipTools.ShowColonistsAcrossAllMapsInAssignmentDialog_Tooltip".Translate()
             );
             listingStandard.CheckboxLabeled(
-                "BedOwnershipTools.ShowDeathrestAutoControlsWhenAwake".Translate(),
-                ref settings.showDeathrestAutoControlsWhenAwake,
-                "BedOwnershipTools.ShowDeathrestAutoControlsWhenAwake_Tooltip".Translate()
+                "BedOwnershipTools.HideDeathrestAutoControlsOnPawnWhileAwake".Translate(),
+                ref settings.hideDeathrestAutoControlsOnPawnWhileAwake,
+                "BedOwnershipTools.HideDeathrestAutoControlsOnPawnWhileAwake_Tooltip".Translate()
+            );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.ShowDeathrestAutoControlsOnCasket".Translate(),
+                ref settings.showDeathrestAutoControlsOnCasket,
+                "BedOwnershipTools.ShowDeathrestAutoControlsOnCasket_Tooltip".Translate()
             );
 
             listingStandard.GapLine();
+            listingStandard.Label("BedOwnershipTools.ModCompatibilityHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableModCompatPatches".Translate("Hospitality"),
                 ref settings.enableHospitalityModCompatPatches,
@@ -118,8 +136,14 @@ namespace BedOwnershipTools {
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );
 
+            listingStandard.GapLine();
+            if (listingStandard.ButtonText("BedOwnershipTools.ResetSettingsButton".Translate())) {
+                settings.Reset();
+            }
+
             if (Prefs.DevMode) {
                 listingStandard.GapLine();
+                listingStandard.Label("BedOwnershipTools.DeveloperSettingsHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
                 listingStandard.CheckboxLabeled(
                     "BedOwnershipTools.DevEnableDebugInspectStringListings".Translate(),
                     ref settings.devEnableDebugInspectStringListings,
@@ -130,6 +154,14 @@ namespace BedOwnershipTools {
                     ref settings.devEnableUnaccountedCaseLogging,
                     "BedOwnershipTools.DevEnableUnaccountedCaseLogging_Tooltip".Translate()
                 );
+                listingStandard.CheckboxLabeled(
+                    "BedOwnershipTools.DevEnableExtraMenusAndGizmos".Translate(),
+                    ref settings.devEnableExtraMenusAndGizmos,
+                    "BedOwnershipTools.DevEnableExtraMenusAndGizmos_Tooltip".Translate()
+                );
+                if (listingStandard.ButtonText("BedOwnershipTools.ResetDeveloperSettingsButton".Translate())) {
+                    settings.ResetDev();
+                }
             }
             listingStandard.End();
         }

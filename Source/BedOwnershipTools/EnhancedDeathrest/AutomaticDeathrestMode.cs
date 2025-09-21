@@ -8,6 +8,7 @@ namespace BedOwnershipTools {
     public enum AutomaticDeathrestMode {
         Manual,
         Exhaustion1Hour,
+        Exhaustion3Hours,
         Exhaustion1Day,
         Exhaustion3Days,
         CalendarAprimaySeptober1To5,
@@ -18,7 +19,7 @@ namespace BedOwnershipTools {
         CalendarJugustDecembary11To15,
     }
 
-    public enum AutomaticDeathrestScheduleDiscpline {
+    public enum AutomaticDeathrestScheduleDiscipline {
         Manual,
         Exhaustion,
         Calendar,
@@ -35,15 +36,29 @@ namespace BedOwnershipTools {
         }
 
         public static IEnumerable<AutomaticDeathrestMode> GetValues() {
-            return (IEnumerable<AutomaticDeathrestMode>)Enum.GetValues(typeof(AutomaticDeathrestMode));
+            yield return AutomaticDeathrestMode.Manual;
+            yield return AutomaticDeathrestMode.Exhaustion3Hours;
+            yield return AutomaticDeathrestMode.Exhaustion1Day;
+            yield return AutomaticDeathrestMode.CalendarAprimaySeptober1To5;
+            yield return AutomaticDeathrestMode.CalendarAprimaySeptober6To10;
+            yield return AutomaticDeathrestMode.CalendarAprimaySeptober11To15;
+            yield return AutomaticDeathrestMode.CalendarJugustDecembary1To5;
+            yield return AutomaticDeathrestMode.CalendarJugustDecembary6To10;
+            yield return AutomaticDeathrestMode.CalendarJugustDecembary11To15;
+
+            if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableExtraMenusAndGizmos) {
+                yield return AutomaticDeathrestMode.Exhaustion1Hour;
+                yield return AutomaticDeathrestMode.Exhaustion3Days;
+            }
         }
 
         public static string LabelString(this AutomaticDeathrestMode automaticDeathrestMode) {
             return automaticDeathrestMode switch {
                 AutomaticDeathrestMode.Manual => "BedOwnershipTools.ScheduleManual".Translate(),
-                AutomaticDeathrestMode.Exhaustion1Hour => "BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion".Translate("Period1Hour".Translate()),
+                AutomaticDeathrestMode.Exhaustion1Hour => "[DEV] " + "BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion".Translate("Period1Hour".Translate()),
+                AutomaticDeathrestMode.Exhaustion3Hours => "BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion".Translate("PeriodHours".Translate(3)),
                 AutomaticDeathrestMode.Exhaustion1Day => "BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion".Translate("Period1Day".Translate()),
-                AutomaticDeathrestMode.Exhaustion3Days => "BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion".Translate("PeriodDays".Translate(3)),
+                AutomaticDeathrestMode.Exhaustion3Days => "[DEV] " + "BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion".Translate("PeriodDays".Translate(3)),
                 AutomaticDeathrestMode.CalendarAprimaySeptober1To5 => $"{BiannualDateRangeStringAt(1, 5, Quadrum.Aprimay, Quadrum.Septober)}",
                 AutomaticDeathrestMode.CalendarAprimaySeptober6To10 => $"{BiannualDateRangeStringAt(6, 10, Quadrum.Aprimay, Quadrum.Septober)}",
                 AutomaticDeathrestMode.CalendarAprimaySeptober11To15 => $"{BiannualDateRangeStringAt(11, 15, Quadrum.Aprimay, Quadrum.Septober)}",
@@ -54,35 +69,47 @@ namespace BedOwnershipTools {
             };
         }
 
-        public static Texture2D Texture(this AutomaticDeathrestMode automaticDeathrestMode) {
+        public static AutomaticDeathrestScheduleDiscipline Discipline(this AutomaticDeathrestMode automaticDeathrestMode) {
             return automaticDeathrestMode switch {
-                AutomaticDeathrestMode.Manual => Widgets.CheckboxOffTex,
-                AutomaticDeathrestMode.Exhaustion1Hour => AnytimeRitualTex.Texture,
-                AutomaticDeathrestMode.Exhaustion1Day => AnytimeRitualTex.Texture,
-                AutomaticDeathrestMode.Exhaustion3Days => AnytimeRitualTex.Texture,
-                AutomaticDeathrestMode.CalendarAprimaySeptober1To5 => DateRitualTex.Texture,
-                AutomaticDeathrestMode.CalendarAprimaySeptober6To10 => DateRitualTex.Texture,
-                AutomaticDeathrestMode.CalendarAprimaySeptober11To15 => DateRitualTex.Texture,
-                AutomaticDeathrestMode.CalendarJugustDecembary1To5 => DateRitualTex.Texture,
-                AutomaticDeathrestMode.CalendarJugustDecembary6To10 => DateRitualTex.Texture,
-                AutomaticDeathrestMode.CalendarJugustDecembary11To15 => DateRitualTex.Texture,
-                _ => null
+                AutomaticDeathrestMode.Manual => AutomaticDeathrestScheduleDiscipline.Manual,
+                AutomaticDeathrestMode.Exhaustion1Hour => AutomaticDeathrestScheduleDiscipline.Exhaustion,
+                AutomaticDeathrestMode.Exhaustion3Hours => AutomaticDeathrestScheduleDiscipline.Exhaustion,
+                AutomaticDeathrestMode.Exhaustion1Day => AutomaticDeathrestScheduleDiscipline.Exhaustion,
+                AutomaticDeathrestMode.Exhaustion3Days => AutomaticDeathrestScheduleDiscipline.Exhaustion,
+                AutomaticDeathrestMode.CalendarAprimaySeptober1To5 => AutomaticDeathrestScheduleDiscipline.Calendar,
+                AutomaticDeathrestMode.CalendarAprimaySeptober6To10 => AutomaticDeathrestScheduleDiscipline.Calendar,
+                AutomaticDeathrestMode.CalendarAprimaySeptober11To15 => AutomaticDeathrestScheduleDiscipline.Calendar,
+                AutomaticDeathrestMode.CalendarJugustDecembary1To5 => AutomaticDeathrestScheduleDiscipline.Calendar,
+                AutomaticDeathrestMode.CalendarJugustDecembary6To10 => AutomaticDeathrestScheduleDiscipline.Calendar,
+                AutomaticDeathrestMode.CalendarJugustDecembary11To15 => AutomaticDeathrestScheduleDiscipline.Calendar,
+                _ => AutomaticDeathrestScheduleDiscipline.Manual
             };
         }
 
-        public static AutomaticDeathrestScheduleDiscpline Discipline(this AutomaticDeathrestMode automaticDeathrestMode) {
-            return automaticDeathrestMode switch {
-                AutomaticDeathrestMode.Manual => AutomaticDeathrestScheduleDiscpline.Manual,
-                AutomaticDeathrestMode.Exhaustion1Hour => AutomaticDeathrestScheduleDiscpline.Exhaustion,
-                AutomaticDeathrestMode.Exhaustion1Day => AutomaticDeathrestScheduleDiscpline.Exhaustion,
-                AutomaticDeathrestMode.Exhaustion3Days => AutomaticDeathrestScheduleDiscpline.Exhaustion,
-                AutomaticDeathrestMode.CalendarAprimaySeptober1To5 => AutomaticDeathrestScheduleDiscpline.Calendar,
-                AutomaticDeathrestMode.CalendarAprimaySeptober6To10 => AutomaticDeathrestScheduleDiscpline.Calendar,
-                AutomaticDeathrestMode.CalendarAprimaySeptober11To15 => AutomaticDeathrestScheduleDiscpline.Calendar,
-                AutomaticDeathrestMode.CalendarJugustDecembary1To5 => AutomaticDeathrestScheduleDiscpline.Calendar,
-                AutomaticDeathrestMode.CalendarJugustDecembary6To10 => AutomaticDeathrestScheduleDiscpline.Calendar,
-                AutomaticDeathrestMode.CalendarJugustDecembary11To15 => AutomaticDeathrestScheduleDiscpline.Calendar,
-                _ => AutomaticDeathrestScheduleDiscpline.Manual
+        public static string LabelStringWithColour(this AutomaticDeathrestMode automaticDeathrestMode) {
+            return automaticDeathrestMode.Discipline() switch {
+                AutomaticDeathrestScheduleDiscipline.Manual => automaticDeathrestMode.LabelString().Colorize(ColoredText.DateTimeColor),
+                AutomaticDeathrestScheduleDiscipline.Exhaustion => automaticDeathrestMode.LabelString().Colorize(ColoredText.DateTimeColor),
+                AutomaticDeathrestScheduleDiscipline.Calendar => automaticDeathrestMode.LabelString().Colorize(ColoredText.DateTimeColor),
+                _ => "INVALID"
+            };
+        }
+
+        public static string LabelStringDisciplineDescriptionTranslationKey(this AutomaticDeathrestMode automaticDeathrestMode) {
+            return automaticDeathrestMode.Discipline() switch {
+                AutomaticDeathrestScheduleDiscipline.Manual => "BedOwnershipTools.Command_SetAutomaticDeathrestModeManualScheduleDesc",
+                AutomaticDeathrestScheduleDiscipline.Exhaustion => "BedOwnershipTools.Command_SetAutomaticDeathrestModeExhaustionScheduleDesc",
+                AutomaticDeathrestScheduleDiscipline.Calendar => "BedOwnershipTools.Command_SetAutomaticDeathrestModeCalendarScheduleDesc",
+                _ => "INVALID"
+            };
+        }
+
+        public static Texture2D Texture(this AutomaticDeathrestMode automaticDeathrestMode) {
+            return automaticDeathrestMode.Discipline() switch {
+                AutomaticDeathrestScheduleDiscipline.Manual => Widgets.CheckboxOffTex,
+                AutomaticDeathrestScheduleDiscipline.Exhaustion => AnytimeRitualTex.Texture,
+                AutomaticDeathrestScheduleDiscipline.Calendar => DateRitualTex.Texture,
+                _ => null
             };
         }
     }

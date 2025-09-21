@@ -36,29 +36,6 @@ namespace BedOwnershipTools {
             automaticDeathrestTracker.ShallowExposeData();
 	    }
 
-        public override IEnumerable<Gizmo> CompGetGizmosExtra() {
-            Gene_Deathrest gene_Deathrest = parentPawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
-            if (gene_Deathrest != null && gene_Deathrest.Active) {
-                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsWhenAwake || parentPawn.Deathresting) {
-                    yield return new Command_SetAutomaticDeathrestMode(this);
-                }
-                // TODO properly stub the code that also generates this in Gene_Deathrest
-                // should inject these gizmos in that method so that they're placed next to one another
-                // TODO disallow toggling this with a calendar based discipline
-                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsWhenAwake && !(parentPawn.Deathresting && gene_Deathrest.DeathrestPercent < 1f)) {
-                    yield return new Command_Toggle {
-                        defaultLabel = "AutoWake".Translate().CapitalizeFirst(),
-                        defaultDesc = "AutoWakeDesc".Translate(parentPawn.Named("PAWN")).Resolve(),
-                        icon = HarmonyPatches.DelegatesAndRefs.Gene_Deathrest_AutoWakeCommandTex().Texture,
-                        isActive = () => gene_Deathrest.autoWake,
-                        toggleAction = delegate {
-                            gene_Deathrest.autoWake = !gene_Deathrest.autoWake;
-                        }
-                    };
-                }
-            }
-        }
-
         public override string CompInspectStringExtra() {
             if (!Prefs.DevMode || !BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {
                 return "";

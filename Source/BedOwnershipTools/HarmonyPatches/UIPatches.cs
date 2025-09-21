@@ -125,9 +125,8 @@ namespace BedOwnershipTools {
                 if (__instance.Medical || Find.CameraDriver.CurrentZoom != CameraZoomRange.Closest || !__instance.CompAssignableToPawn.PlayerCanSeeAssignments) {
                     return false;
                 }
-                if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(__instance.def)) {
-                    return true;
-                }
+
+                // TODO for deathrest casket show bindee if not assigned
 
                 bool showCommunalGUIOverlayInsteadOfBlankUnderBed = BedOwnershipTools.Singleton.settings.showCommunalGUIOverlayInsteadOfBlankUnderBed;
                 bool hideDisplayStringForNonHumanlikeBeds = !__instance.def.building.bed_humanlike && BedOwnershipTools.Singleton.settings.hideGUIOverlayOnNonHumanlikeBeds;
@@ -291,6 +290,50 @@ namespace BedOwnershipTools {
                 foreach (Pawn pawn in __result) {
                     if (seenPawns.Add(pawn)) {
                         yield return pawn;
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.CompGetGizmosExtra))]
+        public class Patch_CompAssignableToPawn_CompGetGizmosExtra {
+            static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, CompAssignableToPawn __instance) {
+                foreach (Gizmo x in __result) {
+                    yield return x;
+                }
+                if (__instance.parent is Building_Bed) {
+                    CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs != null) {
+                        foreach (Gizmo x in bedXAttrs.CompGetGizmosExtraImpl()) {
+                            yield return x;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Gene_Deathrest), nameof(Gene_Deathrest.GetGizmos))]
+        public class Patch_Gene_Deathrest_GetGizmos {
+            static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Gene_Deathrest __instance) {
+                bool removedAutoWake = false;
+                foreach (Gizmo x in __result) {
+                    if (BedOwnershipTools.Singleton.settings.enableAutomaticDeathrest) {
+                        if (x is Command_Toggle command_Toggle) {
+                            if (command_Toggle.defaultLabel == "AutoWake".Translate().CapitalizeFirst()) {
+                                removedAutoWake = true;
+                                continue;
+                            }
+                        }
+                    }
+                    yield return x;
+                }
+                CompPawnXAttrs pawnXAttrs = __instance.pawn.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs != null) {
+                    if (!BedOwnershipTools.Singleton.settings.hideDeathrestAutoControlsOnPawnWhileAwake || pawnXAttrs.parentPawn.Deathresting) {
+                        foreach (Gizmo x in pawnXAttrs.automaticDeathrestTracker.CompGetGizmosExtraImpl(!BedOwnershipTools.Singleton.settings.hideDeathrestAutoControlsOnPawnWhileAwake || removedAutoWake)) {
+                            yield return x;
+                        }
                     }
                 }
             }

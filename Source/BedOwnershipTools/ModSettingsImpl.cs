@@ -1,3 +1,4 @@
+using System.Reflection;
 using RimWorld;
 using Verse;
 
@@ -19,7 +20,8 @@ namespace BedOwnershipTools {
         public bool showCommunalGUIOverlayInsteadOfBlankUnderBed = true;
         public bool hideGUIOverlayOnNonHumanlikeBeds = true;
         public bool showColonistsAcrossAllMapsInAssignmentDialog = true;
-        public bool showDeathrestAutoControlsWhenAwake = true;
+        public bool hideDeathrestAutoControlsOnPawnWhileAwake = true;
+        public bool showDeathrestAutoControlsOnCasket = true;
 
         public bool enableHospitalityModCompatPatches = true;
         public bool enableOneBedToSleepWithAllModCompatPatches = true;
@@ -30,6 +32,38 @@ namespace BedOwnershipTools {
 
         public bool devEnableDebugInspectStringListings = false;
         public bool devEnableUnaccountedCaseLogging = false;
+        public bool devEnableExtraMenusAndGizmos = false;
+
+        public void Reset() {
+            this.enableCommunalBeds = true;
+            this.communalBedsSupportOrderedMedicalSleep = true;
+
+            this.enableBedAssignmentPinning = true;
+            this.pawnsMaySelfAssignToUnownedPinnedBeds = true;
+
+            this.enableBedAssignmentGroups = true;
+            this.useAssignmentGroupsForDeathrestCaskets = true;
+
+            this.enableAutomaticDeathrest = true;
+
+            this.showCommunalGUIOverlayInsteadOfBlankUnderBed = true;
+            this.hideGUIOverlayOnNonHumanlikeBeds = true;
+            this.showColonistsAcrossAllMapsInAssignmentDialog = true;
+            this.hideDeathrestAutoControlsOnPawnWhileAwake = true;
+            this.showDeathrestAutoControlsOnCasket = true;
+
+            this.enableHospitalityModCompatPatches = true;
+            this.enableOneBedToSleepWithAllModCompatPatches = true;
+            this.enableLoftBedModCompatPatches = true;
+            this.enableBunkBedsModCompatPatches = true;
+            this.enableMultiFloorsModCompatPatches = true;
+        }
+
+        public void ResetDev() {
+            this.devEnableDebugInspectStringListings = false;
+            this.devEnableUnaccountedCaseLogging = false;
+            this.devEnableExtraMenusAndGizmos = false;
+        }
 
         public override void ExposeData() {
             Scribe_Values.Look(ref this.enableCommunalBeds, "enableCommunalBeds", true);
@@ -46,7 +80,8 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref this.showCommunalGUIOverlayInsteadOfBlankUnderBed, "showCommunalGUIOverlayInsteadOfBlankUnderBed", true);
             Scribe_Values.Look(ref this.hideGUIOverlayOnNonHumanlikeBeds, "hideGUIOverlayOnNonHumanlikeBeds", true);
             Scribe_Values.Look(ref this.showColonistsAcrossAllMapsInAssignmentDialog, "showColonistsAcrossAllMapsInAssignmentDialog", true);
-            Scribe_Values.Look(ref this.showDeathrestAutoControlsWhenAwake, "showDeathrestAutoControlsWhenAwake", true);
+            Scribe_Values.Look(ref this.hideDeathrestAutoControlsOnPawnWhileAwake, "hideDeathrestAutoControlsOnPawnWhileAwake", true);
+            Scribe_Values.Look(ref this.showDeathrestAutoControlsOnCasket, "showDeathrestAutoControlsOnCasket", true);
 
             Scribe_Values.Look(ref this.enableHospitalityModCompatPatches, "enableHospitalityModCompatPatches", true);
             Scribe_Values.Look(ref this.enableOneBedToSleepWithAllModCompatPatches, "enableOneBedToSleepWithAllModCompatPatches", true);
@@ -56,6 +91,7 @@ namespace BedOwnershipTools {
 
             Scribe_Values.Look(ref this.devEnableDebugInspectStringListings, "devEnableDebugInspectStringListings", false);
             Scribe_Values.Look(ref this.devEnableUnaccountedCaseLogging, "devEnableUnaccountedCaseLogging", false);
+            Scribe_Values.Look(ref this.devEnableExtraMenusAndGizmos, "devEnableExtraMenusAndGizmos", false);
         }
     }
 }

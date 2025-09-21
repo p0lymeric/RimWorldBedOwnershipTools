@@ -16,6 +16,7 @@ namespace BedOwnershipTools {
         // Management compartments
         public AGMCompartment_AssignmentGroups agmCompartment_AssignmentGroups;
         public AGMCompartment_HarmonyPatchState agmCompartment_HarmonyPatchState;
+        public AGMCompartment_AutomaticDeathrest agmCompartment_AutomaticDeathrest;
 
         // Observed execution order
         // New game
@@ -51,14 +52,17 @@ namespace BedOwnershipTools {
 
             this.agmCompartment_AssignmentGroups = new(game, this);
             this.agmCompartment_HarmonyPatchState = new(game, this);
+            this.agmCompartment_AutomaticDeathrest = new(game, this);
         }
 
         public void Notify_WriteSettings() {
             agmCompartment_AssignmentGroups.Notify_WriteSettings();
+            agmCompartment_AutomaticDeathrest.Notify_WriteSettings();
         }
 
         public override void FinalizeInit() {
             agmCompartment_AssignmentGroups.FinalizeInit();
+            agmCompartment_AutomaticDeathrest.FinalizeInit();
         }
 
         public override void ExposeData() {

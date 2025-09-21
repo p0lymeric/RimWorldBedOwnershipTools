@@ -159,7 +159,7 @@ namespace BedOwnershipTools {
         //     SettingsFixupTasks();
         // }
 
-        public override IEnumerable<Gizmo> CompGetGizmosExtra() {
+        public IEnumerable<Gizmo> CompGetGizmosExtraImpl() {
             bool disableGizmos = false;
             bool disableToggleIsAssignedToCommunity = false;
             if (
@@ -238,6 +238,31 @@ namespace BedOwnershipTools {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
                         if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
                             yield return toggleIsAssignedToCommunity;
+                        }
+                    }
+                }
+
+                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                    if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
+                        // if there is a bindee or a tentative assignee and they are a deathrester then expose their auto gizmos
+                        Pawn assignee = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?
+                            this.assignedPawnsOverlay.ElementAtOrDefault(0) :
+                            bed.OwnersForReading.ElementAtOrDefault(0);
+                        CompDeathrestBindable cdb = this.parent.GetComp<CompDeathrestBindable>();
+                        Pawn bindee = cdb?.BoundPawn;
+                        Pawn pawn = bindee ?? assignee;
+                        if (pawn != null) {
+                            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                            Gene_Deathrest gene_Deathrest = pawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
+                            if (pawnXAttrs != null) {
+                                foreach (Gizmo x in pawnXAttrs.automaticDeathrestTracker.CompGetGizmosExtraImpl(true)) {
+                                    yield return x;
+                                }
+                            }
+                        } else {
+                            foreach (Gizmo x in PawnXAttrs_AutomaticDeathrestTracker.MockCompGetGizmosExtraImpl(true)) {
+                                yield return x;
+                            }
                         }
                     }
                 }
