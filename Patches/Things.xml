@@ -9,4 +9,9 @@
         <xpath>Defs/ThingDef[thingClass="Building_Bed"]/comps</xpath>
 		<value><li><compClass>BedOwnershipTools.CompBuilding_BedXAttrs</compClass></li></value>
 	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+        <xpath>Defs/ThingDef/comps[./li/@Class="CompProperties_DeathrestBindable"]</xpath>
+		<value><li><compClass>BedOwnershipTools.CompDeathrestBindableXAttrs</compClass></li></value>
+	</Operation>
 </Patch>

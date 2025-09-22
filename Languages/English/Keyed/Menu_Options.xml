@@ -3,6 +3,7 @@
     <BedOwnershipTools.CommunalBedsHeading>Communal beds</BedOwnershipTools.CommunalBedsHeading>
     <BedOwnershipTools.AssignmentPinningHeading>Assignment pinning</BedOwnershipTools.AssignmentPinningHeading>
     <BedOwnershipTools.AssignmentGroupsHeading>Assignment groups</BedOwnershipTools.AssignmentGroupsHeading>
+    <BedOwnershipTools.DeathrestBindingsHeading>Deathrest bindings</BedOwnershipTools.DeathrestBindingsHeading>
     <BedOwnershipTools.AutomaticDeathrestHeading>Automatic deathrest</BedOwnershipTools.AutomaticDeathrestHeading>
     <BedOwnershipTools.UICustomizationsHeading>UI customizations</BedOwnershipTools.UICustomizationsHeading>
     <BedOwnershipTools.ModCompatibilityHeading>Mod compatibility</BedOwnershipTools.ModCompatibilityHeading>
@@ -26,8 +27,15 @@
     <BedOwnershipTools.UseAssignmentGroupsForDeathrestCaskets>Use assignment groups for deathrest caskets</BedOwnershipTools.UseAssignmentGroupsForDeathrestCaskets>
     <BedOwnershipTools.UseAssignmentGroupsForDeathrestCaskets_Tooltip>If enabled with the multiple bed assignment system, allows deathrest caskets to be categorized by the player into assignment groups.\n\nDeathresters may own at most one deathrest casket in addition to their bed in each assignment group.\n\nAssignment group priority is used to select between multiple deathrest caskets for automatic deathrest.</BedOwnershipTools.UseAssignmentGroupsForDeathrestCaskets_Tooltip>
 
+    <BedOwnershipTools.EnableSpareDeathrestBindings>Enable spare deathrest bindings</BedOwnershipTools.EnableSpareDeathrestBindings>
+    <BedOwnershipTools.EnableSpareDeathrestBindings_Tooltip>If enabled, deathresters can bind to multiple deathrest caskets and more buildings than supported by their deathrest serum capacity.\n\nWith spare bindings, deathresters can switch between deathrest buildings without needing to deconstruct the previously used set. Deathresters will still be limited by serum capacity while deathresting.</BedOwnershipTools.EnableSpareDeathrestBindings_Tooltip>
+    <BedOwnershipTools.DeathrestBindingsArePermanent>Deathrest bindings are permanent</BedOwnershipTools.DeathrestBindingsArePermanent>
+    <BedOwnershipTools.DeathrestBindingsArePermanent_Tooltip>If enabled with the spare deathrest bindings feature, retains vanilla game behaviour where deathrest buildings are irreversibly bound to the building's first user. If disabled, allows bound buildings to be transferred between deathresters without restriction.</BedOwnershipTools.DeathrestBindingsArePermanent_Tooltip>
+
     <BedOwnershipTools.EnableAutomaticDeathrest>Enable automatic deathrest</BedOwnershipTools.EnableAutomaticDeathrest>
-    <BedOwnershipTools.EnableAutomaticDeathrest_Tooltip>If enabled, allows the player to optionally assign automatic deathrest schedules to deathrester colonists.\n\nDeathresters following a schedule will autonomously deathrest on certain calendar dates or at certain exhaustion levels.</BedOwnershipTools.EnableAutomaticDeathrest_Tooltip>
+    <BedOwnershipTools.EnableAutomaticDeathrest_Tooltip>If enabled, allows the player to optionally assign automatic deathrest schedules to deathrester colonists.\n\nDeathresters following a schedule will autonomously deathrest on certain calendar dates or at certain exhaustion levels. Deathresters will not automatically deathrest if they do not own a deathrest casket or regular bed.</BedOwnershipTools.EnableAutomaticDeathrest_Tooltip>
+    <BedOwnershipTools.IgnoreBedsForAutomaticDeathrest>Ignore beds for automatic deathrest</BedOwnershipTools.IgnoreBedsForAutomaticDeathrest>
+    <BedOwnershipTools.IgnoreBedsForAutomaticDeathrest_Tooltip>If enabled with the automatic deathrest feature, deathrester colonists will not use regular beds for automatic deathrest. If disabled, deathrester colonists will consider using regular beds for automatic deathrest if they cannot locate a deathrest casket.\n\nDeathresters will always prioritize using deathrest caskets over beds.</BedOwnershipTools.IgnoreBedsForAutomaticDeathrest_Tooltip>
 
     <BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed>Show "communal" label instead of blank under bed</BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed>
     <BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed_Tooltip>If enabled with the communal bed feature, vacant communal beds will indicate their owner as "(comm.)" over the bed. If disabled, communal beds will not display anything where "Unowned" would normally be shown.\n\n(Note that regardless of this setting, bed settings can be inspected by clicking on the bed.)</BedOwnershipTools.ShowCommunalGUIOverlayInsteadOfBlankUnderBed_Tooltip>

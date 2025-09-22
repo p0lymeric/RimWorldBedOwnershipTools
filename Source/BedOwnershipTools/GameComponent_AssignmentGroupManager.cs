@@ -12,10 +12,12 @@ namespace BedOwnershipTools {
         // Tracks all live ThingComps introduced by this mod for enumeration purposes
         public HashSet<CompPawnXAttrs> compPawnXAttrsRegistry;
         public HashSet<CompBuilding_BedXAttrs> compBuilding_BedXAttrsRegistry;
+        public HashSet<CompDeathrestBindableXAttrs> compDeathrestBindableXAttrsRegistry;
 
         // Management compartments
         public AGMCompartment_AssignmentGroups agmCompartment_AssignmentGroups;
         public AGMCompartment_HarmonyPatchState agmCompartment_HarmonyPatchState;
+        public AGMCompartment_SpareDeathrestBindings agmCompartment_SpareDeathrestBindings;
         public AGMCompartment_AutomaticDeathrest agmCompartment_AutomaticDeathrest;
 
         // Observed execution order
@@ -49,19 +51,23 @@ namespace BedOwnershipTools {
 
             compPawnXAttrsRegistry = new();
             compBuilding_BedXAttrsRegistry = new();
+            compDeathrestBindableXAttrsRegistry = new();
 
             this.agmCompartment_AssignmentGroups = new(game, this);
             this.agmCompartment_HarmonyPatchState = new(game, this);
+            this.agmCompartment_SpareDeathrestBindings = new(game, this);
             this.agmCompartment_AutomaticDeathrest = new(game, this);
         }
 
         public void Notify_WriteSettings() {
             agmCompartment_AssignmentGroups.Notify_WriteSettings();
+            agmCompartment_SpareDeathrestBindings.Notify_WriteSettings();
             agmCompartment_AutomaticDeathrest.Notify_WriteSettings();
         }
 
         public override void FinalizeInit() {
             agmCompartment_AssignmentGroups.FinalizeInit();
+            agmCompartment_SpareDeathrestBindings.FinalizeInit();
             agmCompartment_AutomaticDeathrest.FinalizeInit();
         }
 

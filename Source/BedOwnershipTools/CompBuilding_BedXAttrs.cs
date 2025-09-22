@@ -248,8 +248,11 @@ namespace BedOwnershipTools {
                         Pawn assignee = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?
                             this.assignedPawnsOverlay.ElementAtOrDefault(0) :
                             bed.OwnersForReading.ElementAtOrDefault(0);
+                        CompDeathrestBindableXAttrs cdbXAttrs = this.parent.GetComp<CompDeathrestBindableXAttrs>();
                         CompDeathrestBindable cdb = this.parent.GetComp<CompDeathrestBindable>();
-                        Pawn bindee = cdb?.BoundPawn;
+                        Pawn bindee = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings ?
+                            cdbXAttrs?.boundPawnOverlay :
+                            cdb?.BoundPawn;
                         Pawn pawn = bindee ?? assignee;
                         if (pawn != null) {
                             CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();

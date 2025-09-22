@@ -15,7 +15,11 @@ namespace BedOwnershipTools {
         public bool enableBedAssignmentGroups = true;
         public bool useAssignmentGroupsForDeathrestCaskets = true;
 
+        public bool enableSpareDeathrestBindings = true;
+        public bool deathrestBindingsArePermanent = true;
+
         public bool enableAutomaticDeathrest = true;
+        public bool ignoreBedsForAutomaticDeathrest = true;
 
         public bool showCommunalGUIOverlayInsteadOfBlankUnderBed = true;
         public bool hideGUIOverlayOnNonHumanlikeBeds = true;
@@ -44,7 +48,11 @@ namespace BedOwnershipTools {
             this.enableBedAssignmentGroups = true;
             this.useAssignmentGroupsForDeathrestCaskets = true;
 
+            this.enableSpareDeathrestBindings = true;
+            this.deathrestBindingsArePermanent = true;
+
             this.enableAutomaticDeathrest = true;
+            this.ignoreBedsForAutomaticDeathrest = true;
 
             this.showCommunalGUIOverlayInsteadOfBlankUnderBed = true;
             this.hideGUIOverlayOnNonHumanlikeBeds = true;
@@ -75,7 +83,11 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref this.enableBedAssignmentGroups, "enableBedAssignmentGroups", true);
             Scribe_Values.Look(ref this.useAssignmentGroupsForDeathrestCaskets, "useAssignmentGroupsForDeathrestCaskets", true);
 
+            Scribe_Values.Look(ref this.enableSpareDeathrestBindings, "enableSpareDeathrestBindings", true);
+            Scribe_Values.Look(ref this.deathrestBindingsArePermanent, "deathrestBindingsArePermanent", true);
+
             Scribe_Values.Look(ref this.enableAutomaticDeathrest, "enableAutomaticDeathrest", true);
+            Scribe_Values.Look(ref this.ignoreBedsForAutomaticDeathrest, "ignoreBedsForAutomaticDeathrest", true);
 
             Scribe_Values.Look(ref this.showCommunalGUIOverlayInsteadOfBlankUnderBed, "showCommunalGUIOverlayInsteadOfBlankUnderBed", true);
             Scribe_Values.Look(ref this.hideGUIOverlayOnNonHumanlikeBeds, "hideGUIOverlayOnNonHumanlikeBeds", true);

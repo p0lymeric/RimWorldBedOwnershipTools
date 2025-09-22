@@ -107,6 +107,34 @@ namespace BedOwnershipTools {
             }
         }
 
+        [HarmonyPatch(typeof(CompDeathrestBindable), nameof(CompDeathrestBindable.CompInspectStringExtra))]
+        public class Patch_CompDeathrestBindable_CompInspectStringExtra {
+            static bool Prefix(CompDeathrestBindable __instance, ref string __result) {
+                if (!BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings) {
+                    return true;
+                }
+                string text = null;
+                CompDeathrestBindableXAttrs cdbXAttrs = __instance.parent.GetComp<CompDeathrestBindableXAttrs>();
+                Pawn bindee = __instance.BoundPawn ?? cdbXAttrs.boundPawnOverlay;
+                bool virtuallyButNotActuallyBound = (__instance.BoundPawn == null) && (cdbXAttrs.boundPawnOverlay != null);
+                Gene_Deathrest deathrestGene = bindee?.genes?.GetFirstGeneOfType<Gene_Deathrest>();
+                if (bindee != null && deathrestGene != null) {
+                    text = text + ("BoundTo".Translate() + ": " + bindee.NameShortColored).Resolve() + string.Format(" ({0}/{1} {2})", deathrestGene.CurrentCapacity, deathrestGene.DeathrestCapacity, "DeathrestCapacity".Translate());
+                    if (virtuallyButNotActuallyBound) {
+                        text += " " + "BedOwnershipTools.InactiveBrackets".Translate().Resolve();
+                    }
+                    if (__instance.Props.displayTimeActive && __instance.presenceTicks > 0 && deathrestGene.deathrestTicks > 0) {
+                        float f = Mathf.Clamp01((float)__instance.presenceTicks / (float)deathrestGene.deathrestTicks);
+                        text += string.Format("\n{0}: {1} / {2} ({3})\n{4}", "TimeActiveThisDeathrest".Translate(), __instance.presenceTicks.ToStringTicksToPeriod(allowSeconds: true, shortForm: true), deathrestGene.deathrestTicks.ToStringTicksToPeriod(allowSeconds: true, shortForm: true), f.ToStringPercent(), "MinimumNeededToApply".Translate(0.75f.ToStringPercent()));
+                    }
+                } else {
+                    text += "WillBindOnFirstUse".Translate();
+                }
+                __result = text;
+                return false;
+            }
+        }
+
         [HarmonyPatch(typeof(CompAssignableToPawn_Bed), "ShouldShowAssignmentGizmo")]
         public class Patch_CompAssignableToPawn_Bed_ShouldShowAssignmentGizmo {
             static void Postfix(CompAssignableToPawn_Bed __instance, ref bool __result) {
@@ -119,14 +147,13 @@ namespace BedOwnershipTools {
         }
 
         // show overlay inactive as grey
+        // and bound as yellow
         [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.DrawGUIOverlay))]
         public class Patch_Building_Bed_DrawGUIOverlay {
             static bool Prefix(Building_Bed __instance) {
                 if (__instance.Medical || Find.CameraDriver.CurrentZoom != CameraZoomRange.Closest || !__instance.CompAssignableToPawn.PlayerCanSeeAssignments) {
                     return false;
                 }
-
-                // TODO for deathrest casket show bindee if not assigned
 
                 bool showCommunalGUIOverlayInsteadOfBlankUnderBed = BedOwnershipTools.Singleton.settings.showCommunalGUIOverlayInsteadOfBlankUnderBed;
                 bool hideDisplayStringForNonHumanlikeBeds = !__instance.def.building.bed_humanlike && BedOwnershipTools.Singleton.settings.hideGUIOverlayOnNonHumanlikeBeds;
@@ -137,8 +164,27 @@ namespace BedOwnershipTools {
                 }
 
                 Color defaultThingLabelColor = GenMapUI.DefaultThingLabelColor;
-                Color grey = new Color(0.5f, 0.5f, 0.5f, 1f);
+                // Color grey = new Color(0.5f, 0.5f, 0.5f, 1f);
+                // Color yellow = new Color(0.96f, 0.77f, 0.19f, 1f);
+                Color grey = ColoredText.SubtleGrayColor;
+                Color yellow = ColoredText.NameColor;
+                bool boundButNotAssigned = false;
                 List<Pawn> assignedPawns = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ? xAttrs.assignedPawnsOverlay : __instance.CompAssignableToPawn.AssignedPawnsForReading;
+                // bleh
+                if (assignedPawns.Count == 0) {
+                    if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(__instance.def)) {
+                        CompDeathrestBindable cdb = __instance.GetComp<CompDeathrestBindable>();
+                        CompDeathrestBindableXAttrs cdbXAttrs = __instance.GetComp<CompDeathrestBindableXAttrs>();
+                        if (cdb != null && cdbXAttrs != null) {
+                            assignedPawns = new();
+                            Pawn boundPawn = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings ? cdbXAttrs.boundPawnOverlay : cdb.BoundPawn;
+                            if (boundPawn != null) {
+                                assignedPawns.Add(boundPawn);
+                                boundButNotAssigned = true;
+                            }
+                        }
+                    }
+                }
                 if (!__instance.ForPrisoners && !__instance.Medical && xAttrs.IsAssignedToCommunity) {
                     if (showCommunalGUIOverlayInsteadOfBlankUnderBed && !hideDisplayStringForNonHumanlikeBeds) {
                         GenMapUI.DrawThingLabel(__instance, "BedOwnershipTools.CommunalAbbrevBrackets".Translate(), defaultThingLabelColor);
@@ -151,7 +197,7 @@ namespace BedOwnershipTools {
                     if ((!pawn.InBed() || pawn.CurrentBed() != __instance) && (!pawn.RaceProps.Animal || Prefs.AnimalNameMode.ShouldDisplayAnimalName(pawn))) {
                         if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                             bool active = __instance.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn);
-                            GenMapUI.DrawThingLabel(__instance, pawn.LabelShort, active ? defaultThingLabelColor : grey);
+                            GenMapUI.DrawThingLabel(__instance, pawn.LabelShort, boundButNotAssigned ? yellow : active ? defaultThingLabelColor : grey);
                         } else {
                             GenMapUI.DrawThingLabel(__instance, pawn.LabelShort, defaultThingLabelColor);
                         }
@@ -165,7 +211,7 @@ namespace BedOwnershipTools {
                             }
                             if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                                 bool active = __instance.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn2);
-                                GenMapUI.DrawThingLabel(GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, active ? defaultThingLabelColor : grey);
+                                GenMapUI.DrawThingLabel(GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, boundButNotAssigned ? yellow : active ? defaultThingLabelColor : grey);
                             } else {
                                 GenMapUI.DrawThingLabel(HarmonyPatches.DelegatesAndRefs.Building_Bed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, defaultThingLabelColor);
                             }

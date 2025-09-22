@@ -45,13 +45,26 @@ namespace BedOwnershipTools {
                     if (building_Bed != null) {
                         return JobMaker.MakeJob(JobDefOf.Deathrest, building_Bed);
                     }
-                    building_Bed = RestUtility.FindBedFor(pawn);
-                    if (building_Bed != null) {
-                        return JobMaker.MakeJob(JobDefOf.Deathrest, building_Bed);
+                    if (!BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest) {
+                        building_Bed = RestUtility.FindBedFor(pawn);
+                        if (building_Bed != null && !ThingTouchingSunlight(building_Bed)) {
+                            return JobMaker.MakeJob(JobDefOf.Deathrest, building_Bed);
+                        }
                     }
                 }
             }
             return null;
+        }
+
+        public bool ThingTouchingSunlight(Thing thing) {
+            if (thing != null && thing.Map != null) {
+                foreach (IntVec3 coord in thing.OccupiedRect()) {
+                    if (coord.InSunlight(thing.Map)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public Building_Bed FindDeathrestCasketFor(Pawn pawn) {
@@ -62,7 +75,7 @@ namespace BedOwnershipTools {
             if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                 foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
                     if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
-                        if (pawn.CanReach(bed, PathEndMode.OnCell, Danger.Some)) {
+                        if (pawn.CanReach(bed, PathEndMode.OnCell, Danger.Some) && !ThingTouchingSunlight(bed)) {
                             pawn.ownership.ClaimDeathrestCasket(bed);
                             return bed;
                         }
@@ -70,12 +83,30 @@ namespace BedOwnershipTools {
                 }
             } else {
                 if (pawn.ownership.AssignedDeathrestCasket != null) {
-                    if (pawn.CanReach(pawn.ownership.AssignedDeathrestCasket, PathEndMode.OnCell, Danger.Some)) {
+                    if (pawn.CanReach(pawn.ownership.AssignedDeathrestCasket, PathEndMode.OnCell, Danger.Some) && !ThingTouchingSunlight(pawn.ownership.AssignedDeathrestCasket)) {
                         return pawn.ownership.AssignedDeathrestCasket;
                     }
                 }
             }
-            // TODO if I'm bound to a deathrest casket, then use that deathrest casket
+            // TODO should search through some pawn-specific structure instead of a global registry
+            // should also avoid redundant CanReach searches
+            // what shall we do when we want things done?
+            // FIXME should also account for assignment group order when searching through binds
+            foreach (CompDeathrestBindableXAttrs cdbXAttrs in GameComponent_AssignmentGroupManager.Singleton.compDeathrestBindableXAttrsRegistry) {
+                if (cdbXAttrs.parent is Building_Bed bed) {
+                    if (cdbXAttrs.boundPawnOverlay == pawn) {
+                        if (pawn.CanReach(bed, PathEndMode.OnCell, Danger.Some) && !ThingTouchingSunlight(bed)) {
+                            return bed;
+                        }
+                    }
+                    CompDeathrestBindable cdb = cdbXAttrs.parent.GetComp<CompDeathrestBindable>();
+                    if (cdb != null && cdb.BoundPawn == pawn) {
+                        if (pawn.CanReach(bed, PathEndMode.OnCell, Danger.Some) && !ThingTouchingSunlight(bed)) {
+                            return bed;
+                        }
+                    }
+                }
+            }
             return null;
         }
 

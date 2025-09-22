@@ -71,11 +71,29 @@ namespace BedOwnershipTools {
             );
 
             listingStandard.GapLine();
+            listingStandard.Label("BedOwnershipTools.DeathrestBindingsHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.EnableSpareDeathrestBindings".Translate(),
+                ref settings.enableSpareDeathrestBindings,
+                "BedOwnershipTools.EnableSpareDeathrestBindings_Tooltip".Translate()
+            );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.DeathrestBindingsArePermanent".Translate(),
+                ref settings.deathrestBindingsArePermanent,
+                "BedOwnershipTools.DeathrestBindingsArePermanent_Tooltip".Translate()
+            );
+
+            listingStandard.GapLine();
             listingStandard.Label("BedOwnershipTools.AutomaticDeathrestHeading".Translate().Colorize(ColoredText.SubtleGrayColor));
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableAutomaticDeathrest".Translate(),
                 ref settings.enableAutomaticDeathrest,
                 "BedOwnershipTools.EnableAutomaticDeathrest_Tooltip".Translate()
+            );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.IgnoreBedsForAutomaticDeathrest".Translate(),
+                ref settings.ignoreBedsForAutomaticDeathrest,
+                "BedOwnershipTools.IgnoreBedsForAutomaticDeathrest_Tooltip".Translate()
             );
             listingStandard.End();
 
