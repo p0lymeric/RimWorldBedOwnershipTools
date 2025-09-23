@@ -13,7 +13,6 @@ namespace BedOwnershipTools {
         public bool pawnsMaySelfAssignToUnownedPinnedBeds = true;
 
         public bool enableBedAssignmentGroups = true;
-        public bool useAssignmentGroupsForDeathrestCaskets = true;
 
         public bool enableSpareDeathrestBindings = true;
         public bool deathrestBindingsArePermanent = true;
@@ -46,7 +45,6 @@ namespace BedOwnershipTools {
             this.pawnsMaySelfAssignToUnownedPinnedBeds = true;
 
             this.enableBedAssignmentGroups = true;
-            this.useAssignmentGroupsForDeathrestCaskets = true;
 
             this.enableSpareDeathrestBindings = true;
             this.deathrestBindingsArePermanent = true;
@@ -81,7 +79,6 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref this.pawnsMaySelfAssignToUnownedPinnedBeds, "pawnsMaySelfAssignToUnownedPinnedBeds", true);
 
             Scribe_Values.Look(ref this.enableBedAssignmentGroups, "enableBedAssignmentGroups", true);
-            Scribe_Values.Look(ref this.useAssignmentGroupsForDeathrestCaskets, "useAssignmentGroupsForDeathrestCaskets", true);
 
             Scribe_Values.Look(ref this.enableSpareDeathrestBindings, "enableSpareDeathrestBindings", true);
             Scribe_Values.Look(ref this.deathrestBindingsArePermanent, "deathrestBindingsArePermanent", true);

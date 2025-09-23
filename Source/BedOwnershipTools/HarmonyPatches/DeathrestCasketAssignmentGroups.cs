@@ -23,12 +23,23 @@ namespace BedOwnershipTools {
 
         [HarmonyPatch(typeof(CompAssignableToPawn_DeathrestCasket), nameof(CompAssignableToPawn_DeathrestCasket.TryUnassignPawn))]
         public class Patch_CompAssignableToPawn_DeathrestCasket_TryUnassignPawn {
+            static void Prefix(CompAssignableToPawn_DeathrestCasket __instance, Pawn pawn, bool sort = true, bool uninstall = false) {
+                if (Patch_CompAssignableToPawn_TryUnassignPawn.setBeforeCallingToNotInvalidateAllOverlays) {
+                    Patch_Pawn_Ownership_UnclaimDeathrestCasket.HintDontInvalidateOverlays();
+                }
+                if (Patch_CompAssignableToPawn_TryUnassignPawn.setBeforeCallingToInvalidateAllOverlaysWithoutWarning) {
+                    Patch_Pawn_Ownership_UnclaimDeathrestCasket.HintInvalidateAllOverlays();
+                }
+                Patch_CompAssignableToPawn_TryUnassignPawn.ClearHints();
+            }
             static void Postfix(CompAssignableToPawn_DeathrestCasket __instance, Pawn pawn, bool sort = true, bool uninstall = false) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (!enableBedAssignmentGroups) {
+                    Patch_Pawn_Ownership_UnclaimDeathrestCasket.ClearHints();
                     return;
                 }
                 CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, pawn, sort, uninstall);
+                Patch_Pawn_Ownership_UnclaimDeathrestCasket.ClearHints();
             }
         }
 
@@ -134,7 +145,7 @@ namespace BedOwnershipTools {
                 harmony.Patch(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.Notify_ChangedGuestStatus)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
 
                 // RimWorld.CompAssignableToPawn_DeathrestCasket.TryUnassignPawn -- directed, HIT
-                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn_DeathrestCasket), nameof(CompAssignableToPawn_DeathrestCasket.TryUnassignPawn)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
+                // handled in Patch_CompAssignableToPawn_TryUnassignPawn
             }
         }
     }

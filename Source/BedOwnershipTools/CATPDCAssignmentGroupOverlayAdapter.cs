@@ -38,6 +38,7 @@ namespace BedOwnershipTools {
         }
 
         public override void TryUnassignPawn(Pawn pawn, bool sort = true, bool uninstall = false) {
+            HarmonyPatches.Patch_CompAssignableToPawn_TryUnassignPawn.HintDontInvalidateOverlays();
             inner.TryUnassignPawn(pawn, sort, uninstall);
         }
     }

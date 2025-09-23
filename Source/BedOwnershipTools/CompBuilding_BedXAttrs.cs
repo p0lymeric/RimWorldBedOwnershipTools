@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace BedOwnershipTools {
     public class CompBuilding_BedXAttrs : ThingComp {
+        private static readonly CachedTexture PinOwnerTex = new("BedOwnershipTools/UI/Commands/PinOwner");
+        private static readonly CachedTexture CommunalOwnerTex = new("BedOwnershipTools/UI/Commands/CommunalOwner");
+
         // Whether this bed is owned by the community -- i.e. no assigned owner and anyone may use it
         private bool isAssignedToCommunity = false;
         public bool IsAssignedToCommunity {
@@ -186,7 +189,7 @@ namespace BedOwnershipTools {
                 Command_Toggle toggleIsAssignmentPinned = new Command_Toggle();
                 toggleIsAssignmentPinned.defaultLabel = "BedOwnershipTools.CommandToggleIsAssignmentPinned".Translate();
                 toggleIsAssignmentPinned.defaultDesc = "BedOwnershipTools.CommandToggleIsAssignmentPinnedDesc".Translate();
-                toggleIsAssignmentPinned.icon = ContentFinder<Texture2D>.Get("BedOwnershipTools/UI/Commands/PinOwner");
+                toggleIsAssignmentPinned.icon = PinOwnerTex.Texture;
                 toggleIsAssignmentPinned.isActive = () => this.isAssignmentPinned;
                 toggleIsAssignmentPinned.toggleAction = delegate {
                     this.isAssignmentPinned = !this.isAssignmentPinned;
@@ -207,13 +210,11 @@ namespace BedOwnershipTools {
                 Command_SetAssignmentGroup selectAssignmentGroup = new Command_SetAssignmentGroup(this);
                 if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(BedOwnershipTools.Singleton.settings.useAssignmentGroupsForDeathrestCaskets || !CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
-                            if (disableGizmos) {
-                                selectAssignmentGroup.Disable();
-                            }
-                            if(!this.isAssignedToCommunity) {
-                                yield return selectAssignmentGroup;
-                            }
+                        if (disableGizmos) {
+                            selectAssignmentGroup.Disable();
+                        }
+                        if(!this.isAssignedToCommunity) {
+                            yield return selectAssignmentGroup;
                         }
                     }
                 }
@@ -223,7 +224,7 @@ namespace BedOwnershipTools {
                 toggleIsAssignedToCommunity.defaultDesc = this.isAssignedToCommunity ?
                     "BedOwnershipTools.CommandToggleIsAssignedToCommunityCommunalDesc".Translate() :
                     "BedOwnershipTools.CommandToggleIsAssignedToCommunityNonCommunalDesc".Translate();
-                toggleIsAssignedToCommunity.icon = ContentFinder<Texture2D>.Get("BedOwnershipTools/UI/Commands/CommunalOwner");
+                toggleIsAssignedToCommunity.icon = CommunalOwnerTex.Texture;
                 toggleIsAssignedToCommunity.isActive = () => this.isAssignedToCommunity;
                 toggleIsAssignedToCommunity.toggleAction = delegate {
                     if (!this.isAssignedToCommunity) {

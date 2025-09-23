@@ -79,16 +79,122 @@ namespace BedOwnershipTools {
             }
         }
 
-        // All users of this path should set one of the UnclaimBed hints because this function will call UnclaimBed exactly once
+        public class Patch_CompAssignableToPawn_TryUnassignPawn {
+            // Since callers are unaware of multiple bed ownership, there is some ambiguity over
+            // if a caller wishes to unbind everything the Pawn owns, or if they'd just want the single bed unassigned.
+
+            // The complicating factor is that virtual calls to CATPB/CATPDC reference the base class, so the patches
+            // on the derived implementations need to proxy these hints and clear this tracker's state.
+
+            // Note that unlike with hints directly against UnclaimBed, TryUnassignPawn handlers will automatically
+            // insert a call to UnclaimBedDirected for the referenced bed, so it's not necessary to write patches
+            // for the directed or invall paths if the intent is to only relinquish one or all beds.
+            // Custom patches are only needed for invalidating a certain subset of beds.
+            public static bool setBeforeCallingToNotInvalidateAllOverlays = false;
+            public static bool setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
+
+            public static void HintDontInvalidateOverlays() {
+                setBeforeCallingToNotInvalidateAllOverlays = true;
+            }
+            public static void HintInvalidateAllOverlays() {
+                setBeforeCallingToInvalidateAllOverlaysWithoutWarning = true;
+            }
+            public static void ClearHints() {
+                setBeforeCallingToNotInvalidateAllOverlays = false;
+                setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
+            }
+
+            public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_CompAssignableToPawn_TryUnassignPawn),
+                            nameof(Patch_CompAssignableToPawn_TryUnassignPawn.HintDontInvalidateOverlays))
+                        )
+                    },
+                    false,
+                    true
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_CompAssignableToPawn_TryUnassignPawn),
+                            nameof(Patch_CompAssignableToPawn_TryUnassignPawn.HintInvalidateAllOverlays))
+                        )
+                    },
+                    false,
+                    true
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_CompAssignableToPawn_TryUnassignPawn),
+                            nameof(Patch_CompAssignableToPawn_TryUnassignPawn.HintDontInvalidateOverlays))
+                        )
+                    },
+                    false,
+                    false
+                );
+            }
+            public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysNoErrorTranspiler(IEnumerable<CodeInstruction> instructions) {
+                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.TryUnassignPawn))),
+                    new[] {
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(typeof(Patch_CompAssignableToPawn_TryUnassignPawn),
+                            nameof(Patch_CompAssignableToPawn_TryUnassignPawn.HintInvalidateAllOverlays))
+                        )
+                    },
+                    false,
+                    false
+                );
+            }
+
+            public static void ApplyHarmonyPatches(Harmony harmony) {
+                // RimWorld.CompAssignableToPawn.TryUnassignPawn RimWorld.CompAssignableToPawn.PostDeSpawn -- directed, HIT
+                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostDeSpawn)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
+
+                // RimWorld.CompAssignableToPawn.TryUnassignPawn RimWorld.CompAssignableToPawn.PostSwapMap -- invall, pawn was destroyed check, HIT
+#if RIMWORLD__1_6
+                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostSwapMap)), transpiler: new HarmonyMethod(InsertHintInvalidateAllOverlaysTranspiler));
+#endif
+
+                // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.Dialog_AssignBuildingOwner.DrawAssignedRow -- directed, other calling paths shouldn't exist, HIT
+                // OK hint already inserted in CATPBGroupAssignmentOverlayAdapter
+            }
+        }
+
         [HarmonyPatch(typeof(CompAssignableToPawn_Bed), nameof(CompAssignableToPawn_Bed.TryUnassignPawn))]
         public class Patch_CompAssignableToPawn_Bed_TryUnassignPawn {
             static void Prefix(CompAssignableToPawn_Bed __instance, Pawn pawn, bool sort = true, bool uninstall = false) {
-                Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays();
+                if (Patch_CompAssignableToPawn_TryUnassignPawn.setBeforeCallingToNotInvalidateAllOverlays) {
+                    Patch_Pawn_Ownership_UnclaimBed.HintDontInvalidateOverlays();
+                }
+                if (Patch_CompAssignableToPawn_TryUnassignPawn.setBeforeCallingToInvalidateAllOverlaysWithoutWarning) {
+                    Patch_Pawn_Ownership_UnclaimBed.HintInvalidateAllOverlays();
+                }
+                Patch_CompAssignableToPawn_TryUnassignPawn.ClearHints();
             }
 
             static void Postfix(CompAssignableToPawn_Bed __instance, Pawn pawn, bool sort = true, bool uninstall = false) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (!enableBedAssignmentGroups) {
+                    Patch_Pawn_Ownership_UnclaimBed.ClearHints();
                     return;
                 }
                 CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, pawn, sort, uninstall);
@@ -297,7 +403,7 @@ namespace BedOwnershipTools {
                 harmony.Patch(AccessTools.Method(typeof(Building_Bed), "RemoveAllOwners"), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
 
                 // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn -- directed, HIT
-                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn_Bed), nameof(CompAssignableToPawn_Bed.TryUnassignPawn)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
+                // handled in Patch_CompAssignableToPawn_TryUnassignPawn
             }
         }
 

@@ -86,6 +86,24 @@ namespace BedOwnershipTools {
             };
         }
 
+        public static float LowDeathrestAlertLevel(this AutomaticDeathrestMode automaticDeathrestMode) {
+            const float DAYS_PER_DEATHREST_PERIOD = 30.0f;
+            return automaticDeathrestMode switch {
+                AutomaticDeathrestMode.Manual => 3.0f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.Exhaustion1Hour => 0f,
+                AutomaticDeathrestMode.Exhaustion3Hours => 0f,
+                AutomaticDeathrestMode.Exhaustion1Day => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.Exhaustion3Days => 1.0f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.CalendarAprimaySeptober1To5 => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.CalendarAprimaySeptober6To10 => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.CalendarAprimaySeptober11To15 => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.CalendarJugustDecembary1To5 => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.CalendarJugustDecembary6To10 => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.CalendarJugustDecembary11To15 => 0.5f / DAYS_PER_DEATHREST_PERIOD,
+                _ => 3.0f / DAYS_PER_DEATHREST_PERIOD
+            };
+        }
+
         public static string LabelStringWithColour(this AutomaticDeathrestMode automaticDeathrestMode) {
             return automaticDeathrestMode.Discipline() switch {
                 AutomaticDeathrestScheduleDiscipline.Manual => automaticDeathrestMode.LabelString().Colorize(ColoredText.DateTimeColor),

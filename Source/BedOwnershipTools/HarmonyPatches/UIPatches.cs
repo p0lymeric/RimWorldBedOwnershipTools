@@ -146,8 +146,7 @@ namespace BedOwnershipTools {
             }
         }
 
-        // show overlay inactive as grey
-        // and bound as yellow
+        // show overlay inactive or bound unassigned as grey
         [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.DrawGUIOverlay))]
         public class Patch_Building_Bed_DrawGUIOverlay {
             static bool Prefix(Building_Bed __instance) {
@@ -164,10 +163,8 @@ namespace BedOwnershipTools {
                 }
 
                 Color defaultThingLabelColor = GenMapUI.DefaultThingLabelColor;
-                // Color grey = new Color(0.5f, 0.5f, 0.5f, 1f);
-                // Color yellow = new Color(0.96f, 0.77f, 0.19f, 1f);
-                Color grey = ColoredText.SubtleGrayColor;
-                Color yellow = ColoredText.NameColor;
+                Color grey = new Color(0.6f, 0.6f, 0.6f, 1f);
+                Color lightGrey = new Color(0.5f, 0.5f, 0.5f, 0.5f);
                 bool boundButNotAssigned = false;
                 List<Pawn> assignedPawns = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ? xAttrs.assignedPawnsOverlay : __instance.CompAssignableToPawn.AssignedPawnsForReading;
                 // bleh
@@ -197,7 +194,7 @@ namespace BedOwnershipTools {
                     if ((!pawn.InBed() || pawn.CurrentBed() != __instance) && (!pawn.RaceProps.Animal || Prefs.AnimalNameMode.ShouldDisplayAnimalName(pawn))) {
                         if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                             bool active = __instance.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn);
-                            GenMapUI.DrawThingLabel(__instance, pawn.LabelShort, boundButNotAssigned ? yellow : active ? defaultThingLabelColor : grey);
+                            GenMapUI.DrawThingLabel(__instance, pawn.LabelShort, boundButNotAssigned ? lightGrey : active ? defaultThingLabelColor : grey);
                         } else {
                             GenMapUI.DrawThingLabel(__instance, pawn.LabelShort, defaultThingLabelColor);
                         }
@@ -211,7 +208,7 @@ namespace BedOwnershipTools {
                             }
                             if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                                 bool active = __instance.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn2);
-                                GenMapUI.DrawThingLabel(GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, boundButNotAssigned ? yellow : active ? defaultThingLabelColor : grey);
+                                GenMapUI.DrawThingLabel(GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, boundButNotAssigned ? lightGrey : active ? defaultThingLabelColor : grey);
                             } else {
                                 GenMapUI.DrawThingLabel(HarmonyPatches.DelegatesAndRefs.Building_Bed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, defaultThingLabelColor);
                             }

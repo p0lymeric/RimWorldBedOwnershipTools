@@ -9,6 +9,7 @@ namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
         public static void ApplyHarmonyPatches(BedOwnershipTools mod) {
             mod.harmony.PatchAllUncategorized();
+            Patch_CompAssignableToPawn_TryUnassignPawn.ApplyHarmonyPatches(mod.harmony);
             Patch_Pawn_Ownership_UnclaimBed.ApplyHarmonyPatches(mod.harmony);
             Patch_Pawn_Ownership_UnclaimDeathrestCasket.ApplyHarmonyPatches(mod.harmony);
             if (mod.runtimeHandles.modHospitalityLoadedForCompatPatching) {

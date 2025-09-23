@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace BedOwnershipTools {
     public class Command_SetAutomaticDeathrestMode : Command {
+        private static readonly CachedTexture DeathrestAutoScheduleTex = new("BedOwnershipTools/UI/Commands/DeathrestAutoSchedule");
+
         private CompPawnXAttrs xAttrs;
 
         public Command_SetAutomaticDeathrestMode(CompPawnXAttrs xAttrs) {
@@ -21,9 +23,8 @@ namespace BedOwnershipTools {
                 this.defaultDesc = "BedOwnershipTools.Command_GenericDisabledDesc".Translate();
                 this.Disable("BedOwnershipTools.Command_GenericDisabledNoOwnerReason".Translate());
             }
-            this.icon = ContentFinder<Texture2D>.Get("BedOwnershipTools/UI/Commands/DeathrestAutoSchedule");
-            // TODO want to display the current level on the gizmo
-            // TODO want to display the current discipline's icon on the top right of the gizmo
+            this.icon = DeathrestAutoScheduleTex.Texture;
+            // TODO want to display the current enum level on the gizmo
         }
 
         public override GizmoResult GizmoOnGUI(Vector2 loc, float maxWidth, GizmoRenderParms parms) {

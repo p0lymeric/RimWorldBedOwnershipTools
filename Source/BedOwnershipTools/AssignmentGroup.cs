@@ -29,6 +29,12 @@ namespace BedOwnershipTools {
             // this.colour = colour;
         }
 
+        // TODO should apply a caching trick here and invalidate the cached entry when assignment groups are deleted, created, or reordered
+        public int Priority() {
+            int priority = GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority.IndexOf(this);
+            return priority >= 0 ? priority : int.MaxValue;
+        }
+
         public void ExposeData() {
             Scribe_Values.Look(ref id, "id", -1);
             Scribe_Values.Look(ref name, "name");

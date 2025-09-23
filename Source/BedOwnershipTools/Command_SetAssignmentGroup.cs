@@ -5,13 +5,15 @@ using UnityEngine;
 
 namespace BedOwnershipTools {
     public class Command_SetAssignmentGroup : Command {
+        private static readonly CachedTexture SetAssignmentGroupTex = new("BedOwnershipTools/UI/Commands/SetAssignmentGroup");
+
         private CompBuilding_BedXAttrs xAttrs;
 
         public Command_SetAssignmentGroup(CompBuilding_BedXAttrs xAttrs) {
             this.xAttrs = xAttrs;
             this.defaultLabel = "BedOwnershipTools.CommandSetAssignmentGroup".Translate();
             this.defaultDesc = "BedOwnershipTools.CommandSetAssignmentGroupDesc".Translate();
-            this.icon = ContentFinder<Texture2D>.Get("BedOwnershipTools/UI/Commands/SetAssignmentGroup");
+            this.icon = SetAssignmentGroupTex.Texture;
         }
 
         public override void ProcessInput(Event ev) {

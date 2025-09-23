@@ -78,10 +78,6 @@ namespace BedOwnershipTools {
             return false;
         }
 
-        public long estimateNextDeathrestTick() {
-            return -1L;
-        }
-
         public void Notify_DeathrestEnded() {
             this.tickCompletedLastDeathrest = Find.TickManager.TicksGame;
         }

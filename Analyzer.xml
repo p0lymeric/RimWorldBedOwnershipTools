@@ -2,12 +2,21 @@
 <Analyzer>
     <BedOwnershipTools>
         <Types>
+            <li>BedOwnershipTools.AGMCompartment_AssignmentGroups</li>
+            <li>BedOwnershipTools.AGMCompartment_AutomaticDeathrest</li>
+            <li>BedOwnershipTools.AGMCompartment_HarmonyPatchState</li>
+            <li>BedOwnershipTools.AGMCompartment_SpareDeathrestBindings</li>
+            <li>BedOwnershipTools.Alert_NeedAutoDeathrestBuilding</li>
             <li>BedOwnershipTools.AssignmentGroup</li>
+            <li>BedOwnershipTools.AutomaticDeathrestModeExtensions</li>
             <li>BedOwnershipTools.CATPBAndPOMethodReplacements</li>
-            <li>BedOwnershipTools.CATPBGroupAssignmentOverlayAdapter</li>
             <li>BedOwnershipTools.CompBuilding_BedXAttrs</li>
+            <li>BedOwnershipTools.CompDeathrestBindableXAttrs</li>
             <li>BedOwnershipTools.CompPawnXAttrs</li>
             <li>BedOwnershipTools.GameComponent_AssignmentGroupManager</li>
+            <li>BedOwnershipTools.JobGiver_AutomaticDeathrest</li>
+            <li>BedOwnershipTools.PawnXAttrs_AssignmentGroupTracker</li>
+            <li>BedOwnershipTools.PawnXAttrs_AutomaticDeathrestTracker</li>
         </Types>
         <Methods>
             <!-- <li>Verse.Thing:Tick</li> -->

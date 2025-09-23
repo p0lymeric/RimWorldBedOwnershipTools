@@ -64,6 +64,10 @@ namespace BedOwnershipTools {
                 // TODO can accomplish this with TargetMethods
                 public static void ApplyHarmonyPatches(Harmony harmony) {
                     harmony.Patch(
+                        AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_PolygamyModeUtility, "AddMakeMasterButton"),
+                        transpiler: new HarmonyMethod(Patch_CompAssignableToPawn_TryUnassignPawn.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
+                    );
+                    harmony.Patch(
                         AccessTools.Method(BedOwnershipTools.Singleton.runtimeHandles.typeOneBedToSleepWithAll_CompPolygamyMode, "AssignesUpdated"),
                         transpiler: new HarmonyMethod(Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
                     );

@@ -13,7 +13,7 @@
     <BedOwnershipTools.MaxAssignmentGroupsReached>Maximum {0} assignment groups allowed.</BedOwnershipTools.MaxAssignmentGroupsReached>
     <BedOwnershipTools.InactiveBrackets>(inactive)</BedOwnershipTools.InactiveBrackets>
 
-    <BedOwnershipTools.ScheduleManual>Manual (disabled)</BedOwnershipTools.ScheduleManual>
+    <BedOwnershipTools.ScheduleManual>Manual</BedOwnershipTools.ScheduleManual>
     <!-- {0} holds a time period from the base game's Time.xml, e.g. "1 day before exhaustion" -->
     <BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion>{0} before exhaustion</BedOwnershipTools.ScheduleTimePeriodBeforeExhaustion>
     <!-- {0}, {1} holds ordinal days and {2}, {3} holds quadrum names, e.g. "Aprimay/Septober (1st-5th)" -->
