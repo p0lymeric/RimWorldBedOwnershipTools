@@ -10,6 +10,17 @@ using HarmonyLib;
 
 namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
+        [HarmonyPatch(typeof(Pawn_Ownership), nameof(Pawn_Ownership.ClaimDeathrestCasket))]
+        public class Patch_Pawn_Ownership_ClaimDeathrestCasket {
+            static void Postfix(Pawn_Ownership __instance, ref bool __result, Building_Bed deathrestCasket) {
+                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
+                if (enableBedAssignmentGroups) {
+                    Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                    CATPBAndPOMethodReplacements.ClaimDeathrestCasket(pawn, deathrestCasket);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(CompAssignableToPawn_DeathrestCasket), nameof(CompAssignableToPawn_DeathrestCasket.TryAssignPawn))]
         public class Patch_CompAssignableToPawn_DeathrestCasket_TryAssignPawn {
             static void Postfix(CompAssignableToPawn_DeathrestCasket __instance, Pawn pawn) {
@@ -60,11 +71,7 @@ namespace BedOwnershipTools {
                 setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
             }
 
-            static void Prefix(Pawn_Ownership __instance, ref bool __result, out Building_Bed __state) {
-                __state = __instance.AssignedDeathrestCasket;
-            }
-
-            static void Postfix(Pawn_Ownership __instance, ref bool __result, Building_Bed __state) {
+            static void Postfix(Pawn_Ownership __instance, ref bool __result) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (!enableBedAssignmentGroups) {
                     ClearHints();
@@ -78,26 +85,12 @@ namespace BedOwnershipTools {
                         }
                     }
                     CATPBAndPOMethodReplacements.UnclaimDeathrestCasketAll(pawn);
-                } else if (__result) {
-                    // activate another deathrest casket if possible
-                    CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
-                    if (pawnXAttrs != null) {
-                        foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
-                                if (bed != __state) {
-                                    bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                    HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_AssignedDeathrestCasket_Set(pawn.ownership, bed);
-                                    break;
-                                }
-                            }
-                        }
-                    }
                 }
                 ClearHints();
             }
 
             public static IEnumerable<CodeInstruction> InsertHintDontInvalidateOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
+                return TranspilerTemplates.InsertBeforeMatchingCodeInstructionTranspiler(
                     instructions,
                     (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimDeathrestCasket))),
                     new[] {
@@ -112,7 +105,7 @@ namespace BedOwnershipTools {
                 );
             }
             public static IEnumerable<CodeInstruction> InsertHintInvalidateAllOverlaysTranspiler(IEnumerable<CodeInstruction> instructions) {
-                return TranspilerTemplates.InsertCodeInstructionsBeforePredicateTranspiler(
+                return TranspilerTemplates.InsertBeforeMatchingCodeInstructionTranspiler(
                     instructions,
                     (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(Pawn_Ownership), nameof(Pawn_Ownership.UnclaimDeathrestCasket))),
                     new[] {

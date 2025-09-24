@@ -140,6 +140,13 @@ namespace BedOwnershipTools {
                 return false;
             }
             if (IsDefOfDeathrestCasket(newBed.def)) {
+                for (int num = newBedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
+                    Pawn pawnToEvict = newBedXAttrs.assignedPawnsOverlay[num];
+                    CompPawnXAttrs pawnToEvictXAttrs = pawnToEvict.GetComp<CompPawnXAttrs>();
+                    if (pawnToEvictXAttrs != null) {
+                        UnclaimDeathrestCasketDirected(pawnToEvict, newBedXAttrs.MyAssignmentGroup);
+                    }
+                }
                 UnclaimDeathrestCasketDirected(pawn, newBedXAttrs.MyAssignmentGroup);
                 ForceAddPawn(newBed.CompAssignableToPawn, pawn);
                 pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[newBedXAttrs.MyAssignmentGroup] = newBed;
@@ -187,7 +194,7 @@ namespace BedOwnershipTools {
                 return false;
             }
             UnclaimDeathrestCasketDirected(pawn, bedXAttrs.MyAssignmentGroup);
-            if (bedXAttrs.assignedPawnsOverlay.Count == 0) {
+            if (bedXAttrs.assignedPawnsOverlay.Count > 0) {
                 List<Pawn> pawnsToRemove = new();
                 foreach (Pawn oldPawn in bedXAttrs.assignedPawnsOverlay) {
                     pawnsToRemove.Add(oldPawn);

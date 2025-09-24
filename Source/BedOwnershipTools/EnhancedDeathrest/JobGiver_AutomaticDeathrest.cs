@@ -32,7 +32,9 @@ namespace BedOwnershipTools {
             }
             if (!BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest) {
                 building_Bed = RestUtility.FindBedFor(pawn);
-                if (building_Bed != null && !ThingTouchingSunlight(building_Bed)) {
+                // IsDefOfDeathrestCasket since FindBedFor will return a deathrest casket as a last resort bed
+                // which could be intrusive if permanent deathrest bindings are turned off
+                if (building_Bed != null && !ThingTouchingSunlight(building_Bed) && !CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(building_Bed.def)) {
                     return building_Bed;
                 }
             }
@@ -64,6 +66,7 @@ namespace BedOwnershipTools {
                 if (roping == null || !roping.IsRoped) {
                     Building_Bed building_Bed = TryFindBedOrDeathrestCasket(pawn);
                     if (building_Bed != null) {
+                        // JobDriver_Deathrest will eventually call ClaimBedIfNonMedical through MakeNewToils -> Toils_Bed
                         return JobMaker.MakeJob(JobDefOf.Deathrest, building_Bed);
                     }
                 }
@@ -133,7 +136,6 @@ namespace BedOwnershipTools {
 
             foreach (Building_Bed bed in deathrestCasketsAssociatedWithPawn) {
                 if (pawn.CanReach(bed, PathEndMode.OnCell, Danger.Some) && !ThingTouchingSunlight(bed)) {
-                    pawn.ownership.ClaimDeathrestCasket(bed);
                     return bed;
                 }
             }

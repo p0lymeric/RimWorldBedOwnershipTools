@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using RimWorld;
 using Verse;
 using HarmonyLib;
-using RimWorld.Planet;
 
 // Summary of patches
 // Automatic deathrest
@@ -34,33 +34,39 @@ namespace BedOwnershipTools {
 
         [HarmonyPatch(typeof(Alert_LowDeathrest), "CalculateTargets")]
         public class Patch_Alert_LowDeathrest_CalculateTargets {
-            static bool Prefix(Alert_LowDeathrest __instance, List<GlobalTargetInfo> ___targets, List<string> ___targetLabels) {
+            static float MyNeedWatermark(Pawn pawn) {
                 if (!BedOwnershipTools.Singleton.settings.enableAutomaticDeathrest) {
-                    return true;
+                    return 0.1f;
                 }
-                ___targets.Clear();
-                ___targetLabels.Clear();
-#if RIMWORLD__1_6
-                foreach (Pawn item in PawnsFinder.AllMapsCaravansAndTravellingTransporters_AliveSpawned) {
-#else
-                foreach (Pawn item in PawnsFinder.AllMapsCaravansAndTravelingTransportPods_Alive) {
-#endif
-                    if (item.RaceProps.Humanlike && item.Faction == Faction.OfPlayer) { // ordering this check first significantly limits cost with farm animals
-                        Need_Deathrest need_Deathrest = item.needs?.TryGetNeed<Need_Deathrest>();
-                        if (need_Deathrest != null) {
-                            CompPawnXAttrs pawnXAttrs = item.GetComp<CompPawnXAttrs>();
-                            float ticksToLowDeathrestAlert = 0.1f;
-                            if (pawnXAttrs != null) {
-                                ticksToLowDeathrestAlert = pawnXAttrs.automaticDeathrestTracker.automaticDeathrestMode.LowDeathrestAlertLevel();
-                            }
-                            if (need_Deathrest.CurLevel <= ticksToLowDeathrestAlert && !item.Deathresting) {
-                                ___targets.Add(item);
-                                ___targetLabels.Add(item.NameShortColored.Resolve());
-                            }
-                        }
-                    }
+                CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs != null) {
+                    return pawnXAttrs.automaticDeathrestTracker.automaticDeathrestMode.LowDeathrestAlertLevel();
                 }
-                return false;
+                return 0.1f;
+            }
+
+            // // if (item.RaceProps.Humanlike && item.Faction == Faction.OfPlayer && item.needs != null && item.needs.TryGetNeed(out Need_Deathrest need) && need.CurLevel <= 0.1f && !item.Deathresting)
+			// IL_005b: ldloc.2
+			// IL_005c: callvirt instance float32 RimWorld.Need::get_CurLevel()
+			// IL_0061: ldc.r4 0.1 <- replace
+			// IL_0066: bgt.un.s IL_009a
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
+                return TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.LoadsConstant(0.1f),
+                    new[] {
+                        new CodeInstruction(OpCodes.Ldloc_1), // Pawn item
+                        new CodeInstruction(
+                            OpCodes.Call,
+                            AccessTools.Method(
+                                typeof(Patch_Alert_LowDeathrest_CalculateTargets),
+                                nameof(Patch_Alert_LowDeathrest_CalculateTargets.MyNeedWatermark)
+                            )
+                        ),
+                    },
+                    firstMatchOnly: true,
+                    errorOnNonMatch: true
+                );
             }
         }
     }

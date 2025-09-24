@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using RimWorld;
@@ -11,26 +12,44 @@ namespace BedOwnershipTools {
             public static IEnumerable<CodeInstruction> StubRetTranspiler(IEnumerable<CodeInstruction> instructions) {
                 yield return new CodeInstruction(OpCodes.Ret);
             }
+
             public static IEnumerable<CodeInstruction> StubPushI4OneRetTranspiler(IEnumerable<CodeInstruction> instructions) {
                 yield return new CodeInstruction(OpCodes.Ldc_I4, 1);
                 yield return new CodeInstruction(OpCodes.Ret);
             }
 
-            public static IEnumerable<CodeInstruction> InsertCodeInstructionsBeforePredicateTranspiler(
+            public static IEnumerable<CodeInstruction> InjectPerMatchingCodeInstructionTranspiler(
                 IEnumerable<CodeInstruction> instructions,
-                System.Predicate<CodeInstruction> predicate,
-                IEnumerable<CodeInstruction> toInsert,
+                Predicate<CodeInstruction> predicateToMatch,
+                IEnumerable<CodeInstruction> sequenceToInject,
+                bool insertIfFalseReplaceIfTrue,
+                bool insertSeqBeforeIfFalseInsertSeqAfterIfTrue,
                 bool firstMatchOnly,
                 bool errorOnNonMatch
             ) {
                 bool everMatched = false;
                 foreach (CodeInstruction instruction in instructions) {
                     bool skipInsert = firstMatchOnly && everMatched;
-                    if (!skipInsert && predicate(instruction)) {
-                        foreach (CodeInstruction newInstruction in toInsert) {
-                            yield return newInstruction;
+                    if (!skipInsert && predicateToMatch(instruction)) {
+                        if (insertIfFalseReplaceIfTrue) {
+                            // replace
+                            foreach (CodeInstruction newInstruction in sequenceToInject) {
+                                yield return newInstruction;
+                            }
+                        } else {
+                            // insert
+                            if (insertSeqBeforeIfFalseInsertSeqAfterIfTrue) {
+                                // Insert the sequence AFTER the matching instruction
+                                yield return instruction;
+                            }
+                            foreach (CodeInstruction newInstruction in sequenceToInject) {
+                                yield return newInstruction;
+                            }
+                            if (!insertSeqBeforeIfFalseInsertSeqAfterIfTrue) {
+                                // Insert the sequence BEFORE the matching instruction
+                                yield return instruction;
+                            }
                         }
-                        yield return instruction;
                         everMatched = true;
                     } else {
                         yield return instruction;
@@ -45,6 +64,34 @@ namespace BedOwnershipTools {
                         Log.Warning("[BOT] Transpiler never found the predicate instruction to trigger code modification");
                     }
                 }
+            }
+
+            public static IEnumerable<CodeInstruction> InsertBeforeMatchingCodeInstructionTranspiler(
+                IEnumerable<CodeInstruction> instructions,
+                Predicate<CodeInstruction> predicateToMatch,
+                IEnumerable<CodeInstruction> sequenceToInject,
+                bool firstMatchOnly,
+                bool errorOnNonMatch
+            ) {
+                return InjectPerMatchingCodeInstructionTranspiler(
+                    instructions, predicateToMatch, sequenceToInject,
+                    insertIfFalseReplaceIfTrue: false, insertSeqBeforeIfFalseInsertSeqAfterIfTrue: false,
+                    firstMatchOnly, errorOnNonMatch
+                );
+            }
+
+            public static IEnumerable<CodeInstruction> ReplaceAtMatchingCodeInstructionTranspiler(
+                IEnumerable<CodeInstruction> instructions,
+                Predicate<CodeInstruction> predicateToMatch,
+                IEnumerable<CodeInstruction> sequenceToInject,
+                bool firstMatchOnly,
+                bool errorOnNonMatch
+            ) {
+                return InjectPerMatchingCodeInstructionTranspiler(
+                    instructions, predicateToMatch, sequenceToInject,
+                    insertIfFalseReplaceIfTrue: true, insertSeqBeforeIfFalseInsertSeqAfterIfTrue: false,
+                    firstMatchOnly, errorOnNonMatch
+                );
             }
         }
     }

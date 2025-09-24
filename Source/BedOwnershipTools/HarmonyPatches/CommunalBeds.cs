@@ -30,10 +30,27 @@ namespace BedOwnershipTools {
                     return false;
                 }
 
+                // Perform an equivalent claim on the assignment group overlay
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (enableBedAssignmentGroups) {
                     Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                     CATPBAndPOMethodReplacements.ClaimBedIfNonMedical(pawn, newBed);
+                }
+
+                // JobDriver_Deathrest calls ClaimBedIfNonMedical to claim deathrest caskets
+                // The vanilla game hardcodes a limit of 1 occupant in several places except on this path
+                bool enableSpareDeathrestBindings = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings;
+                if (enableSpareDeathrestBindings) {
+                    if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(newBed.def)) {
+                        Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                        if (!newBed.IsOwner(pawn) && !newBed.Medical) {
+                            for (int num = newBed.OwnersForReading.Count - 1; num >= 0; num--) {
+                                Pawn pawnToEvict = newBed.OwnersForReading[num];
+                                HarmonyPatches.Patch_Pawn_Ownership_UnclaimDeathrestCasket.HintDontInvalidateOverlays();
+                                pawnToEvict.ownership.UnclaimDeathrestCasket();
+                            }
+                        }
+                    }
                 }
 
                 // Cascade into the base implementation if above check fails
@@ -158,23 +175,23 @@ namespace BedOwnershipTools {
                     return (communalBedsSupportOrderedMedicalSleep && bedXAttrs.IsAssignedToCommunity) || thiss.Medical;
                 }
             }
+
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
-                bool everMatched = false;
-                foreach (CodeInstruction instruction in instructions) {
-                    if (!everMatched && instruction.Calls(AccessTools.PropertyGetter(typeof(Building_Bed), nameof(Building_Bed.Medical)))) {
-                        yield return new CodeInstruction(
+                return TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
+                    instructions,
+                    (CodeInstruction instruction) => instruction.Calls(AccessTools.PropertyGetter(typeof(Building_Bed), nameof(Building_Bed.Medical))),
+                    new[] {
+                        new CodeInstruction(
                             OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Building_Bed_GetBedRestFloatMenuOption),
-                            nameof(Patch_Building_Bed_GetBedRestFloatMenuOption.MyMedicalGetterImpl))
-                        );
-                        everMatched = true;
-                    } else {
-                        yield return instruction;
-                    }
-                }
-                if (!everMatched) {
-                    Log.Error("[BOT] Transpiler never found a Building_Bed.Medical getter call");
-                }
+                            AccessTools.Method(
+                                typeof(Patch_Building_Bed_GetBedRestFloatMenuOption),
+                                nameof(Patch_Building_Bed_GetBedRestFloatMenuOption.MyMedicalGetterImpl)
+                            )
+                        ),
+                    },
+                    firstMatchOnly: true,
+                    errorOnNonMatch: true
+                );
             }
         }
 
@@ -194,31 +211,47 @@ namespace BedOwnershipTools {
             // IL_022b: ldarg.1 // (bed)
             // IL_022c: ldarg.0 (bed actor)
             // IL_022d: ldfld public class RimWorld.Pawn_Ownership Verse.Pawn::ownership // (bed actor.ownership)
-            // IL_0232: callvirt instance public class RimWorld.Building_Bed RimWorld.Pawn_Ownership::get_OwnedBed() // (bed actor.ownership.OwnedBed)
-            // - IL_0237: bne.un IL_02f7 ()
+            // IL_0232: callvirt instance public class RimWorld.Building_Bed RimWorld.Pawn_Ownership::get_OwnedBed() // (bed actor.ownership.OwnedBed) <- S0
+            // - IL_0237: bne.un IL_02f7 () <- S1
             // + call BedEqOwnedBedOrBedIsAssignedToCommunity // (testResult)
             // + brfalse IL_02f7 ()
+            // ... <- S2
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
-                bool currentOpReplaceBneUn = false;
+                int state = 0;
                 foreach (CodeInstruction instruction in instructions) {
-                    if (instruction.Calls(AccessTools.PropertyGetter(typeof(Pawn_Ownership), nameof(Pawn_Ownership.OwnedBed)))) {
-                        yield return instruction;
-                        yield return new CodeInstruction(
-                            OpCodes.Call,
-                            AccessTools.Method(typeof(Patch_Toils_LayDown_ApplyBedThoughts),
-                            nameof(Patch_Toils_LayDown_ApplyBedThoughts.BedEqOwnedBedOrBedIsAssignedToCommunity))
-                        );
-                        currentOpReplaceBneUn = true;
-                    } else if (currentOpReplaceBneUn) {
-                        if (instruction.opcode == OpCodes.Bne_Un) {
-                            yield return new CodeInstruction(OpCodes.Brfalse, instruction.operand);
-                            currentOpReplaceBneUn = false;
-                        } else {
-                            Log.Error("[BOT] Transpiler failed to locate bne.un after call to get_OwnedBed");
-                        }
-                    } else {
-                        yield return instruction;
+                    switch (state) {
+                        case 0: // COPY_UNTIL_AND_MATCH_PAWN_OWNERSHIP_GET_OWNEDBED
+                            yield return instruction;
+                            if (instruction.Calls(AccessTools.PropertyGetter(typeof(Pawn_Ownership), nameof(Pawn_Ownership.OwnedBed)))) {
+                                state++;
+                            }
+                            break;
+                        case 1: // DELETE_BNE_UN_AND_INSERT_REPLACEMENT
+                            if (instruction.opcode == OpCodes.Bne_Un) {
+                                yield return new CodeInstruction(
+                                    OpCodes.Call,
+                                    AccessTools.Method(
+                                        typeof(Patch_Toils_LayDown_ApplyBedThoughts),
+                                        nameof(Patch_Toils_LayDown_ApplyBedThoughts.BedEqOwnedBedOrBedIsAssignedToCommunity)
+                                    )
+                                );
+                                yield return new CodeInstruction(OpCodes.Brfalse, instruction.operand);
+                            } else {
+                                Log.Error($"[BOT] Transpiler failed to match bne.un after call to get_OwnedBed.");
+                                yield break;
+                            }
+                            state++;
+                            break;
+                        case 2:
+                            yield return instruction;
+                            break;
+                        default:
+                            Log.Error("[BOT] Transpiler reached illegal state");
+                            yield break;
                     }
+                }
+                if (state != 2) {
+                    Log.Error($"[BOT] Transpiler did not reach expected terminal state 2. It only reached state {state}.");
                 }
             }
         }

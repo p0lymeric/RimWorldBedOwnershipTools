@@ -448,28 +448,28 @@ namespace BedOwnershipTools {
                 // ~ "if true then consider TargetB reservation a success and jump to TargetC reservation"
                 // IL_0056: brtrue.s IL_005a
                 static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
-                    bool everMatched = false;
-                    foreach (CodeInstruction instruction in instructions) {
-                        if (!everMatched && instruction.Calls(AccessTools.Method(typeof(ReservationUtility), nameof(ReservationUtility.ReserveSittableOrSpot)))) {
-                            yield return new CodeInstruction(OpCodes.Pop);
-                            yield return new CodeInstruction(OpCodes.Pop);
-                            yield return new CodeInstruction(OpCodes.Pop);
-                            yield return new CodeInstruction(OpCodes.Pop);
-                            yield return new CodeInstruction(OpCodes.Ldarg_0);
-                            yield return new CodeInstruction(OpCodes.Ldarg_1);
-                            yield return new CodeInstruction(
+                    // TODO rewrite with token lookahead
+                    return TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
+                        instructions,
+                        (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(ReservationUtility), nameof(ReservationUtility.ReserveSittableOrSpot))),
+                        new[] {
+                            new CodeInstruction(OpCodes.Pop),
+                            new CodeInstruction(OpCodes.Pop),
+                            new CodeInstruction(OpCodes.Pop),
+                            new CodeInstruction(OpCodes.Pop),
+                            new CodeInstruction(OpCodes.Ldarg_0),
+                            new CodeInstruction(OpCodes.Ldarg_1),
+                            new CodeInstruction(
                                 OpCodes.Call,
-                                AccessTools.Method(typeof(Patch_JobDriver_WatchBuilding_TryMakePreToilReservations),
-                                nameof(Patch_JobDriver_WatchBuilding_TryMakePreToilReservations.IsTargetCBuildingBedIfNotThenTryReserveTargetB))
-                            );
-                            everMatched = true;
-                        } else {
-                            yield return instruction;
-                        }
-                    }
-                    if (!everMatched) {
-                        Log.Error("[BOT] Transpiler never found a ReservationUtility.ReserveSittableOrSpot call");
-                    }
+                                AccessTools.Method(
+                                    typeof(Patch_JobDriver_WatchBuilding_TryMakePreToilReservations),
+                                    nameof(Patch_JobDriver_WatchBuilding_TryMakePreToilReservations.IsTargetCBuildingBedIfNotThenTryReserveTargetB)
+                                )
+                            ),
+                        },
+                        firstMatchOnly: true,
+                        errorOnNonMatch: true
+                    );
                 }
             }
         }

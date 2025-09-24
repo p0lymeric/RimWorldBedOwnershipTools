@@ -108,16 +108,6 @@ namespace BedOwnershipTools {
                             // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                             CATPBAndPOMethodReplacements.TryAssignPawn(ownedBed.CompAssignableToPawn, pawn);
                         }
-                    } else {
-                        // Ensures that a Pawn always has an active bed if they own at least one bed
-                        // (corrects save data from mod versions before and including 1.0.8)
-                        foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
-                                bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
-                                break;
-                            }
-                        }
                     }
 
                     ownedBed = pawn.ownership.AssignedDeathrestCasket;
@@ -138,16 +128,6 @@ namespace BedOwnershipTools {
                             pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap[bedXAttrs.MyAssignmentGroup] = ownedBed;
                             // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                             CATPBAndPOMethodReplacements.TryAssignPawn(ownedBed.CompAssignableToPawn, pawn);
-                        }
-                    } else {
-                        // Ensures that a Pawn always has an active bed if they own at least one bed
-                        // (corrects save data from mod versions before and including 1.0.8)
-                        foreach (AssignmentGroup assignmentGroup in GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.allAssignmentGroupsByPriority) {
-                            if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
-                                bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_AssignedDeathrestCasket_Set(pawn.ownership, bed);
-                                break;
-                            }
                         }
                     }
                 }

@@ -38,8 +38,12 @@ namespace BedOwnershipTools {
         }
 
         public override void TryUnassignPawn(Pawn pawn, bool sort = true, bool uninstall = false) {
-            HarmonyPatches.Patch_CompAssignableToPawn_TryUnassignPawn.HintDontInvalidateOverlays();
-            inner.TryUnassignPawn(pawn, sort, uninstall);
+            if (pawn.ownership.OwnedBed != inner.parent) {
+                CATPBAndPOMethodReplacements.TryUnassignPawn(inner, pawn, sort, uninstall);
+            } else {
+                HarmonyPatches.Patch_CompAssignableToPawn_TryUnassignPawn.HintDontInvalidateOverlays();
+                inner.TryUnassignPawn(pawn, sort, uninstall);
+            }
         }
     }
 }
