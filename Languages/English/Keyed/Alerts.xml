@@ -2,7 +2,7 @@
 <LanguageData>
     <BedOwnershipTools.AlertNeedAutoDeathrestBuildingPawn>{PAWN} cannot auto-deathrest</BedOwnershipTools.AlertNeedAutoDeathrestBuildingPawn>
     <BedOwnershipTools.AlertNeedAutoDeathrestBuildingPawns>{NUMCULPRITS} colonists cannot auto-deathrest</BedOwnershipTools.AlertNeedAutoDeathrestBuildingPawns>
-    <BedOwnershipTools.AlertNeedAutoDeathrestBuildingDesc>A colonist cannot locate {ANACCEPTABLEDEATHRESTBUILDING} for automatic deathrest.\n\nA building must be assigned or bound before it is considered for automatic deathrest.\n\nThese people need {ANACCEPTABLEDEATHRESTBUILDING}:\n{CULPRITS}</BedOwnershipTools.AlertNeedAutoDeathrestBuildingDesc>
-    <BedOwnershipTools.AnAssignedBedOrDeathrestCasket>an assigned bed or deathrest casket</BedOwnershipTools.AnAssignedBedOrDeathrestCasket>
+    <BedOwnershipTools.AlertNeedAutoDeathrestBuildingDesc>A colonist is unable to automatically deathrest.\n\nTo fix this, ensure that the colonist can reach {ANACCEPTABLEDEATHRESTBUILDING}.\n\nThese people need {ANACCEPTABLEDEATHRESTBUILDING}:\n{CULPRITS}</BedOwnershipTools.AlertNeedAutoDeathrestBuildingDesc>
+    <BedOwnershipTools.AnAssignedBedOrDeathrestCasket>a bed or assigned deathrest casket</BedOwnershipTools.AnAssignedBedOrDeathrestCasket>
     <BedOwnershipTools.AnAssignedDeathrestCasket>an assigned deathrest casket</BedOwnershipTools.AnAssignedDeathrestCasket>
 </LanguageData>

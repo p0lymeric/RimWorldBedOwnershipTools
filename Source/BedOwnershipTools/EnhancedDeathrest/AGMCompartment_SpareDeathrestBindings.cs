@@ -23,11 +23,8 @@ namespace BedOwnershipTools {
 
             if (isSubsystemActive) {
                 foreach (CompDeathrestBindableXAttrs cdbXAttrs in parent.compDeathrestBindableXAttrsRegistry) {
-                    CompDeathrestBindable cdb = cdbXAttrs.parent.GetComp<CompDeathrestBindable>();
-                    if (cdb == null) {
-                        Log.Warning($"[BOT] A building ({cdbXAttrs.parent.GetUniqueLoadID()}) with a CompDeathrestBindableXAttrs component doesn't have a CompDeathrestBindable component.");
-                    } else if (cdbXAttrs.boundPawnOverlay == null) {
-                        cdbXAttrs.boundPawnOverlay = cdb.BoundPawn;
+                    if (cdbXAttrs.boundPawnOverlay == null) {
+                        cdbXAttrs.boundPawnOverlay = cdbXAttrs.sibling.BoundPawn;
                     }
                 }
             }

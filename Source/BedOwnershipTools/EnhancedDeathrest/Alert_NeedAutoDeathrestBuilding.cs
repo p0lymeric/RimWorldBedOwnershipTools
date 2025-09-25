@@ -8,10 +8,6 @@ namespace BedOwnershipTools {
         public List<GlobalTargetInfo> targets = new();
         public List<string> targetLabels = new();
 
-        // public long lastCalculatedTick = -1L;
-
-        // public const int CALCULATION_INTERVAL = 250;
-
         public Alert_NeedAutoDeathrestBuilding() {
             requireBiotech = true;
         }
@@ -59,11 +55,7 @@ namespace BedOwnershipTools {
             if (!BedOwnershipTools.Singleton.settings.enableAutomaticDeathrest) {
                 return false;
             }
-            // long currentTick = Find.TickManager.TicksGame;
-            // if (lastCalculatedTick < 0 || (currentTick - lastCalculatedTick) > CALCULATION_INTERVAL) {
-                CalculateTargets();
-                // lastCalculatedTick = currentTick;
-            // }
+            CalculateTargets();
             return AlertReport.CulpritsAre(targets);
         }
     }

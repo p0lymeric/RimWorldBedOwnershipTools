@@ -35,6 +35,15 @@ namespace BedOwnershipTools {
 
         public override void TryAssignPawn(Pawn pawn) {
             inner.TryAssignPawn(pawn);
+            // cheesy hack to prevent kicking pawn out of deathrest after an explicit assign
+            if (BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings) {
+                if (pawn.Deathresting || pawn.CurJobDef == JobDefOf.Deathrest) {
+                    Building_Bed currentBed = pawn.CurrentBed();
+                    if (currentBed != null) {
+                        currentBed.CompAssignableToPawn.TryAssignPawn(pawn);
+                    }
+                }
+            }
         }
 
         public override void TryUnassignPawn(Pawn pawn, bool sort = true, bool uninstall = false) {

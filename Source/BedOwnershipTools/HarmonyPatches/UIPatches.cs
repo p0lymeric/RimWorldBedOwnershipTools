@@ -170,11 +170,10 @@ namespace BedOwnershipTools {
                 // bleh
                 if (assignedPawns.Count == 0) {
                     if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(__instance.def)) {
-                        CompDeathrestBindable cdb = __instance.GetComp<CompDeathrestBindable>();
                         CompDeathrestBindableXAttrs cdbXAttrs = __instance.GetComp<CompDeathrestBindableXAttrs>();
-                        if (cdb != null && cdbXAttrs != null) {
+                        if (cdbXAttrs != null) {
                             assignedPawns = new();
-                            Pawn boundPawn = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings ? cdbXAttrs.boundPawnOverlay : cdb.BoundPawn;
+                            Pawn boundPawn = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings ? cdbXAttrs.boundPawnOverlay : cdbXAttrs.sibling.BoundPawn;
                             if (boundPawn != null) {
                                 assignedPawns.Add(boundPawn);
                                 boundButNotAssigned = true;

@@ -14,9 +14,14 @@
     <BedOwnershipTools.Command_SetAutomaticDeathrestModeDesc>Set a schedule that {PAWN_nameDef} will follow for automatic deathrest.\n\nCurrent schedule: {SCHEDULE}\n\n{SCHEDULEDESC}</BedOwnershipTools.Command_SetAutomaticDeathrestModeDesc>
     <BedOwnershipTools.Command_SetAutomaticDeathrestModeManualScheduleDesc>{PAWN_nameDef} will only deathrest if ordered to do so.</BedOwnershipTools.Command_SetAutomaticDeathrestModeManualScheduleDesc>
     <BedOwnershipTools.Command_SetAutomaticDeathrestModeExhaustionScheduleDesc>{PAWN_nameDef} will attempt to deathrest in the scheduled time before exhaustion.</BedOwnershipTools.Command_SetAutomaticDeathrestModeExhaustionScheduleDesc>
-    <BedOwnershipTools.Command_SetAutomaticDeathrestModeCalendarScheduleDesc>{PAWN_nameDef} will attempt to deathrest on the scheduled days of the year, or if {PAWN_pronoun} is near exhaustion.</BedOwnershipTools.Command_SetAutomaticDeathrestModeCalendarScheduleDesc>
+    <BedOwnershipTools.Command_SetAutomaticDeathrestModeCalendarScheduleDesc>{PAWN_nameDef} will attempt to deathrest at the scheduled times of year, or if {PAWN_pronoun} is near exhaustion.</BedOwnershipTools.Command_SetAutomaticDeathrestModeCalendarScheduleDesc>
 
-    <BedOwnershipTools.Command_GenericDisabledDesc>This option is unavailable.</BedOwnershipTools.Command_GenericDisabledDesc>
-    <BedOwnershipTools.Command_GenericDisabledNoOwnerReason>This building does not have a valid assigned or bound owner.</BedOwnershipTools.Command_GenericDisabledNoOwnerReason>
+    <BedOwnershipTools.Command_UnbindDeathrestBindable>Unbind</BedOwnershipTools.Command_UnbindDeathrestBindable>
+    <BedOwnershipTools.Command_UnbindDeathrestBindableDesc>Unbind this building's user.</BedOwnershipTools.Command_UnbindDeathrestBindableDesc>
+    <BedOwnershipTools.Command_UnbindDeathrestBindableDisabledNoBindeeReason>This building is not currently bound.</BedOwnershipTools.Command_UnbindDeathrestBindableDisabledNoBindeeReason>
+
+    <BedOwnershipTools.Command_GenericDisabledDesc>This command is unavailable.</BedOwnershipTools.Command_GenericDisabledDesc>
+    <BedOwnershipTools.Command_GenericDisabledNoOwnerReason>This building does not have a valid assigned or bound user.</BedOwnershipTools.Command_GenericDisabledNoOwnerReason>
+
     <BedOwnershipTools.Command_AutoWakeDisabledCalendarReason>Colonists following calendar deathrest schedules will always auto-wake.</BedOwnershipTools.Command_AutoWakeDisabledCalendarReason>
 </LanguageData>

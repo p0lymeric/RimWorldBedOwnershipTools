@@ -18,11 +18,32 @@ namespace BedOwnershipTools {
             if (lord != null && !lord.CurLordToil.AllowSatisfyLongNeeds) {
                 return 0f;
             }
-            if (pawn.needs == null || pawn.needs.TryGetNeed<Need_Deathrest>() == null) {
+            Need_Deathrest need_Deathrest = pawn.needs?.TryGetNeed<Need_Deathrest>();
+            if (need_Deathrest == null) {
                 return 0f;
             }
-            // TODO review priority
-            return 7.75f;
+            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+            if (pawnXAttrs == null) {
+                return 0f;
+            }
+            // FYI
+            // GetRest priority is 8f
+            // GetFood priority is 9.5f
+            // GetNeuralSupercharge priority is 9.25f
+            const float DEATHREST_PRIORITY = 9.25f;
+            TimeAssignmentDef timeAssignmentDef = (pawn.timetable == null) ? TimeAssignmentDefOf.Anything : pawn.timetable.CurrentAssignment;
+            float curLevel = need_Deathrest.CurLevel;
+            if (timeAssignmentDef == TimeAssignmentDefOf.Sleep) {
+		        return DEATHREST_PRIORITY;
+	        } else {
+                if (curLevel <= pawnXAttrs.automaticDeathrestTracker.automaticDeathrestMode.IgnoreScheduleActivityAssignmentsBelowLevel()) {
+                    return DEATHREST_PRIORITY;
+                } else if (pawn.needs?.TryGetNeed<Need_Rest>() == null) {
+                    return DEATHREST_PRIORITY;
+                } else {
+                    return 0f;
+                }
+            }
         }
 
         public static Building_Bed TryFindBedOrDeathrestCasket(Pawn pawn) {
@@ -110,8 +131,7 @@ namespace BedOwnershipTools {
                         if (BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings) {
                             bindee = x.boundPawnOverlay;
                         } else {
-                            CompDeathrestBindable cdb = x.parent.GetComp<CompDeathrestBindable>();
-                            bindee = cdb?.BoundPawn;
+                            bindee = x.sibling.BoundPawn;
                         }
                         if (assignee == pawn) {
                             return bed;
@@ -144,7 +164,7 @@ namespace BedOwnershipTools {
         }
 
         public override ThinkNode DeepCopy(bool resolve = true) {
-            JobGiver_GetDeathrest obj = (JobGiver_GetDeathrest)base.DeepCopy(resolve);
+            JobGiver_AutomaticDeathrest obj = (JobGiver_AutomaticDeathrest)base.DeepCopy(resolve);
             return obj;
         }
     }

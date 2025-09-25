@@ -296,8 +296,10 @@ namespace BedOwnershipTools {
         }
 
         public static bool IsAnyOwnerLovePartnerOf(Building_Bed bed, Pawn sleeper) {
-            // xattrs null checked by caller
             CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return false;
+            }
             foreach (Pawn owner in bedXAttrs.assignedPawnsOverlay) {
                 if (LovePartnerRelationUtility.LovePartnerRelationExists(sleeper, owner)) {
                     return true;
@@ -307,8 +309,10 @@ namespace BedOwnershipTools {
         }
 
         public static bool BedOwnerWillShare(Building_Bed bed, Pawn sleeper, GuestStatus? guestStatus) {
-            // xattrs null checked by caller
             CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return false;
+            }
             if (!bedXAttrs.assignedPawnsOverlay.Any()) {
                 return true;
             }
@@ -334,6 +338,14 @@ namespace BedOwnershipTools {
 
         public static bool IsDefOfDeathrestCasket(ThingDef thingDef) {
             return ModsConfig.BiotechActive && thingDef == ThingDefOf.DeathrestCasket;
+        }
+
+        public static bool HasFreeSlot(Building_Bed bed) {
+            CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+            if (bedXAttrs == null) {
+                return false;
+            }
+            return bedXAttrs.assignedPawnsOverlay.Count < bed.CompAssignableToPawn.Props.maxAssignedPawnsCount;
         }
     }
 }

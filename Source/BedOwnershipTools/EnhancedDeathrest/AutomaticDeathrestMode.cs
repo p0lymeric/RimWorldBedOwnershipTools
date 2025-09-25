@@ -104,6 +104,15 @@ namespace BedOwnershipTools {
             };
         }
 
+        public static float IgnoreScheduleActivityAssignmentsBelowLevel(this AutomaticDeathrestMode automaticDeathrestMode) {
+            const float DAYS_PER_DEATHREST_PERIOD = 30.0f;
+            return automaticDeathrestMode switch {
+                AutomaticDeathrestMode.Exhaustion1Hour => 1.0f / 24.0f / DAYS_PER_DEATHREST_PERIOD,
+                AutomaticDeathrestMode.Exhaustion3Hours => 3.0f / 24.0f / DAYS_PER_DEATHREST_PERIOD,
+                _ => automaticDeathrestMode.LowDeathrestAlertLevel()
+            };
+        }
+
         public static string LabelStringWithColour(this AutomaticDeathrestMode automaticDeathrestMode) {
             return automaticDeathrestMode.Discipline() switch {
                 AutomaticDeathrestScheduleDiscipline.Manual => automaticDeathrestMode.LabelString().Colorize(ColoredText.DateTimeColor),
