@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
-	<Operation Class="PatchOperationAdd">
-		<xpath>Defs/ThingDef[thingClass="Pawn"]/comps</xpath>
-		<value><li><compClass>BedOwnershipTools.CompPawnXAttrs</compClass></li></value>
-	</Operation>
+    <Operation Class="PatchOperationAdd">
+        <xpath>Defs/ThingDef[thingClass="Pawn"]/comps</xpath>
+        <value><li><compClass>BedOwnershipTools.CompPawnXAttrs</compClass></li></value>
+    </Operation>
 
-	<Operation Class="PatchOperationAdd">
+    <Operation Class="PatchOperationAdd">
         <xpath>Defs/ThingDef[thingClass="Building_Bed"]/comps</xpath>
-		<value><li><compClass>BedOwnershipTools.CompBuilding_BedXAttrs</compClass></li></value>
-	</Operation>
+        <value><li><compClass>BedOwnershipTools.CompBuilding_BedXAttrs</compClass></li></value>
+    </Operation>
 
-	<Operation Class="PatchOperationAdd">
-        <xpath>Defs/ThingDef/comps[./li/@Class="CompProperties_DeathrestBindable"]</xpath>
-		<value><li><compClass>BedOwnershipTools.CompDeathrestBindableXAttrs</compClass></li></value>
-	</Operation>
+    <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Biotech</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/ThingDef/comps[./li/@Class="CompProperties_DeathrestBindable"]</xpath>
+            <value><li><compClass>BedOwnershipTools.CompDeathrestBindableXAttrs</compClass></li></value>
+        </match>
+    </Operation>
 </Patch>

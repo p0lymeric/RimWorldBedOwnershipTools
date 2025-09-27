@@ -153,12 +153,15 @@ namespace BedOwnershipTools {
                             if (sleeperXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed candidateBed)) {
                                 if (sleeper.Map == candidateBed.Map && sleeper.CanReach(candidateBed, PathEndMode.OnCell, Danger.Deadly)) {
                                     return candidateBed;
-                                } else if (DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, candidateBed, null)) {
-                                    sleeper.ownership.ClaimBedIfNonMedical(candidateBed);
-                                    // don't really want to interact with this mod's settings
-                                    // this change would occur too late for the existing transpiler implementation (where we'd perform this fixup after livingMap is already retrieved)
-                                    // RemoteCall_SetLivingLevelToMapLevel(sleeper, candidateBed.Map);
-                                    return candidateBed;
+                                } else if (candidateBed.Map?.Tile == sleeper.Map.Tile) {
+                                    // repro for issue: tri103
+                                    if (DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, candidateBed, null)) {
+                                        sleeper.ownership.ClaimBedIfNonMedical(candidateBed);
+                                        // don't really want to interact with this mod's settings
+                                        // this change would occur too late for the existing transpiler implementation (where we'd perform this fixup after livingMap is already retrieved)
+                                        // RemoteCall_SetLivingLevelToMapLevel(sleeper, candidateBed.Map);
+                                        return candidateBed;
+                                    }
                                 }
                             }
                         }

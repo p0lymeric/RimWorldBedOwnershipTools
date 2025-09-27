@@ -247,7 +247,7 @@ namespace BedOwnershipTools {
                     }
                 }
 
-                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def) || !BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest)) {
+                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def) || (ModsConfig.BiotechActive && !BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest))) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
                         // if there is a bindee or a tentative assignee and they are a deathrester then expose their auto gizmos
                         Pawn assignee = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?

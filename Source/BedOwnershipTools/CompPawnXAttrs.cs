@@ -83,11 +83,6 @@ namespace BedOwnershipTools {
                 stringBuilder.AppendInNewLine("tickCompletedLastDeathrest: " + this.automaticDeathrestTracker.tickCompletedLastDeathrest.ToString());
                 stringBuilder.AppendInNewLine($"ScheduleTest: {(automaticDeathrestTracker.ScheduleTest() ? "Armed" : "Disarmed")}");
                 float myLongitude = automaticDeathrestTracker.LongitudeForLocalDateCalc();
-                stringBuilder.AppendInNewLine($"myLongitudeTickOffset: {GenDate.LocalTicksOffsetFromLongitude(myLongitude)}");
-                int tickAtMeridian = Find.TickManager.TicksAbs;
-                stringBuilder.AppendInNewLine($"tickAtMeridian: {GenDate.DayOfQuadrum(tickAtMeridian, 0) + 1} {GenDate.Quadrum(tickAtMeridian, 0).Label()} {GenDate.Year(tickAtMeridian, 0)} {GenDate.HourFloat(tickAtMeridian, 0):F1}h MER");
-                int tickEarliestTwelfthEndEverywhereOnPlanet = (Find.TickManager.TicksAbs - GenDate.TicksPerHour * 12) / GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth + GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
-                stringBuilder.AppendInNewLine($"tickEarliestTwelfthEndEverywhereOnPlanet: {GenDate.DayOfQuadrum(tickEarliestTwelfthEndEverywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickEarliestTwelfthEndEverywhereOnPlanet, 0).Label()} {GenDate.Year(tickEarliestTwelfthEndEverywhereOnPlanet, 0)} {GenDate.HourFloat(tickEarliestTwelfthEndEverywhereOnPlanet, 0):F1}h LOC");
                 int tickLatestTwelfthStartAnywhereOnPlanet = (Find.TickManager.TicksAbs + GenDate.TicksPerHour * 12) / GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
                 stringBuilder.AppendInNewLine($"tickLatestTwelfthStartAnywhereOnPlanet: {GenDate.DayOfQuadrum(tickLatestTwelfthStartAnywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickLatestTwelfthStartAnywhereOnPlanet, 0).Label()} {GenDate.Year(tickLatestTwelfthStartAnywhereOnPlanet, 0)} {GenDate.HourFloat(tickLatestTwelfthStartAnywhereOnPlanet, 0):F1}h LOC");
                 int projectedExhaustionTick = Find.TickManager.TicksAbs + (int)Math.Round(automaticDeathrestTracker.TicksToDeathrestExhaustion()) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);

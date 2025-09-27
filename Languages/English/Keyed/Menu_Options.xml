@@ -55,5 +55,4 @@
     <BedOwnershipTools.DevEnableUnaccountedCaseLogging_Tooltip>Enables printing warnings when a pawn is asked to unclaim one of its beds by a caller that is not aware of the multiple bed ownership system. In such cases, without special handling, the pawn would unclaim all its beds.</BedOwnershipTools.DevEnableUnaccountedCaseLogging_Tooltip>
     <BedOwnershipTools.DevEnableExtraMenusAndGizmos>[DEV] Enable extra menus and gizmos</BedOwnershipTools.DevEnableExtraMenusAndGizmos>
     <BedOwnershipTools.DevEnableExtraMenusAndGizmos_Tooltip>Enables extra developer menus and gizmos in game, to assist with testing the mod.</BedOwnershipTools.DevEnableExtraMenusAndGizmos_Tooltip>
-
 </LanguageData>

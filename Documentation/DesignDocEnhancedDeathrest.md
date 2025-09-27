@@ -79,6 +79,13 @@ Inside their scheduled period, deathresters will deathrest regardless of their n
 
 Deathresters will always automatically schedule deathrest below 24 hours to exhaustion, to avoid exhaustion penalties. The game will display a "needs deathrest" advisory at 12 hours to exhaustion. Exhaustion fallback should not be hit in steady state.
 
-Following a calendar-synchronous schedule forces Auto-wake on. Auto-wake is required for calendar-synchronous schedules to maintain stability and behaves slightly differently with the calendar scheduler. Typically, deathresters wake immediately after reaching the safe wake threshold (80% need recovery; 24.0 days of uptime). When a deathrester follows a calendar schedule, they will wait until they first reach the safe wake threshold, then wake only after reaching 100% deathrest need (30.0 days of uptime).
+Following a calendar-synchronous schedule forces Auto-wake on. Auto-wake is required for calendar-synchronous schedules to maintain stability.
 
 The calendar scheduler accounts for time zones, to handle travelling Pawns. The scheduler becomes active at 0:00 in the local time of the selected interval and deactivates by 23:60 on the last day of the interval. To prevent double resting across time zone changes, the scheduler will not trigger again if the last deathrest completed in the same interval in any time zone on the rimworld.
+
+### Auto-wake
+Auto-wake behaves differently when an automatic schedule is selected.
+
+In vanilla, deathresters wake immediately after reaching the safe wake threshold (80% need recovery; 24.0 days of uptime).
+
+When a deathrester follows an automatic schedule and has auto-wake enabled, they will wait until they first reach the safe wake threshold, then wake only after reaching 100% deathrest need (30.0 days of uptime).

@@ -81,11 +81,12 @@ namespace BedOwnershipTools {
                 if (pawnXAttrs == null) {
                     return true;
                 }
-                if (pawnXAttrs.automaticDeathrestTracker.automaticDeathrestMode.Discipline() == AutomaticDeathrestScheduleDiscipline.Calendar) {
+                if (pawnXAttrs.automaticDeathrestTracker.automaticDeathrestMode.Discipline() != AutomaticDeathrestScheduleDiscipline.Manual) {
                     Need_Deathrest need_Deathrest = gene_Deathrest.pawn.needs?.TryGetNeed<Need_Deathrest>();
                     if (need_Deathrest != null) {
                         // normally the game will wake a deathrester when it's safe before full recovery, around 80% need recovered
-                        // we'll wake calendar deathresters at 100% recovery to meet the minimum needed to deathrest every 30 days
+                        // we'll wake deathresters at 100% recovery in automatic modes
+                        // calendar deathresters need to recover around 100% to meet the minimum needed to deathrest every 30 days
                         // technically need slightly less, but it's really a matter of wasting up to half a day in rest
                         if (gene_Deathrest.DeathrestPercent >= 1f && need_Deathrest.CurLevel >= 1.0f) {
                             gene_Deathrest.Wake();
