@@ -29,11 +29,11 @@ namespace BedOwnershipTools {
         }
 
         public override void PostExposeData() {
-		    base.PostExposeData();
+            base.PostExposeData();
 
             assignmentGroupTracker.ShallowExposeData();
             automaticDeathrestTracker.ShallowExposeData();
-	    }
+        }
 
         public override string CompInspectStringExtra() {
             if (!Prefs.DevMode || !BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {

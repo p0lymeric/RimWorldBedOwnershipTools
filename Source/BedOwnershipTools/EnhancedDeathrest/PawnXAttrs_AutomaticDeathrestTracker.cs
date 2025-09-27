@@ -33,7 +33,7 @@ namespace BedOwnershipTools {
 
         public bool ExhaustionScheduleTest(int watermarkTicksToExhaustion) {
             Pawn pawn = parent.parentPawn;
-			if (pawn.needs != null) {
+            if (pawn.needs != null) {
                 Need_Deathrest need_Deathrest = pawn.needs.TryGetNeed<Need_Deathrest>();
                 if (need_Deathrest != null) {
                     const int TICKS_PER_DEATHREST_PERIOD = GenDate.TicksPerDay * 30;
@@ -43,7 +43,7 @@ namespace BedOwnershipTools {
                         return true;
                     }
                 }
-			}
+            }
             return false;
         }
 
@@ -158,6 +158,6 @@ namespace BedOwnershipTools {
         public void ShallowExposeData() {
             Scribe_Values.Look(ref automaticDeathrestMode, "BedOwnershipTools_automaticDeathrestMode", AutomaticDeathrestMode.Manual);
             Scribe_Values.Look(ref tickCompletedLastDeathrest, "BedOwnershipTools_tickCompletedLastDeathrest", -1);
-	    }
+        }
     }
 }

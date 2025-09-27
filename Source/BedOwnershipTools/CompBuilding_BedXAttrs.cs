@@ -75,7 +75,7 @@ namespace BedOwnershipTools {
         }
 
         public override void PostExposeData() {
-		    base.PostExposeData();
+            base.PostExposeData();
             Scribe_Values.Look(ref this.isAssignedToCommunity, "BedOwnershipTools_isAssignedToCommunity", false);
             Scribe_Values.Look(ref this.isAssignmentPinned, "BedOwnershipTools_isAssignmentPinned", false);
             Scribe_References.Look(ref this.myAssignmentGroup, "BedOwnershipTools_myAssignmentGroup");
@@ -88,12 +88,12 @@ namespace BedOwnershipTools {
             if (Scribe.mode == LoadSaveMode.PostLoadInit) {
                 // copied from CompAssignableToPawn.PostExposeData
                 // possibly to clean up any references to missing Pawns after a savegame load
-			    assignedPawnsOverlay.RemoveAll((Pawn x) => x == null);
+                assignedPawnsOverlay.RemoveAll((Pawn x) => x == null);
                 uninstalledAssignedPawnsOverlay.RemoveAll((Pawn x) => x == null);
 
                 // rest of init is done in the AGM
-		    }
-	    }
+            }
+        }
 
         public void SetAssignmentGroupByInterface(AssignmentGroup assignmentGroup) {
             // lol I went through the stages of grief searching for how the game handles

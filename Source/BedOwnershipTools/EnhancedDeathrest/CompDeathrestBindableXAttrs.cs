@@ -54,14 +54,14 @@ namespace BedOwnershipTools {
         }
 
         public override void PostExposeData() {
-		    base.PostExposeData();
+            base.PostExposeData();
             if (BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings) {
                 Scribe_References.Look(ref this.boundPawnOverlay, "BedOwnershipTools_boundPawnOverlay");
             }
             // if (Scribe.mode == LoadSaveMode.PostLoadInit) {
             //     // rest of init is done in AGMCompartment_EnhancedDeathrest
             // }
-	    }
+        }
 
         public override string CompInspectStringExtra() {
             if (!Prefs.DevMode || !BedOwnershipTools.Singleton.settings.devEnableDebugInspectStringListings) {

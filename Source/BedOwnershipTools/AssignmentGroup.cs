@@ -16,8 +16,8 @@ namespace BedOwnershipTools {
                 name = value;
             }
         }
-	    public string BaseLabel => RenamableLabel;
-	    public string InspectLabel => RenamableLabel;
+        public string BaseLabel => RenamableLabel;
+        public string InspectLabel => RenamableLabel;
 
         public AssignmentGroup() {
         }
@@ -40,7 +40,7 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref name, "name");
             Scribe_Values.Look(ref showDisplay, "showDisplay");
             // Scribe_Values.Look(ref colour, "colour");
-	    }
+        }
 
         public string GetUniqueLoadID() {
             return $"AssignmentGroup_{id}";

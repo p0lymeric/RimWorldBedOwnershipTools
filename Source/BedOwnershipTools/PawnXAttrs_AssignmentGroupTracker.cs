@@ -46,7 +46,7 @@ namespace BedOwnershipTools {
                     assignmentGroupToAssignedDeathrestCasketMap = new();
                 }
                 // rest of fixup including null handling is done in AGMCompartment_AssignmentGroups
-		    }
-	    }
+            }
+        }
     }
 }

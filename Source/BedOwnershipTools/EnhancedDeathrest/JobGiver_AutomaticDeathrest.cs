@@ -34,8 +34,8 @@ namespace BedOwnershipTools {
             TimeAssignmentDef timeAssignmentDef = (pawn.timetable == null) ? TimeAssignmentDefOf.Anything : pawn.timetable.CurrentAssignment;
             float curLevel = need_Deathrest.CurLevel;
             if (timeAssignmentDef == TimeAssignmentDefOf.Sleep) {
-		        return DEATHREST_PRIORITY;
-	        } else {
+                return DEATHREST_PRIORITY;
+            } else {
                 if (curLevel <= pawnXAttrs.automaticDeathrestTracker.automaticDeathrestMode.IgnoreScheduleActivityAssignmentsBelowLevel()) {
                     return DEATHREST_PRIORITY;
                 } else if (pawn.needs?.TryGetNeed<Need_Rest>() == null) {

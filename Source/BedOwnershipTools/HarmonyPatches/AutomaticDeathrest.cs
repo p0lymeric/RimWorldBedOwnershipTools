@@ -46,10 +46,10 @@ namespace BedOwnershipTools {
             }
 
             // // if (item.RaceProps.Humanlike && item.Faction == Faction.OfPlayer && item.needs != null && item.needs.TryGetNeed(out Need_Deathrest need) && need.CurLevel <= 0.1f && !item.Deathresting)
-			// IL_005b: ldloc.2
-			// IL_005c: callvirt instance float32 RimWorld.Need::get_CurLevel()
-			// IL_0061: ldc.r4 0.1 <- replace
-			// IL_0066: bgt.un.s IL_009a
+            // IL_005b: ldloc.2
+            // IL_005c: callvirt instance float32 RimWorld.Need::get_CurLevel()
+            // IL_0061: ldc.r4 0.1 <- replace
+            // IL_0066: bgt.un.s IL_009a
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
                 return TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
                     instructions,

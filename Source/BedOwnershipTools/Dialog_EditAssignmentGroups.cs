@@ -92,10 +92,10 @@ namespace BedOwnershipTools {
 
         private void DoRow(Rect rect, AssignmentGroup assignmentGroup, int i) {
             if (Mouse.IsOver(rect)) {
-            	// area.MarkForDraw();
-            	// GUI.color = area.Color;
-            	Widgets.DrawHighlight(rect);
-            	// GUI.color = Color.white;
+                // area.MarkForDraw();
+                // GUI.color = area.Color;
+                Widgets.DrawHighlight(rect);
+                // GUI.color = Color.white;
             }
             if (i % 2 == 1) {
                 Widgets.DrawLightHighlight(rect);
@@ -105,8 +105,8 @@ namespace BedOwnershipTools {
             if (i > 0) {
                 if (widgetRow.ButtonIcon(TexButton.ReorderUp, "BedOwnershipTools.IncreasePriorityAssignmentGroupTip".Translate(), GenUI.SubtleMouseoverColor)) {
                     GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.ExchangeByIdx(i - 1, i);
-			        SoundDefOf.Tick_High.PlayOneShotOnCamera();
-		        }
+                    SoundDefOf.Tick_High.PlayOneShotOnCamera();
+                }
             } else {
                 if (widgetRow.ButtonIcon((Texture2D)null, null, GenUI.SubtleMouseoverColor)) {
                     // SoundDefOf.ClickReject.PlayOneShotOnCamera();
@@ -118,7 +118,7 @@ namespace BedOwnershipTools {
                     GameComponent_AssignmentGroupManager.Singleton.agmCompartment_AssignmentGroups.ExchangeByIdx(i, i + 1);
                     SoundDefOf.Tick_Low.PlayOneShotOnCamera();
                 }
-		    } else {
+            } else {
                 if (widgetRow.ButtonIcon((Texture2D)null, null, GenUI.SubtleMouseoverColor)) {
                     // SoundDefOf.ClickReject.PlayOneShotOnCamera();
                 }

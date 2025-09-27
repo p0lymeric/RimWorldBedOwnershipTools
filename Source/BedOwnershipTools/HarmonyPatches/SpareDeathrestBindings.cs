@@ -165,12 +165,12 @@ namespace BedOwnershipTools {
                     // should technically look inside the closure of the FloatMenuOption to match its environment's value of "bed"
                     // should also account for stacked buildings
                     // let's not consider those
-                	List<Thing> thingList2 = clickCell.GetThingList(pawn.Map);
-                	for (int num = 0; num < thingList2.Count; num++) {
-                		Building_Bed bed;
-                		if ((bed = thingList2[num] as Building_Bed) == null || !bed.def.building.bed_humanlike) {
+                    List<Thing> thingList2 = clickCell.GetThingList(pawn.Map);
+                    for (int num = 0; num < thingList2.Count; num++) {
+                        Building_Bed bed;
+                        if ((bed = thingList2[num] as Building_Bed) == null || !bed.def.building.bed_humanlike) {
                             continue;
-                		}
+                        }
                         Gene_Deathrest gene_Deathrest = pawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
                         CompDeathrestBindableXAttrs cdbXAttrs = bed.GetComp<CompDeathrestBindableXAttrs>();
                         int indexOfStartDeathrest = opts.FindIndex(x => x.Label == "StartDeathrest".Translate());

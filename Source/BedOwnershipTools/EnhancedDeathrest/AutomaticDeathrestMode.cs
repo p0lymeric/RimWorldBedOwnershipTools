@@ -32,7 +32,7 @@ namespace BedOwnershipTools {
         private static string BiannualDateRangeStringAt(int day1, int day2, Quadrum quadrum1, Quadrum quadrum2) {
             string stringDay1 = Find.ActiveLanguageWorker.OrdinalNumber(day1);
             string stringDay2 = Find.ActiveLanguageWorker.OrdinalNumber(day2);
-	        return "BedOwnershipTools.ScheduleBiannualDateRange".Translate(stringDay1, stringDay2, quadrum1.Label(), quadrum2.Label(), day1, day2);
+            return "BedOwnershipTools.ScheduleBiannualDateRange".Translate(stringDay1, stringDay2, quadrum1.Label(), quadrum2.Label(), day1, day2);
         }
 
         public static IEnumerable<AutomaticDeathrestMode> GetValues() {

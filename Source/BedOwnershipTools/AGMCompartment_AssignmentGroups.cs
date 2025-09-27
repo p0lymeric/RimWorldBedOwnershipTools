@@ -248,6 +248,6 @@ namespace BedOwnershipTools {
         public void ShallowExposeData() {
             Scribe_Collections.Look(ref this.allAssignmentGroupsByPriority, "allAssignmentGroupsByPriority", LookMode.Deep);
             Scribe_References.Look(ref this.defaultAssignmentGroup, "defaultAssignmentGroup");
-	    }
+        }
     }
 }
