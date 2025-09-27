@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using RimWorld.Planet;
 using Verse;
 
 namespace BedOwnershipTools {
@@ -7,7 +8,7 @@ namespace BedOwnershipTools {
         public readonly CompPawnXAttrs parent;
         public AutomaticDeathrestMode automaticDeathrestMode = AutomaticDeathrestMode.Manual;
         // set when a Pawn finishes deathrest
-        public long tickCompletedLastDeathrest = -1L;
+        public int tickCompletedLastDeathrest = -1;
 
         public PawnXAttrs_AutomaticDeathrestTracker(CompPawnXAttrs parent) {
             this.parent = parent;
@@ -46,13 +47,24 @@ namespace BedOwnershipTools {
             return false;
         }
 
+        public float LongitudeForLocalDateCalc() {
+#if RIMWORLD__1_6
+            PlanetTile tile = parent.parentPawn.Tile;
+            if (tile.Valid) {
+#else
+            int tile = parent.parentPawn.Tile;
+            if (tile >= 0) {
+#endif
+                return Find.WorldGrid.LongLatOf(tile).x;
+            }
+            return 0;
+        }
+
         public bool CalendarScheduleTest(Twelfth twelfth1, Twelfth twelfth2) {
             // first check for imminent deathrest exhaustion
             if (ExhaustionScheduleTest(GenDate.TicksPerDay)) {
                 return true;
             }
-
-            long currentTick = Find.TickManager.TicksGame;
 
             Twelfth localTwelfthOfYear = GenLocalDate.Twelfth(parent.parent);
             // don't invoke the calendar scheduler if it's the wrong time of year
@@ -66,16 +78,44 @@ namespace BedOwnershipTools {
                 return true;
             }
 
-            // now we need to ask "did I already deathrest during this scheduling trigger period in any time zone?"
-            // we won't deathrest if we've already deathrested in some time zone that covers the current twelfth
+            // This scheduler operates in local time, as it's more natural for the common case when a pawn is stationed in some settlement.
+            // However, we need to account for time zone changes with travelling Pawns.
 
-            long tickStartOfTwelfthAnywhereOnPlanet = currentTick / GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12L;
+            // We want to avoid retriggering deathrest at the beginning of the week in some local time zone, if the pawn recently
+            // finished deathrest in the same week in another local time zone.
+            // e.g. finishing deathrest on 6 Aprimay 1hT+1h in a T+1h timezone, then travelling to 5 Aprimay 23h in a T-1h timezone.
+            //      The scheduler must not retrigger on 6 Aprimay 0hT-1h.
 
-            if (tickCompletedLastDeathrest < tickStartOfTwelfthAnywhereOnPlanet) {
+            // This is accomplished by allowing the scheduler to trigger from days 1 to 5 in local time
+            // and blocking if the last deathrest finished anytime it was day 1 in any time zone
+
+            // Note that a 5-day refractory period probably could've also worked (absTickCompletedLastDeathrest + TicksPerTwelfth < TicksAbs)
+            // But we want hysteresis windows to be tight to mitigate risks of a deathrester latching onto the fallback exhaustion schedule in steady state.
+
+            // Time zone conversions suck.
+            int tickLatestTwelfthStartAnywhereOnPlanet =
+                // Convert to the LATEST time zone on the planet (where a twelfth would begin FIRST)
+                (Find.TickManager.TicksAbs + GenDate.TicksPerHour * 12) /
+                // Truncate modulo TicksPerTwelfth to obtain the start of the week in the latest time zone
+                GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth -
+                // REVERSE the time zone conversion to meridian time
+                GenDate.TicksPerHour * 12;
+
+            // guaranteed that tickCompletedLastDeathrest contains a valid game tick due to negative check above
+            if (GenDate.TickGameToAbs(tickCompletedLastDeathrest) < tickLatestTwelfthStartAnywhereOnPlanet) {
                 // Log.Message("[BOT] eepy due to calendar");
                 return true;
             }
             return false;
+        }
+
+        public float TicksToDeathrestExhaustion() {
+            const int TICKS_PER_DEATHREST_PERIOD = GenDate.TicksPerDay * 30;
+            Need_Deathrest need_Deathrest = parent.parentPawn.needs?.TryGetNeed<Need_Deathrest>();
+            if (need_Deathrest != null) {
+                return need_Deathrest.CurLevel * TICKS_PER_DEATHREST_PERIOD;
+            }
+            return TICKS_PER_DEATHREST_PERIOD;
         }
 
         public void Notify_DeathrestEnded() {
@@ -86,7 +126,7 @@ namespace BedOwnershipTools {
             // because if the Pawn was governed by a calendar scheduler and regains the gene, Auto-wake will not be synchronized anymore
             this.automaticDeathrestMode = AutomaticDeathrestMode.Manual;
             // not necessary but prudent to reset
-            this.tickCompletedLastDeathrest = -1L;
+            this.tickCompletedLastDeathrest = -1;
         }
 
         public static IEnumerable<Gizmo> MockCompGetGizmosExtraImpl(bool showAutoWakeControl) {
@@ -117,7 +157,7 @@ namespace BedOwnershipTools {
 
         public void ShallowExposeData() {
             Scribe_Values.Look(ref automaticDeathrestMode, "BedOwnershipTools_automaticDeathrestMode", AutomaticDeathrestMode.Manual);
-            Scribe_Values.Look(ref tickCompletedLastDeathrest, "BedOwnershipTools_tickCompletedLastDeathrest", -1L);
+            Scribe_Values.Look(ref tickCompletedLastDeathrest, "BedOwnershipTools_tickCompletedLastDeathrest", -1);
 	    }
     }
 }

@@ -21,7 +21,7 @@
     <BedOwnershipTools.Command_UnbindDeathrestBindableDisabledNoBindeeReason>This building is not currently bound.</BedOwnershipTools.Command_UnbindDeathrestBindableDisabledNoBindeeReason>
 
     <BedOwnershipTools.Command_GenericDisabledDesc>This command is unavailable.</BedOwnershipTools.Command_GenericDisabledDesc>
-    <BedOwnershipTools.Command_GenericDisabledNoOwnerReason>This building does not have a valid assigned or bound user.</BedOwnershipTools.Command_GenericDisabledNoOwnerReason>
+    <BedOwnershipTools.Command_GenericDisabledNoOwnerReason>This building does not have a valid assigned or bound deathrester.</BedOwnershipTools.Command_GenericDisabledNoOwnerReason>
 
     <BedOwnershipTools.Command_AutoWakeDisabledCalendarReason>Colonists following calendar deathrest schedules will always auto-wake.</BedOwnershipTools.Command_AutoWakeDisabledCalendarReason>
 </LanguageData>

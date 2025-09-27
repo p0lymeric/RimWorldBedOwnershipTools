@@ -141,18 +141,20 @@ namespace BedOwnershipTools {
                     }
                     return null;
                 })
-                .Where(x => x != null);
-
-            if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
-                deathrestCasketsAssociatedWithPawn = deathrestCasketsAssociatedWithPawn.OrderBy(x => {
+                .Where(x => x != null)
+                .OrderBy(x => {
                     CompBuilding_BedXAttrs bedXAttrs = x.GetComp<CompBuilding_BedXAttrs>();
-                    if (bedXAttrs != null) {
-                        return bedXAttrs.MyAssignmentGroup.Priority();
+                    if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups && bedXAttrs != null) {
+                        // hack to prioritize assigned caskets over bound caskets in the same assignment group
+                        int basePriority = bedXAttrs.MyAssignmentGroup.Priority() * 2;
+                        int subPriority = (bedXAttrs.assignedPawnsOverlay.FirstOrDefault() == pawn) ? 1 : 0;
+                        return basePriority + subPriority;
                     } else {
-                        return int.MaxValue;
+                        int basePriority = int.MaxValue - 1;
+                        int subPriority = (x.OwnersForReading.FirstOrDefault() == pawn) ? 1 : 0;
+                        return basePriority + subPriority;
                     }
                 });
-            }
 
             foreach (Building_Bed bed in deathrestCasketsAssociatedWithPawn) {
                 if (pawn.CanReach(bed, PathEndMode.OnCell, Danger.Some) && !ThingTouchingSunlight(bed)) {

@@ -60,9 +60,13 @@ namespace BedOwnershipTools {
         private static int LastInterfaceActionFrame = -1;
 
         public override void Initialize(CompProperties props) {
-            if (this.parent is not Building_Bed) {
-                Log.Error("[BOT] Tried to create CompBuilding_BedXAttrs under a non-Building_Bed parent ThingWithComps.");
-            }
+            // Relevant Stats in Description constructs a dummy ThingWithComps instance
+            // and calls InitializeComps twice (once directly, once through PostMake)
+            // in order to query information about the constructed building
+            // This check would be tripped by that query object
+            // if (this.parent is not Building_Bed) {
+            //     Log.Error($"[BOT] Tried to create CompBuilding_BedXAttrs under a non-Building_Bed ({this.parent.GetType().Name}) parent ThingWithComps ({this.parent.GetUniqueLoadID()}).");
+            // }
             GameComponent_AssignmentGroupManager.Singleton.compBuilding_BedXAttrsRegistry.Add(this);
         }
 
@@ -243,7 +247,7 @@ namespace BedOwnershipTools {
                     }
                 }
 
-                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def) || !BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest)) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
                         // if there is a bindee or a tentative assignee and they are a deathrester then expose their auto gizmos
                         Pawn assignee = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?

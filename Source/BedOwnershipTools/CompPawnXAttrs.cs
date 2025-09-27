@@ -1,8 +1,7 @@
-using System.Collections.Generic;
+using System;
 using System.Text;
 using RimWorld;
 using Verse;
-using Verse.AI;
 
 // New state attached to Pawns
 
@@ -19,7 +18,7 @@ namespace BedOwnershipTools {
 
         public override void Initialize(CompProperties props) {
             if (this.parent is not Pawn) {
-                Log.Error("[BOT] Tried to create CompPawnXAttrs under a non-Pawn parent ThingWithComps.");
+                Log.Error($"[BOT] Tried to create CompPawnXAttrs under a non-Pawn ({this.parent.GetType().Name}) parent ThingWithComps ({this.parent.GetUniqueLoadID()}).");
             }
             parentPawn = (Pawn)this.parent;
             GameComponent_AssignmentGroupManager.Singleton.compPawnXAttrsRegistry.Add(this);
@@ -82,6 +81,17 @@ namespace BedOwnershipTools {
 
                 stringBuilder.AppendInNewLine("automaticDeathrestMode: " + this.automaticDeathrestTracker.automaticDeathrestMode.ToString());
                 stringBuilder.AppendInNewLine("tickCompletedLastDeathrest: " + this.automaticDeathrestTracker.tickCompletedLastDeathrest.ToString());
+                stringBuilder.AppendInNewLine($"ScheduleTest: {(automaticDeathrestTracker.ScheduleTest() ? "Armed" : "Disarmed")}");
+                float myLongitude = automaticDeathrestTracker.LongitudeForLocalDateCalc();
+                stringBuilder.AppendInNewLine($"myLongitudeTickOffset: {GenDate.LocalTicksOffsetFromLongitude(myLongitude)}");
+                int tickAtMeridian = Find.TickManager.TicksAbs;
+                stringBuilder.AppendInNewLine($"tickAtMeridian: {GenDate.DayOfQuadrum(tickAtMeridian, 0) + 1} {GenDate.Quadrum(tickAtMeridian, 0).Label()} {GenDate.Year(tickAtMeridian, 0)} {GenDate.HourFloat(tickAtMeridian, 0):F1}h MER");
+                int tickEarliestTwelfthEndEverywhereOnPlanet = (Find.TickManager.TicksAbs - GenDate.TicksPerHour * 12) / GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth + GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
+                stringBuilder.AppendInNewLine($"tickEarliestTwelfthEndEverywhereOnPlanet: {GenDate.DayOfQuadrum(tickEarliestTwelfthEndEverywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickEarliestTwelfthEndEverywhereOnPlanet, 0).Label()} {GenDate.Year(tickEarliestTwelfthEndEverywhereOnPlanet, 0)} {GenDate.HourFloat(tickEarliestTwelfthEndEverywhereOnPlanet, 0):F1}h LOC");
+                int tickLatestTwelfthStartAnywhereOnPlanet = (Find.TickManager.TicksAbs + GenDate.TicksPerHour * 12) / GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
+                stringBuilder.AppendInNewLine($"tickLatestTwelfthStartAnywhereOnPlanet: {GenDate.DayOfQuadrum(tickLatestTwelfthStartAnywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickLatestTwelfthStartAnywhereOnPlanet, 0).Label()} {GenDate.Year(tickLatestTwelfthStartAnywhereOnPlanet, 0)} {GenDate.HourFloat(tickLatestTwelfthStartAnywhereOnPlanet, 0):F1}h LOC");
+                int projectedExhaustionTick = Find.TickManager.TicksAbs + (int)Math.Round(automaticDeathrestTracker.TicksToDeathrestExhaustion()) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
+                stringBuilder.AppendInNewLine($"TicksToDeathrestExhaustion: {GenDate.DayOfQuadrum(projectedExhaustionTick, 0) + 1} {GenDate.Quadrum(projectedExhaustionTick, 0).Label()} {GenDate.Year(projectedExhaustionTick, 0)} {GenDate.HourFloat(projectedExhaustionTick, 0):F1}h LOC");
 
                 if (pawn.ownership.AssignedDeathrestCasket != null) {
                     stringBuilder.AppendInNewLine("INTERNALDC: " + pawn.ownership.AssignedDeathrestCasket.GetUniqueLoadID());
