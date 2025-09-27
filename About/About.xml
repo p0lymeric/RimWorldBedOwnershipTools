@@ -3,10 +3,16 @@
     <packageId>polymeric.bedownershiptools</packageId>
     <name>Bed Ownership Tools</name>
     <author>polymeric</author>
-    <description>Tools to reduce bed-related micromanagement.\n\nDesignate beds for communal use. Pin bed owner assignments so they aren't forgotten. Assign multiple beds per colonist.</description>
+    <description>Tools to reduce bed-related micromanagement.
+
+- Designate beds for communal use.
+- Pin bed owner assignments so they aren't forgotten.
+- Assign multiple beds per colonist.
+- Build multiple deathrest chambers per deathrester (Biotech only).
+- Appoint automatic deathrest schedules (Biotech only).</description>
     <url>https://github.com/p0lymeric/RimWorldBedOwnershipTools</url>
 
-    <modVersion IgnoreIfNoMatchingField="True">1.0.8</modVersion>
+    <modVersion IgnoreIfNoMatchingField="True">1.1.0</modVersion>
 
     <supportedVersions>
         <li>1.5</li>

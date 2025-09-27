@@ -9,6 +9,13 @@ namespace BedOwnershipTools {
     public class GameComponent_AssignmentGroupManager : GameComponent {
         public static GameComponent_AssignmentGroupManager Singleton;
 
+        // Tracks the version of the mod used when the game was last saved.
+        // Currently unused but could be useful for future save data migration routines
+        // Only meant to be used during FinalizeInit, after which the string is replaced with the current mod version string
+        // If the game is new, the version string is empty
+        // If the game was loaded from a pre-1.1.0 save, mod version is represented with a fallback version of 0.1.0
+        private string modVersionOnSave;
+
         // Tracks all live ThingComps introduced by this mod for enumeration purposes
         public HashSet<CompPawnXAttrs> compPawnXAttrsRegistry;
         public HashSet<CompBuilding_BedXAttrs> compBuilding_BedXAttrsRegistry;
@@ -49,6 +56,8 @@ namespace BedOwnershipTools {
         public GameComponent_AssignmentGroupManager(Game game) {
             Singleton = this;
 
+            modVersionOnSave = "";
+
             compPawnXAttrsRegistry = new();
             compBuilding_BedXAttrsRegistry = new();
             compDeathrestBindableXAttrsRegistry = new();
@@ -66,13 +75,23 @@ namespace BedOwnershipTools {
         }
 
         public override void FinalizeInit() {
+            // if (modVersionOnSave == "") {
+            //     Log.Message($"[BOT] Bed Ownership Tools save data was freshly initialized.");
+            // } else {
+            //     Log.Message($"[BOT] Loaded save from Bed Ownership Tools version {modVersionOnSave}.");
+            //     Log.Message($"[BOT] Current Bed Ownership Tools version is {BedOwnershipTools.Singleton.Content.ModMetaData.ModVersion}.");
+            // }
+
             agmCompartment_AssignmentGroups.FinalizeInit();
             agmCompartment_SpareDeathrestBindings.FinalizeInit();
             agmCompartment_AutomaticDeathrest.FinalizeInit();
+
+            modVersionOnSave = BedOwnershipTools.Singleton.Content.ModMetaData.ModVersion;
         }
 
         public override void ExposeData() {
             base.ExposeData();
+            Scribe_Values.Look(ref this.modVersionOnSave, "modVersionOnSave", "0.1.0");
             agmCompartment_AssignmentGroups.ShallowExposeData();
         }
     }

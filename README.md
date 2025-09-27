@@ -6,9 +6,21 @@
 
 Bed Ownership Tools reduces micromanagement of colonists' bed assignments by introducing new ownership controls on beds.
 
-Designate beds for communal use. Pin bed owner assignments so they aren't forgotten. Assign multiple beds per colonist.
+**(New) Version 1.1 adds deathrest features.** Sanguophages and colonists with the deathrest gene can now own multiple deathrest chambers and optionally follow automatic deathrest schedules.
 
 ![hero banner](About/Preview.png)
+
+## Features
+#### Core
+- **Communal beds** - Assignment-free beds that are automatically shared between colonists.
+- **Pinned assignments** - Prevent colonists from forgetting their bed assignments unless manually reassigned by the player.
+- **Assignment groups** - Allow colonists to own and automatically switch between multiple beds during travel or zoning.
+
+#### Deathrest (*Biotech DLC only*)
+- **Spare deathrest bindings** - Allow deathresters to switch between multiple sets of deathrest buildings.
+- **Automatic deathrest** - Assign exhaustion-based or calendar deathrest schedules to individual deathresters.
+
+Individual features can be disabled in the mod's settings.
 
 ## Communal beds
 
@@ -62,23 +74,42 @@ Maybe the captain got malaria and is out of commission for an urgent quest. No w
 - While the ship is away, the captain will automatically use their Home bed instead.
 - The crew members who leave for the quest will switch from their Home to Ship beds on the first night out.
 
-### Technical aside for assignment groups
+# Spare deathrest bindings
 
-When the mod is first initialized, it creates three assignment groups (Default, Home, Ship).
-All beds start in the Default assignment group unless you designate otherwise. The other two groups carry no initial meaning other than serving as a starting template.
+Spare deathrest bindings allow colonists to switch between multiple deathrest caskets and buildings beyond their serum binding capacity.
 
-Having all beds in the same assignment group produces vanilla game ownership behaviour. When a bed is moved to another assignment group, the game will only consider assignment conflicts with beds in the same assignment group.
+![spare deathrest bindings](Collateral/DocMedia/ReadmeSpareDeathrestBindings.png)
 
-Hence, a colonist may own one bed in each assignment group. The groups themselves are ordered by priority, dictating which bed a colonist will choose when multiple assigned beds are available.
+You can use this feature by constructing two sets of deathrest buildings for a deathrester and ordering them to deathrest in both. Unlike the base game, they won't be blocked from using the second casket.
 
-When a colonist needs rest, it will initiate a bed search, looking through all beds they own to pick the highest priority bed they can reach. They will internally set that bed to be their owned bed and hand off to the vanilla game's single-bed ownership system. Vanilla game bedroom quality evaluation and mood effects then apply as normal.
+Once a building is bound, it normally cannot be reassigned to another user. This behaviour can be disabled by unchecking "Deathrest bindings are permanent" in the mod's settings.
 
-In the starter set, the Default group exists separately from the Home and Ship groups, and has no clear use. This is so that newly claimed or constructed beds are placed by default in a separate group from the Home group. It's also valid to use the Default group to hold home bed assignments, and use pinning to protect assignments.
+# Automatic deathrest
+
+Automatic deathrest allows colonists to follow a given schedule for deathrest.
+
+![automatic deathrest](Collateral/DocMedia/ReadmeAutomaticDeathrest.png)
+
+The mod provides two kinds of schedules:
+- **Exhaustion-driven** - The deathrester will deathrest after their need falls below a certain level. This scheme can tolerate manual overrides like disabling Auto-wake or keeping a colonist awake past exhaustion.
+- **Calendar** - The deathrester will always deathrest in the specified "weeks" of the year or when almost exhausted. If blocked long enough from following the schedule, they may rest twice in a period to realign with the calendar.
+
+Exhaustion-driven schedules are straightforward to use. Calendar scheduling allows you to prevent deathrest period overlap between multiple colonists.
+
+Beds can be used for automatic deathrest by unchecking "Ignore beds for automatic deathrest" in the mod's settings.
+
+Deathrest auto-scheduling controls can be accessed by selecting:
+- one of the colonist's deathrest caskets
+- one of the colonist's beds (if "Ignore beds for automatic deathrest" is unchecked in the mod's settings)
+- the colonist themselves while they are deathresting
+- the colonist themselves while they are awake (by unchecking "Hide deathrest auto-controls on pawn while awake" in the mod's settings)
 
 ## Save compatibility
 It's safe to add or remove this mod at any time. You may see harmless one-time errors printed to the game's console following mod removal.
 
-Upon mod removal, colonists with multiple bed assignments will keep the last non-communal bed they used.
+Upon mod removal:
+- colonists with multiple bed assignments will own the last non-communal bed they used.
+- colonists with spare deathrest bindings will be bound to the last set of buildings they used.
 
 ## Mod compatibility
 Bed Ownership Tools has built-in support for a growing list of mods that interact with bed assignments. These include:

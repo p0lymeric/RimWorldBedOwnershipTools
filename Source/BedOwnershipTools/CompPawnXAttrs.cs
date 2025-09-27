@@ -80,11 +80,13 @@ namespace BedOwnershipTools {
                 }
 
                 stringBuilder.AppendInNewLine("automaticDeathrestMode: " + this.automaticDeathrestTracker.automaticDeathrestMode.ToString());
-                stringBuilder.AppendInNewLine("tickCompletedLastDeathrest: " + this.automaticDeathrestTracker.tickCompletedLastDeathrest.ToString());
                 stringBuilder.AppendInNewLine($"ScheduleTest: {(automaticDeathrestTracker.ScheduleTest() ? "Armed" : "Disarmed")}");
                 float myLongitude = automaticDeathrestTracker.LongitudeForLocalDateCalc();
-                int tickLatestTwelfthStartAnywhereOnPlanet = (Find.TickManager.TicksAbs + GenDate.TicksPerHour * 12) / GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
-                stringBuilder.AppendInNewLine($"tickLatestTwelfthStartAnywhereOnPlanet: {GenDate.DayOfQuadrum(tickLatestTwelfthStartAnywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickLatestTwelfthStartAnywhereOnPlanet, 0).Label()} {GenDate.Year(tickLatestTwelfthStartAnywhereOnPlanet, 0)} {GenDate.HourFloat(tickLatestTwelfthStartAnywhereOnPlanet, 0):F1}h LOC");
+                int tickCompletedLastDeathrest = GenDate.TickGameToAbs(this.automaticDeathrestTracker.tickCompletedLastDeathrest) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
+                stringBuilder.AppendInNewLine($"tickCompletedLastDeathrest: {GenDate.DayOfQuadrum(tickCompletedLastDeathrest, 0) + 1} {GenDate.Quadrum(tickCompletedLastDeathrest, 0).Label()} {GenDate.Year(tickCompletedLastDeathrest, 0)} {GenDate.HourFloat(tickCompletedLastDeathrest, 0):F1}h LOC");
+                int localTwelfthAbs = (Find.TickManager.TicksAbs + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude)) / GenDate.TicksPerTwelfth;
+                int tickStartOfLocalTwelfthAnywhereOnPlanet = localTwelfthAbs * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
+                stringBuilder.AppendInNewLine($"tickStartOfLocalTwelfthAnywhereOnPlanet: {GenDate.DayOfQuadrum(tickStartOfLocalTwelfthAnywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickStartOfLocalTwelfthAnywhereOnPlanet, 0).Label()} {GenDate.Year(tickStartOfLocalTwelfthAnywhereOnPlanet, 0)} {GenDate.HourFloat(tickStartOfLocalTwelfthAnywhereOnPlanet, 0):F1}h LOC");
                 int projectedExhaustionTick = Find.TickManager.TicksAbs + (int)Math.Round(automaticDeathrestTracker.TicksToDeathrestExhaustion()) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
                 stringBuilder.AppendInNewLine($"TicksToDeathrestExhaustion: {GenDate.DayOfQuadrum(projectedExhaustionTick, 0) + 1} {GenDate.Quadrum(projectedExhaustionTick, 0).Label()} {GenDate.Year(projectedExhaustionTick, 0)} {GenDate.HourFloat(projectedExhaustionTick, 0):F1}h LOC");
 

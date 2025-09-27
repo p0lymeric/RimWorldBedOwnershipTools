@@ -7,7 +7,7 @@
         <Description>A RimWorld mod assembly</Description>
         <Company>polymeric</Company>
         <Copyright>Copyright © polymeric. All rights reserved.</Copyright>
-        <Version>1.0.8</Version>
+        <Version>1.1.0</Version>
         <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
         <TargetFramework>net472</TargetFramework>

@@ -119,7 +119,7 @@ namespace BedOwnershipTools {
             // and a large population of deathresters who can't find a place to automatically deathrest (high frequency of calls)
             IEnumerable<Building_Bed> deathrestCasketsAssociatedWithPawn = GameComponent_AssignmentGroupManager.Singleton.compDeathrestBindableXAttrsRegistry
                 .Select(x => {
-                    if (x.parent is Building_Bed bed) {
+                    if (x.parent is Building_Bed bed && bed.Spawned) {
                         Pawn assignee = null;
                         Pawn bindee = null;
                         if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
@@ -147,11 +147,11 @@ namespace BedOwnershipTools {
                     if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups && bedXAttrs != null) {
                         // hack to prioritize assigned caskets over bound caskets in the same assignment group
                         int basePriority = bedXAttrs.MyAssignmentGroup.Priority() * 2;
-                        int subPriority = (bedXAttrs.assignedPawnsOverlay.FirstOrDefault() == pawn) ? 1 : 0;
+                        int subPriority = bedXAttrs.assignedPawnsOverlay.Contains(pawn) ? 0 : 1;
                         return basePriority + subPriority;
                     } else {
                         int basePriority = int.MaxValue - 1;
-                        int subPriority = (x.OwnersForReading.FirstOrDefault() == pawn) ? 1 : 0;
+                        int subPriority = x.OwnersForReading.Contains(pawn) ? 0 : 1;
                         return basePriority + subPriority;
                     }
                 });

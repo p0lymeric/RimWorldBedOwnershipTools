@@ -86,23 +86,15 @@ namespace BedOwnershipTools {
             // e.g. finishing deathrest on 6 Aprimay 1hT+1h in a T+1h timezone, then travelling to 5 Aprimay 23h in a T-1h timezone.
             //      The scheduler must not retrigger on 6 Aprimay 0hT-1h.
 
-            // This is accomplished by allowing the scheduler to trigger from days 1 to 5 in local time
-            // and blocking if the last deathrest finished anytime it was day 1 in any time zone
-
             // Note that a 5-day refractory period probably could've also worked (absTickCompletedLastDeathrest + TicksPerTwelfth < TicksAbs)
             // But we want hysteresis windows to be tight to mitigate risks of a deathrester latching onto the fallback exhaustion schedule in steady state.
 
             // Time zone conversions suck.
-            int tickLatestTwelfthStartAnywhereOnPlanet =
-                // Convert to the LATEST time zone on the planet (where a twelfth would begin FIRST)
-                (Find.TickManager.TicksAbs + GenDate.TicksPerHour * 12) /
-                // Truncate modulo TicksPerTwelfth to obtain the start of the week in the latest time zone
-                GenDate.TicksPerTwelfth * GenDate.TicksPerTwelfth -
-                // REVERSE the time zone conversion to meridian time
-                GenDate.TicksPerHour * 12;
+            int localTwelfthAbs = (Find.TickManager.TicksAbs + (int)GenDate.LocalTicksOffsetFromLongitude(LongitudeForLocalDateCalc())) / GenDate.TicksPerTwelfth;
+            int tickStartOfLocalTwelfthAnywhereOnPlanet = localTwelfthAbs * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12;
 
             // guaranteed that tickCompletedLastDeathrest contains a valid game tick due to negative check above
-            if (GenDate.TickGameToAbs(tickCompletedLastDeathrest) < tickLatestTwelfthStartAnywhereOnPlanet) {
+            if (GenDate.TickGameToAbs(tickCompletedLastDeathrest) < tickStartOfLocalTwelfthAnywhereOnPlanet) {
                 // Log.Message("[BOT] eepy due to calendar");
                 return true;
             }
@@ -120,6 +112,9 @@ namespace BedOwnershipTools {
 
         public void Notify_DeathrestEnded() {
             this.tickCompletedLastDeathrest = Find.TickManager.TicksGame;
+            // int tickCompletedLastDeathrest = GenDate.TickGameToAbs(this.tickCompletedLastDeathrest) + (int)GenDate.LocalTicksOffsetFromLongitude(LongitudeForLocalDateCalc());
+            // Log.Warning($"tickCompletedLastDeathrest: {tickCompletedLastDeathrest}");
+            // Log.Warning($"tickCompletedLastDeathrestT: {GenDate.DayOfQuadrum(tickCompletedLastDeathrest, 0) + 1} {GenDate.Quadrum(tickCompletedLastDeathrest, 0).Label()} {GenDate.Year(tickCompletedLastDeathrest, 0)} {GenDate.HourFloat(tickCompletedLastDeathrest, 0):F1}h LOC");
         }
 
         public void Notify_DeathrestGeneRemoved() {

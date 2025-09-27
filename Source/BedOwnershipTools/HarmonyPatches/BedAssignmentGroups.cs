@@ -59,7 +59,7 @@ namespace BedOwnershipTools {
                     if (x.parent.GetComp<CompBuilding_BedXAttrs>() == null) {
                         return;
                     }
-                    if(CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(x.parent.def) && __instance is CompAssignableToPawn_DeathrestCasket y) {
+                    if(__instance is CompAssignableToPawn_DeathrestCasket y) {
                         __instance = new CATPDCAssignmentGroupOverlayAdapter(y);
                     } else {
                         __instance = new CATPBAssignmentGroupOverlayAdapter(x);
@@ -87,9 +87,9 @@ namespace BedOwnershipTools {
             // on the derived implementations need to proxy these hints and clear this tracker's state.
 
             // Note that unlike with hints directly against UnclaimBed, TryUnassignPawn handlers will automatically
-            // insert a call to UnclaimBedDirected for the referenced bed, so it's not necessary to write patches
-            // for the directed or invall paths if the intent is to only relinquish one or all beds.
-            // Custom patches are only needed for invalidating a certain subset of beds.
+            // insert a call to UnclaimBedDirected for the given bed and Pawn pair from the original call.
+            // Patches are still necessary to account for pawns who own the bed in the overlay.
+
             public static bool setBeforeCallingToNotInvalidateAllOverlays = false;
             public static bool setBeforeCallingToInvalidateAllOverlaysWithoutWarning = false;
 
@@ -169,9 +169,9 @@ namespace BedOwnershipTools {
                 // RimWorld.CompAssignableToPawn.TryUnassignPawn RimWorld.CompAssignableToPawn.PostDeSpawn -- directed, HIT
                 harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostDeSpawn)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
 
-                // RimWorld.CompAssignableToPawn.TryUnassignPawn RimWorld.CompAssignableToPawn.PostSwapMap -- invall, pawn was destroyed check, HIT
+                // RimWorld.CompAssignableToPawn.TryUnassignPawn RimWorld.CompAssignableToPawn.PostSwapMap -- directed, pawn was destroyed check, HIT
 #if RIMWORLD__1_6
-                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostSwapMap)), transpiler: new HarmonyMethod(InsertHintInvalidateAllOverlaysTranspiler));
+                harmony.Patch(AccessTools.Method(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostSwapMap)), transpiler: new HarmonyMethod(InsertHintDontInvalidateOverlaysTranspiler));
 #endif
 
                 // RimWorld.CompAssignableToPawn_Bed.TryUnassignPawn RimWorld.Dialog_AssignBuildingOwner.DrawAssignedRow -- directed, other calling paths shouldn't exist, HIT
@@ -549,6 +549,68 @@ namespace BedOwnershipTools {
                 }
             }
         }
+
+        [HarmonyPatch(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostDeSpawn))]
+        public class Patch_CompAssignableToPawn_PostDeSpawn {
+#if RIMWORLD__1_6
+            static void Postfix(CompAssignableToPawn __instance, Map map, DestroyMode mode = DestroyMode.Vanish) {
+                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
+                if (!enableBedAssignmentGroups) {
+                    return;
+                }
+                if (__instance is CompAssignableToPawn_Bed) {
+                    CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
+                    if (mode != DestroyMode.WillReplace) {
+                        for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
+                            CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num], sort: false, !__instance.parent.DestroyedOrNull());
+                        }
+                    }
+                }
+            }
+#else
+            static void Postfix(CompAssignableToPawn __instance, Map map) {
+                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
+                if (!enableBedAssignmentGroups) {
+                    return;
+                }
+                if (__instance is CompAssignableToPawn_Bed) {
+                    CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
+                    for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
+                        CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num], sort: false, !__instance.parent.DestroyedOrNull());
+                    }
+                }
+            }
+#endif
+        }
+
+#if RIMWORLD__1_6
+        [HarmonyPatch(typeof(CompAssignableToPawn), nameof(CompAssignableToPawn.PostSwapMap))]
+        public class Patch_CompAssignableToPawn_PostSwapMap {
+            static void Postfix(CompAssignableToPawn __instance) {
+                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
+                if (!enableBedAssignmentGroups) {
+                    return;
+                }
+                if (__instance is CompAssignableToPawn_Bed) {
+                    CompBuilding_BedXAttrs bedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
+                    if (bedXAttrs == null) {
+                        return;
+                    }
+                    for (int num = bedXAttrs.assignedPawnsOverlay.Count - 1; num >= 0; num--) {
+                        if (bedXAttrs.assignedPawnsOverlay[num].DestroyedOrNull() || !bedXAttrs.assignedPawnsOverlay[num].SpawnedOrAnyParentSpawned) {
+                            CATPBAndPOMethodReplacements.TryUnassignPawn(__instance, bedXAttrs.assignedPawnsOverlay[num]);
+                        }
+                    }
+                }
+            }
+        }
+#endif
 
         [HarmonyPatch(typeof(Building_Bed), "RemoveAllOwners")]
         public class Patch_Building_Bed_RemoveAllOwners {

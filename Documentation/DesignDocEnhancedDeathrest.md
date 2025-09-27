@@ -69,8 +69,8 @@ The player should probably manage deathrest themselves if the colony depends on 
 ### Exhaustion-synchronous schedules
 Exhaustion-synchronous schedules trigger whenever a deathrester's deathrest need level falls below a certain watermark.
 
-- 3 hours to exhaustion: Start deathrest below the 1% deathrest need mark (3 hours to exhaustion). The game will only display a "needs deathrest" alert after the Pawn becomes exhausted.
-- 1 day to exhaustion: Start deathrest below 24 hours to exhaustion. The game will display a "needs deathrest" alert after 12 hours to exhaustion.
+- 3 hours to exhaustion: Start deathrest below the ~0.42% deathrest need mark (3 hours to exhaustion). The game will only display a "needs deathrest" alert after the Pawn becomes exhausted.
+- 1 day to exhaustion: Start deathrest below the ~3.33% deathrest need mark (24 hours to exhaustion). The game will display a "needs deathrest" alert after 12 hours to exhaustion.
 
 ### Calendar-synchronous schedules
 The calendar scheduler is designed to facilitate coordinated deathrest between multiple deathresters, and to allow the player to anticipate when each deathrester will deathrest.

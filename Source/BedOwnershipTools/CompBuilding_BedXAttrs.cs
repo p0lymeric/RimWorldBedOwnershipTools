@@ -190,6 +190,8 @@ namespace BedOwnershipTools {
                     disableToggleIsAssignedToCommunity = true;
                 }
 
+                bool hasCATP_DeathrestCasket = bed.GetComp<CompAssignableToPawn>() is CompAssignableToPawn_DeathrestCasket;
+
                 Command_Toggle toggleIsAssignmentPinned = new Command_Toggle();
                 toggleIsAssignmentPinned.defaultLabel = "BedOwnershipTools.CommandToggleIsAssignmentPinned".Translate();
                 toggleIsAssignmentPinned.defaultDesc = "BedOwnershipTools.CommandToggleIsAssignmentPinnedDesc".Translate();
@@ -203,7 +205,7 @@ namespace BedOwnershipTools {
                 }
                 if (BedOwnershipTools.Singleton.settings.enableBedAssignmentPinning) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                        if(!hasCATP_DeathrestCasket) {
                             if(!this.isAssignedToCommunity) {
                                 yield return toggleIsAssignmentPinned;
                             }
@@ -241,34 +243,68 @@ namespace BedOwnershipTools {
                 }
                 if (BedOwnershipTools.Singleton.settings.enableCommunalBeds) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def)) {
+                        if(!hasCATP_DeathrestCasket) {
                             yield return toggleIsAssignedToCommunity;
                         }
                     }
                 }
 
-                if (BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def) || (ModsConfig.BiotechActive && !BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest))) {
+                if (ModsConfig.BiotechActive && BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && (
+                    // vanilla deathrest caskets
+                    //CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def) ||
+                    // more robust deathrest casket check
+                    hasCATP_DeathrestCasket ||
+                    // if the player opts to use beds for automatic deathrest
+                    !BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest
+                )) {
                     if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        // if there is a bindee or a tentative assignee and they are a deathrester then expose their auto gizmos
-                        Pawn assignee = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?
-                            this.assignedPawnsOverlay.ElementAtOrDefault(0) :
-                            bed.OwnersForReading.ElementAtOrDefault(0);
-                        CompDeathrestBindableXAttrs cdbXAttrs = this.parent.GetComp<CompDeathrestBindableXAttrs>();
-                        Pawn bindee = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings ?
-                            cdbXAttrs?.boundPawnOverlay :
-                            cdbXAttrs?.sibling.BoundPawn;
-                        Pawn pawn = bindee ?? assignee;
-                        if (pawn != null) {
-                            CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
-                            Gene_Deathrest gene_Deathrest = pawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
-                            if (pawnXAttrs != null) {
-                                foreach (Gizmo x in pawnXAttrs.automaticDeathrestTracker.CompGetGizmosExtraImpl(true)) {
+                        if (hasCATP_DeathrestCasket || Find.Selector.SelectedObjects.OfType<Building_Bed>().Count() > 1) {
+                            // deathrester in deathrest casket or if multiple beds are selected
+                            // if there is a bindee or a tentative assignee and they are a deathrester then expose their auto gizmos
+                            Pawn assignee = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?
+                                this.assignedPawnsOverlay.ElementAtOrDefault(0) :
+                                bed.OwnersForReading.ElementAtOrDefault(0);
+                            CompDeathrestBindableXAttrs cdbXAttrs = this.parent.GetComp<CompDeathrestBindableXAttrs>();
+                            Pawn bindee = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings ?
+                                cdbXAttrs?.boundPawnOverlay :
+                                cdbXAttrs?.sibling.BoundPawn;
+                            Pawn pawn = bindee ?? assignee;
+                            if (pawn != null) {
+                                CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                                Gene_Deathrest gene_Deathrest = pawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
+                                if (pawnXAttrs != null) {
+                                    foreach (Gizmo x in pawnXAttrs.automaticDeathrestTracker.CompGetGizmosExtraImpl(true)) {
+                                        yield return x;
+                                    }
+                                }
+                            } else {
+                                foreach (Gizmo x in PawnXAttrs_AutomaticDeathrestTracker.MockCompGetGizmosExtraImpl(true)) {
                                     yield return x;
                                 }
                             }
                         } else {
-                            foreach (Gizmo x in PawnXAttrs_AutomaticDeathrestTracker.MockCompGetGizmosExtraImpl(true)) {
-                                yield return x;
+                            // multiple deathresters in bed, capable of displaying more than one deathrester, not groupable with other bed selection
+                            List<Pawn> assigneeList = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ?
+                                this.assignedPawnsOverlay :
+                                bed.OwnersForReading;
+                            bool atLeastOneActualDeathrester = false;
+                            foreach (Pawn pawn in assigneeList) {
+                                CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
+                                Gene_Deathrest gene_Deathrest = pawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
+                                if (pawnXAttrs != null && gene_Deathrest != null && gene_Deathrest.Active) {
+                                    foreach (Gizmo x in pawnXAttrs.automaticDeathrestTracker.CompGetGizmosExtraImpl(true)) {
+                                        if (x is Command y) {
+                                            y.groupKey = pawn.thingIDNumber;
+                                        }
+                                        yield return x;
+                                    }
+                                    atLeastOneActualDeathrester = true;
+                                }
+                            }
+                            if (!atLeastOneActualDeathrester) {
+                                foreach (Gizmo x in PawnXAttrs_AutomaticDeathrestTracker.MockCompGetGizmosExtraImpl(true)) {
+                                    yield return x;
+                                }
                             }
                         }
                     }
