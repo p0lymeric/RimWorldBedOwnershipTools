@@ -172,10 +172,9 @@ namespace BedOwnershipTools {
                 return TargetIndex.None;
             }
 
-            [HarmonyPatchCategory("LoftBedBunkBedsModCompatPatches")]
             [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.CurrentBed))]
             [HarmonyPatch(new Type[] { typeof(Pawn), typeof(int?) }, new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
-            class Patch_RestUtility_CurrentBed {
+            public class Patch_RestUtility_CurrentBed {
                 static bool Prefix(ref Building_Bed __result, Pawn p, ref int? sleepingSlot) {
                     // Iterate through the sleeping Pawns and Building_Beds at the given Pawn p's position
                     // and map sleepers to the bed in their job's bed target
@@ -302,9 +301,8 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("LoftBedBunkBedsModCompatPatches")]
             [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.GetCurOccupant))]
-            class Patch_Building_Bed_GetCurOccupant {
+            public class Patch_Building_Bed_GetCurOccupant {
                 static bool Prefix(Building_Bed __instance, ref Pawn __result, int slotIndex) {
                     if (!__instance.Spawned) {
                         __result = null;
@@ -412,9 +410,8 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("LoftBedBunkBedsModCompatPatches")]
             [HarmonyPatch(typeof(JobDriver_WatchBuilding), nameof(JobDriver_WatchBuilding.TryMakePreToilReservations))]
-            class Patch_JobDriver_WatchBuilding_TryMakePreToilReservations {
+            public class Patch_JobDriver_WatchBuilding_TryMakePreToilReservations {
                 // a moment to remember the legless Pawns whose sacrifices brought you working loft/bunk bed TV watching
                 static bool IsTargetCBuildingBedIfNotThenTryReserveTargetB(JobDriver thiss, bool errorOnFailed) {
                     LocalTargetInfo targetC = thiss.job.targetC;

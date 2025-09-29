@@ -8,7 +8,6 @@ using HarmonyLib;
 namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
         public static class ModCompatPatches_Hospitality {
-            [HarmonyPatchCategory("HospitalityModCompatPatches")]
             [HarmonyPatch("Hospitality.Patches.Toils_LayDown_Patch+ApplyBedThoughts", "AddedBedIsOwned")]
             public class DoublePatch_Toils_LayDown_ApplyBedThoughts_AddedBedIsOwned {
                 // Hospitality prefixes ApplyBedThoughts and detours out immediately afterwards

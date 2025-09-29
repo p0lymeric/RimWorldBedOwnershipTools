@@ -87,7 +87,6 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("OneBedToSleepWithAllModCompatPatches")]
             [HarmonyPatch("OneBedToSleepWithAll.PolygamyModeUtility", "AddMakeMasterButton")]
             public class Patch_PolygamyModeUtility_AddMakeMasterButton {
                 static void Postfix(ref bool __result, Rect rect, object pawn_raw, ThingWithComps parent, bool isRectFull) {
@@ -108,7 +107,6 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("OneBedToSleepWithAllModCompatPatches")]
             [HarmonyPatch("OneBedToSleepWithAll.CompPolygamyMode", "AssignesUpdated")]
             public class Patch_CompPolygamyMode_AssignesUpdated {
                 static void Postfix(Pawn pawn, ThingWithComps ___parent, Pawn ___master) {
@@ -127,7 +125,6 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("OneBedToSleepWithAllModCompatPatches")]
             [HarmonyPatch("OneBedToSleepWithAll.CompPolygamyMode", "DefineMaster")]
             public class Patch_CompPolygamyMode_DefineMaster {
                 static void Postfix(ThingWithComps ___parent, Pawn ___master) {
@@ -147,7 +144,6 @@ namespace BedOwnershipTools {
             }
 
             // bedXAttrs.assignedPawnsOverlay.Count > bed.SleepingSlotsCount does not seem to be hittable in normal circumstances
-            [HarmonyPatchCategory("OneBedToSleepWithAllModCompatPatches")]
             [HarmonyPatch("OneBedToSleepWithAll.CompPolygamyMode", "UpdateCondition")]
             public class Patch_CompPolygamyMode_UpdateCondition {
                 static void Postfix(ThingWithComps ___parent, Pawn ___master, bool ___isPolygamy, Pawn ___currentNeighbor) {
@@ -180,7 +176,6 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("OneBedToSleepWithAllModCompatPatches")]
             [HarmonyPatch("OneBedToSleepWithAll.CompPolygamyMode", "ResetAll")]
             public class Patch_CompPolygamyMode_ResetAll {
                 static void Postfix(ThingWithComps ___parent, Pawn ___master) {

@@ -47,7 +47,6 @@ namespace BedOwnershipTools {
 
              // Replacement for GetCurOccupant is defined in ModCompatPatches_LoftBedBunkBeds.cs
 
-            [HarmonyPatchCategory("BunkBedsModCompatPatches")]
             [HarmonyPatch(typeof(GenMapUI), nameof(GenMapUI.LabelDrawPosFor))]
             [HarmonyPatch(new Type[] { typeof(Thing), typeof(float) })]
             public class Patch_GenMapUI_LabelDrawPosFor {
@@ -89,7 +88,6 @@ namespace BedOwnershipTools {
 
             // mmm don't like this mingling and mangling of edits
             // that's the story of UIPatches.cs too...
-            [HarmonyPatchCategory("BunkBedsModCompatPatches")]
             [HarmonyPatch("BunkBeds.CompBunkBed", "DrawGUIOverlay")]
             public class Patch_CompBunkBed_DrawGUIOverlay {
                 static bool Prefix(object __instance, ThingWithComps ___parent) {

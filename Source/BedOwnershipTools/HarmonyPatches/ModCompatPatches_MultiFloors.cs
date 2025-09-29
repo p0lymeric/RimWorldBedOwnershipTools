@@ -137,7 +137,6 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatchCategory("MultiFloorsModCompatPatches")]
             [HarmonyPatch("MultiFloors.HarmonyPatches.HarmonyPatch_MainColonistBehavior", "BackToLivingLevelForGetRest")]
             public class DoublePatch_JobGiver_GetRest_TryGiveJob_Prefix {
                 public static Building_Bed PreprocessAndReturnBedCandidate(Pawn sleeper) {
