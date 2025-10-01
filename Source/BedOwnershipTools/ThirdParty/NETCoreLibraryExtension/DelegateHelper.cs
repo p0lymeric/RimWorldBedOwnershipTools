@@ -91,7 +91,7 @@ namespace BedOwnershipTools.Whathecode.System
             ParameterInfo[] test = toWrapInfo.GetParameters();
             IEnumerable<Type> toWrapArguments = toWrapInfo.GetParameters()
                 // Closure argument isn't an actual argument, but added by the compiler for dynamically generated methods (expression trees).
-                .SkipWhile( p => p.ParameterType.FullName == "System.Runtime.CompilerServices.Closure" )    
+                .SkipWhile( p => p.ParameterType.FullName == "System.Runtime.CompilerServices.Closure" )
                 .Select( p => p.ParameterType );
             ParameterConversionExpressions parameterExpressions = CreateParameterConversionExpressions( toCreateArguments, toWrapArguments );
 
@@ -200,7 +200,7 @@ namespace BedOwnershipTools.Whathecode.System
                         Expression methodCall = Expression.Call(
                             convertedInstance,
                             method,
-                            delegateParameterExpressions.ConvertedParameters );                    
+                            delegateParameterExpressions.ConvertedParameters );
 
                         return Expression.Lambda<TDelegate>(
                             ConvertOrWrapDelegate( methodCall, delegateInfo.ReturnType ), // Convert return type when necessary.
@@ -224,8 +224,8 @@ namespace BedOwnershipTools.Whathecode.System
             IEnumerable<Type> toCreateTypes,
             IEnumerable<Type> toWrapTypes )
         {
-            ParameterExpression[] originalParameters = toCreateTypes.Select( Expression.Parameter ).ToArray(); // ToArray prevents deferred execution.   
-            
+            ParameterExpression[] originalParameters = toCreateTypes.Select( Expression.Parameter ).ToArray(); // ToArray prevents deferred execution.
+
             return new ParameterConversionExpressions
             {
                 OriginalParameters = originalParameters,
