@@ -265,73 +265,211 @@ namespace BedOwnershipTools {
             }
         }
 
-        // TODO refactor changes into transpiler
         [HarmonyPatch(typeof(CompAssignableToPawn_Bed), "AssigningCandidates", MethodType.Getter)]
         public class Patch_CompAssignableToPawn_Bed_AssigningCandidatesGetterImpl {
-            static IEnumerable<Pawn> MyAssigningCandidatesGetterImpl(CompAssignableToPawn_Bed thiss) {
-                if (!thiss.parent.Spawned) {
-                    return Enumerable.Empty<Pawn>();
-                }
-                if (!thiss.parent.def.building.bed_humanlike) {
-#if RIMWORLD__1_6
-                    return from p in PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction
-                        where p.IsAnimal && !p.RaceProps.Dryad
-                        orderby p.kindDef.label, p.Label
-                        select p;
-#else
-                    return from p in PawnsFinder.AllMapsCaravansAndTravelingTransportPods_Alive_OfPlayerFaction
-                        where p.IsNonMutantAnimal && !p.RaceProps.Dryad
-                        orderby p.kindDef.label, p.Label
-                        select p;
-#endif
-                }
-#if RIMWORLD__1_6
-                return PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists.OrderByDescending(delegate(Pawn p) {
-                    if (!thiss.CanAssignTo(p).Accepted) {
-                        return 0;
-                    }
-                    return (!thiss.IdeoligionForbids(p)) ? 1 : 0;
-                }).ThenBy((Pawn p) => p.LabelShort);
-#else
-                return PawnsFinder.AllMapsCaravansAndTravelingTransportPods_Alive_FreeColonists.OrderByDescending(delegate(Pawn p) {
-                    if (!thiss.CanAssignTo(p).Accepted) {
-                        return 0;
-                    }
-                    return (!thiss.IdeoligionForbids(p)) ? 1 : 0;
-                }).ThenBy((Pawn p) => p.LabelShort);
-#endif
-            }
-            static bool Prefix(CompAssignableToPawn_Bed __instance, ref IEnumerable<Pawn> __result) {
+            static bool MyBypassIfTrueCondition(CompAssignableToPawn_Bed thiss) {
                 if (!BedOwnershipTools.Singleton.settings.showColonistsAcrossAllMapsInAssignmentDialog) {
                     return true;
                 }
 
                 // for compatibility with other mods that touch AssigningCandidates on non-colonist beds
                 // e.g. Set Owner for Prisoner Bed
-                Building_Bed bed = (Building_Bed)(__instance.parent);
+                Building_Bed bed = (Building_Bed)thiss.parent;
                 if (bed.ForPrisoners || bed.Medical) {
                     return true;
                 }
 
-                __result = MyAssigningCandidatesGetterImpl(__instance);
                 return false;
+            }
+            // +call MyBypassIfTrueCondition
+            // +stloc myBypassIfTrueConditionLocal
+            // ...
+            // // return from p in parent.Map.mapPawns.PawnsInFaction(Faction.OfPlayer)
+            // // where p.IsAnimal && !p.RaceProps.Dryad
+            // // orderby p.kindDef.label, p.Label
+            // // select p;
+            // +<firstOriginalInstructionLabel>
+            // +ldloc myBypassIfTrueConditionLocal
+            // +brtrue <currentInstructionLabel>
+            // +call PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction
+            // +br <currentInstructionLabel>
+            // IL_002d: ldarg.0
+            // IL_002e: ldfld class Verse.ThingWithComps Verse.ThingComp::parent
+            // IL_0033: callvirt instance class Verse.Map Verse.Thing::get_Map()
+            // IL_0038: ldfld class Verse.MapPawns Verse.Map::mapPawns
+            // IL_003d: call class RimWorld.Faction RimWorld.Faction::get_OfPlayer()
+            // IL_0042: callvirt instance class [mscorlib]System.Collections.Generic.List`1<class Verse.Pawn> Verse.MapPawns::PawnsInFaction(class RimWorld.Faction) <- ScanForPawnsInFactionCall
+            // +<currentInstructionLabel>:
+            // IL_0047: ldsfld class [mscorlib]System.Func`2<class Verse.Pawn, bool> RimWorld.CompAssignableToPawn_Bed/'<>c'::'<>9__1_0' <- InsertAlternativePawnsInFactionCall
+            // ...
+            // // return parent.Map.mapPawns.FreeColonists.OrderByDescending(delegate(Pawn p)
+            // // {...}).ThenBy((Pawn p) => p.LabelShort);
+            // +<firstOriginalInstructionLabel2>
+            // +ldloc myBypassIfTrueConditionLocal
+            // +brtrue <currentInstructionLabel2>
+            // +call PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists
+            // +br <currentInstructionLabel2>
+            // IL_00b4: ldarg.0
+            // IL_00b5: ldfld class Verse.ThingWithComps Verse.ThingComp::parent
+            // IL_00ba: callvirt instance class Verse.Map Verse.Thing::get_Map()
+            // IL_00bf: ldfld class Verse.MapPawns Verse.Map::mapPawns
+            // IL_00c4: callvirt instance class [mscorlib]System.Collections.Generic.List`1<class Verse.Pawn> Verse.MapPawns::get_FreeColonists() <- ScanForFreeColonistsCall
+            // +<currentInstructionLabel2>:
+            // IL_00c9: ldarg.0 <- InsertAlternativeFreeColonistsCall
+            // IL_00ca: ldftn instance int32 RimWorld.CompAssignableToPawn_Bed::'<get_AssigningCandidates>b__1_3'(class Verse.Pawn)
+            // ...
+            enum TState {
+                ScanForPawnsInFactionCall,
+                InsertAlternativePawnsInFactionCall,
+                ScanForFreeColonistsCall,
+                InsertAlternativeFreeColonistsCall,
+                Terminal
+            }
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator) {
+                // hilariously overcomplicated
+                // too much pride sunk to not give it a chance to exist
+                TState state = TState.ScanForPawnsInFactionCall;
+
+                int maxLookbehindWindow = 6;
+                List<CodeInstruction> editBuffer = new(maxLookbehindWindow);
+
+                LocalBuilder myBypassIfTrueConditionLocal = generator.DeclareLocal(typeof(bool));
+
+                editBuffer.Add(new CodeInstruction(OpCodes.Ldarg_0));
+                editBuffer.Add(new CodeInstruction(
+                    OpCodes.Call,
+                    AccessTools.Method(
+                        typeof(Patch_CompAssignableToPawn_Bed_AssigningCandidatesGetterImpl),
+                        nameof(Patch_CompAssignableToPawn_Bed_AssigningCandidatesGetterImpl.MyBypassIfTrueCondition
+                    )
+                )));
+                editBuffer.Add(new CodeInstruction(OpCodes.Stloc, myBypassIfTrueConditionLocal));
+
+                foreach (CodeInstruction instruction in instructions) {
+                    switch (state) {
+                        case TState.ScanForPawnsInFactionCall:
+                            if (instruction.Calls(AccessTools.Method(typeof(MapPawns), nameof(MapPawns.PawnsInFaction)))) {
+                                state = TState.InsertAlternativePawnsInFactionCall;
+                            }
+                            editBuffer.Add(instruction);
+                            break;
+                        case TState.InsertAlternativePawnsInFactionCall:
+                            if (
+                                editBuffer.Count >= 6 &&
+                                /*editBuffer[editBuffer.Count - 1].opcode == OpCodes.Call &&*/ editBuffer[editBuffer.Count - 1].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 2].opcode == OpCodes.Call && editBuffer[editBuffer.Count - 2].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 3].opcode == OpCodes.Ldfld && editBuffer[editBuffer.Count - 3].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 4].opcode == OpCodes.Callvirt && editBuffer[editBuffer.Count - 4].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 5].opcode == OpCodes.Ldfld && editBuffer[editBuffer.Count - 5].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 6].opcode == OpCodes.Ldarg_0
+                            ) {
+                                Label firstOriginalInstructionLabel = generator.DefineLabel();
+                                Label currentInstructionLabel = generator.DefineLabel();
+
+                                int insertionCursor = editBuffer.Count - 6;
+                                CodeInstruction firstOriginalInstruction = editBuffer[insertionCursor];
+
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldloc, myBypassIfTrueConditionLocal).MoveLabelsFrom(firstOriginalInstruction));
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Brtrue_S, firstOriginalInstructionLabel));
+
+                                CodeInstruction myReplacementAnimalListCall = new(OpCodes.Call, AccessTools.PropertyGetter(typeof(PawnsFinder),
+#if RIMWORLD__1_6
+                                    nameof(PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction)
+#else
+                                    nameof(PawnsFinder.AllMapsCaravansAndTravelingTransportPods_Alive_OfPlayerFaction)
+#endif
+                                ));
+
+                                editBuffer.Insert(insertionCursor++, myReplacementAnimalListCall);
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Br, currentInstructionLabel));
+                                // existing instructions implicitly start here
+                                firstOriginalInstruction.WithLabels(firstOriginalInstructionLabel);
+                                // existing instructions implicitly end here
+                                editBuffer.Add(instruction.WithLabels(currentInstructionLabel));
+                                state = TState.ScanForFreeColonistsCall;
+                            } else {
+                                Log.Error("[BOT] Transpiler matched call to PawnsInFaction but past tokens didn't match expected sequence.");
+                                yield break;
+                            }
+                            break;
+                        case TState.ScanForFreeColonistsCall:
+                            if (instruction.Calls(AccessTools.PropertyGetter(typeof(MapPawns), nameof(MapPawns.FreeColonists)))) {
+                                state = TState.InsertAlternativeFreeColonistsCall;
+                            }
+                            editBuffer.Add(instruction);
+                            break;
+                        case TState.InsertAlternativeFreeColonistsCall:
+                            if (
+                                editBuffer.Count >= 5 &&
+                                /*editBuffer[editBuffer.Count - 1].opcode == OpCodes.Call &&*/ editBuffer[editBuffer.Count - 1].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 2].opcode == OpCodes.Ldfld && editBuffer[editBuffer.Count - 2].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 3].opcode == OpCodes.Callvirt && editBuffer[editBuffer.Count - 3].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 4].opcode == OpCodes.Ldfld && editBuffer[editBuffer.Count - 4].labels.Empty() &&
+                                editBuffer[editBuffer.Count - 5].opcode == OpCodes.Ldarg_0
+                            ) {
+                                Label firstOriginalInstructionLabel = generator.DefineLabel();
+                                Label currentInstructionLabel = generator.DefineLabel();
+
+                                int insertionCursor = editBuffer.Count - 5;
+                                CodeInstruction firstOriginalInstruction = editBuffer[insertionCursor];
+
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldloc, myBypassIfTrueConditionLocal).MoveLabelsFrom(firstOriginalInstruction));
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Brtrue_S, firstOriginalInstructionLabel));
+
+                                CodeInstruction myReplacementHumanListCall = new(OpCodes.Call, AccessTools.PropertyGetter(typeof(PawnsFinder),
+#if RIMWORLD__1_6
+                                    nameof(PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists)
+#else
+                                    nameof(PawnsFinder.AllMapsCaravansAndTravelingTransportPods_Alive_FreeColonists)
+#endif
+                                ));
+
+                                editBuffer.Insert(insertionCursor++, myReplacementHumanListCall);
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Br, currentInstructionLabel));
+                                // existing instructions implicitly start here
+                                firstOriginalInstruction.WithLabels(firstOriginalInstructionLabel);
+                                // existing instructions implicitly end here
+                                editBuffer.Add(instruction.WithLabels(currentInstructionLabel));
+                                state = TState.Terminal;
+                            } else {
+                                Log.Error("[BOT] Transpiler matched call to FreeColonists but past tokens didn't match expected sequence.");
+                                yield break;
+                            }
+                            break;
+                        case TState.Terminal:
+                            editBuffer.Add(instruction);
+                            break;
+                        default:
+                            Log.Error($"[BOT] Transpiler reached illegal state {state}.");
+                            yield break;
+                    }
+                    while (editBuffer.Count > maxLookbehindWindow) {
+                        yield return editBuffer.PopFront();
+                    }
+                }
+                if (state != TState.Terminal) {
+                    Log.Error($"[BOT] Transpiler did not reach its terminal state. It only reached state {state}.");
+                }
+                while (editBuffer.Count > 0) {
+                    yield return editBuffer.PopFront();
+                }
             }
 
             [HarmonyPriority(Priority.Last)]
-            static IEnumerable<Pawn> Postfix(IEnumerable<Pawn> __result) {
-                if (!BedOwnershipTools.Singleton.settings.showColonistsAcrossAllMapsInAssignmentDialog) {
+            static IEnumerable<Pawn> Postfix(IEnumerable<Pawn> __result, CompAssignableToPawn_Bed __instance) {
+                if (MyBypassIfTrueCondition(__instance)) {
                     foreach (Pawn pawn in __result) {
                         yield return pawn;
                     }
-                }
-
-                // for compatibility with other mods that insert additional Pawns into the colonist list
-                // e.g. MultiFloors
-                // we'll take a deduplicated superset if we also touched the list
-                HashSet<Pawn> seenPawns = new HashSet<Pawn>();
-                foreach (Pawn pawn in __result) {
-                    if (seenPawns.Add(pawn)) {
-                        yield return pawn;
+                } else {
+                    // for compatibility with other mods that insert additional Pawns into the colonist list
+                    // e.g. MultiFloors
+                    // we'll take a deduplicated superset if we also touched the list
+                    HashSet<Pawn> seenPawns = new();
+                    foreach (Pawn pawn in __result) {
+                        if (seenPawns.Add(pawn)) {
+                            yield return pawn;
+                        }
                     }
                 }
             }
