@@ -26,8 +26,6 @@ namespace BedOwnershipTools {
         public bool modMultiFloorsLoadedForCompatPatching = false;
         public Type typeMultiFloors_StairPathFinderUtility;
         public Type typeMultiFloors_LevelUtility;
-        public Type typeMultiFloors_PrepatcherFields;
-        public Type typeMultiFloors_Pawn_LevelSettings;
 
         public RuntimeHandleProvider(ModSettingsImpl settings) {
             if (settings.enableHospitalityModCompatPatches) {
@@ -58,9 +56,7 @@ namespace BedOwnershipTools {
             if (settings.enableMultiFloorsModCompatPatches) {
                 typeMultiFloors_StairPathFinderUtility = Type.GetType("MultiFloors.StairPathFinderUtility, MultiFloors");
                 typeMultiFloors_LevelUtility = Type.GetType("MultiFloors.LevelUtility, MultiFloors");
-                typeMultiFloors_PrepatcherFields = Type.GetType("MultiFloors.PrepatcherFields, MultiFloors");
-                typeMultiFloors_Pawn_LevelSettings = Type.GetType("MultiFloors.Pawn_LevelSettings, MultiFloors");
-                if (typeMultiFloors_StairPathFinderUtility != null && typeMultiFloors_LevelUtility != null && typeMultiFloors_PrepatcherFields != null && typeMultiFloors_Pawn_LevelSettings != null) {
+                if (typeMultiFloors_StairPathFinderUtility != null && typeMultiFloors_LevelUtility != null) {
                     modMultiFloorsLoadedForCompatPatching = true;
                 }
             }
