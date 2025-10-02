@@ -28,55 +28,29 @@ namespace BedOwnershipTools {
                 public static MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel StairPathFinderUtility_CanReachAcrossLevel =
                     (Pawn pawn, Thing thing, Map map, bool isRaider) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
-                // public delegate bool MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile(Map map, out object controller);
-                // public static MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile LevelUtility_TryGetLevelControllerOnCurrentTile =
-                //     (Map map, out object controller) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+                public delegate bool MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile(Map map, out object controller);
+                public static MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile LevelUtility_TryGetLevelControllerOnCurrentTile =
+                    (Map map, out object controller) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
                 public delegate IEnumerable<Map> MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache(Map map, object controller, int maxMapsToExplore = -1);
                 public static MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache LevelUtility_GetOtherMapVerticallyOutwardFromCache =
                     (Map map, object controller, int maxMapsToExplore) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
-                public delegate bool MethodDelegate_LevelUtility_ConnectedToOtherLevel(Map map);
-                public static MethodDelegate_LevelUtility_ConnectedToOtherLevel LevelUtility_ConnectedToOtherLevel =
-                    (Map map) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public delegate ref Map MethodDelegate_PrepatcherFields_GroundMap(Map map);
-                public static MethodDelegate_PrepatcherFields_GroundMap PrepatcherFields_GroundMap =
-                    (Map map) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public delegate object MethodDelegate_PrepatcherFields_LevelMapComp(Map map);
-                public static MethodDelegate_PrepatcherFields_LevelMapComp PrepatcherFields_LevelMapComp =
-                    (Map map) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public delegate ref int MethodDelegate_PrepatcherFields_Level(Map map);
-                public static MethodDelegate_PrepatcherFields_Level PrepatcherFields_Level =
-                    (Map map) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public delegate ref object MethodDelegate_PrepatcherFields_LevelSettings(Pawn pawn);
-                public static MethodDelegate_PrepatcherFields_LevelSettings PrepatcherFields_LevelSettings =
-                    (Pawn pawn) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public delegate void MethodDelegate_Pawn_LevelSettings_SetLivingLevelTo(object thiss, int level);
-                public static MethodDelegate_Pawn_LevelSettings_SetLivingLevelTo Pawn_LevelSettings_SetLivingLevelTo =
-                    (object thiss, int level) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
                 public static void ApplyHarmonyPatches(Harmony harmony) {
                     Type typeStairPathFinderUtility = BedOwnershipTools.Singleton.runtimeHandles.typeMultiFloors_StairPathFinderUtility;
                     Type typeLevelUtility = BedOwnershipTools.Singleton.runtimeHandles.typeMultiFloors_LevelUtility;
-                    Type typePrepatcherFields = BedOwnershipTools.Singleton.runtimeHandles.typeMultiFloors_PrepatcherFields;
-                    Type typePawn_LevelSettings = BedOwnershipTools.Singleton.runtimeHandles.typeMultiFloors_Pawn_LevelSettings;
 
                     StairPathFinderUtility_CanReachAcrossLevel =
                         AccessTools.MethodDelegate<MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel>(
                             AccessTools.Method(typeStairPathFinderUtility, "CanReachAcrossLevel")
                         );
 
-                    // LevelUtility_TryGetLevelControllerOnCurrentTile =
-                    //     DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile>(
-                    //         AccessTools.Method(typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
-                    //         null,
-                    //         DelegateHelper.CreateOptions.Downcasting
-                    //     );
+                    LevelUtility_TryGetLevelControllerOnCurrentTile =
+                        DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile>(
+                            AccessTools.Method(typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
+                            null,
+                            DelegateHelper.CreateOptions.DowncastingILG
+                        );
 
                     LevelUtility_GetOtherMapVerticallyOutwardFromCache =
                         DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache>(
@@ -84,57 +58,12 @@ namespace BedOwnershipTools {
                             null,
                             DelegateHelper.CreateOptions.Downcasting
                         );
-
-                    LevelUtility_ConnectedToOtherLevel =
-                        AccessTools.MethodDelegate<MethodDelegate_LevelUtility_ConnectedToOtherLevel>(
-                            AccessTools.Method(typeLevelUtility, "ConnectedToOtherLevel")
-                        );
-
-                    PrepatcherFields_GroundMap =
-                        AccessTools.MethodDelegate<MethodDelegate_PrepatcherFields_GroundMap>(
-                            AccessTools.Method(typePrepatcherFields, "GroundMap")
-                        );
-
-                    PrepatcherFields_LevelMapComp =
-                        AccessTools.MethodDelegate<MethodDelegate_PrepatcherFields_LevelMapComp>(
-                            AccessTools.Method(typePrepatcherFields, "LevelMapComp")
-                        );
-
-                    PrepatcherFields_Level =
-                        AccessTools.MethodDelegate<MethodDelegate_PrepatcherFields_Level>(
-                            AccessTools.Method(typePrepatcherFields, "Level")
-                        );
-
-                    PrepatcherFields_LevelSettings =
-                        AccessTools.MethodDelegate<MethodDelegate_PrepatcherFields_LevelSettings>(
-                            AccessTools.Method(typePrepatcherFields, "LevelSettings")
-                        );
-
-                    Pawn_LevelSettings_SetLivingLevelTo =
-                        DelegateHelper.CreateOpenInstanceDelegate<MethodDelegate_Pawn_LevelSettings_SetLivingLevelTo>(
-                            AccessTools.Method(typePawn_LevelSettings, "SetLivingLevelTo"),
-                            DelegateHelper.CreateOptions.Downcasting
-                        );
                 }
             }
 
             public static object RemoteCall_TryGetLevelControllerOnCurrentTile(Map map) {
-                if (!DelegatesAndRefs.LevelUtility_ConnectedToOtherLevel(map)) {
-                    return null;
-                }
-                if (DelegatesAndRefs.PrepatcherFields_GroundMap(map) is Map map2) {
-                    return DelegatesAndRefs.PrepatcherFields_LevelMapComp(map2);
-                }
-                return null;
-            }
-
-            public static void RemoteCall_SetLivingLevelToMapLevel(Pawn pawn, Map map) {
-                int num = DelegatesAndRefs.PrepatcherFields_Level(map);
-                object levelSettings = DelegatesAndRefs.PrepatcherFields_LevelSettings(pawn);
-
-                if (levelSettings != null) {
-                    DelegatesAndRefs.Pawn_LevelSettings_SetLivingLevelTo(levelSettings, num);
-                }
+                DelegatesAndRefs.LevelUtility_TryGetLevelControllerOnCurrentTile(map, out object controller);
+                return controller;
             }
 
             [HarmonyPatch("MultiFloors.HarmonyPatches.HarmonyPatch_MainColonistBehavior", "BackToLivingLevelForGetRest")]
@@ -156,9 +85,6 @@ namespace BedOwnershipTools {
                                     // repro for issue: tri103
                                     if (DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, candidateBed, null)) {
                                         sleeper.ownership.ClaimBedIfNonMedical(candidateBed);
-                                        // don't really want to interact with this mod's settings
-                                        // this change would occur too late for the existing transpiler implementation (where we'd perform this fixup after livingMap is already retrieved)
-                                        // RemoteCall_SetLivingLevelToMapLevel(sleeper, candidateBed.Map);
                                         return candidateBed;
                                     }
                                 }
@@ -182,8 +108,6 @@ namespace BedOwnershipTools {
                                         CompBuilding_BedXAttrs bedXAttrs = building_Bed.GetComp<CompBuilding_BedXAttrs>();
                                         // could also do a IsValidBedFor check, but AnyUnoccupiedSleepingSlot is probably good enough
                                         if (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity && building_Bed.AnyUnoccupiedSleepingSlot && DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, building_Bed, item)) {
-                                            // don't really want to interact with this mod's settings
-                                            // RemoteCall_SetLivingLevelToMapLevel(sleeper, building_Bed.Map);
                                             return building_Bed;
                                         }
                                     }

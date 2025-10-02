@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using BedOwnershipTools.Whathecode.System.Reflection;
 
 // https://github.com/Whathecode/NET-Core-Library-Extension/blob/ba69ef355557bf0abc13a188c74557fbcb99ffba/src/Whathecode.System/DelegateHelper.cs
@@ -29,9 +30,16 @@ namespace BedOwnershipTools.Whathecode.System
             None,
             /// <summary>
             /// Downcasts of delegate parameter types to the correct types required for the method are done where necessary.
-            /// Of course only valid casts will work.
+            /// Performs generation-time type verification and inserts runtime casting checks.
+            /// Cannot handle ref parameters.
             /// </summary>
-            Downcasting
+            Downcasting,
+            /// <summary>
+            /// Downcasts of delegate parameter types to the correct types required for the method are done where necessary.
+            /// Performs generation-time type verification and inserts runtime casting checks.
+            /// Can handle ref parameters, but does not typecheck at runtime.
+            /// </summary>
+            DowncastingILG
         }
 
 
@@ -148,6 +156,57 @@ namespace BedOwnershipTools.Whathecode.System
                             ).Compile();
                     }
 
+                case CreateOptions.DowncastingILG:
+                    {
+                        MethodInfo delegateInfo = MethodInfoFromDelegateType( typeof( TDelegate ) );
+
+                        // Create delegate original and converted arguments.
+                        Type[] delegateTypes = delegateInfo.GetParameters().Select( d => d.ParameterType ).ToArray();
+                        Type[] methodTypes = method.GetParameters().Select( p => p.ParameterType ).ToArray();
+
+                        DynamicMethod dynMethod = new($"{method.Name}_DelegateHelperDowncastingILG", delegateInfo.ReturnType, delegateTypes );
+                        ILGenerator generator = dynMethod.GetILGenerator();
+
+                        int ldArgIdx = 0;
+                        foreach (CastKind conversionKind in delegateTypes.Zip(methodTypes, ClassifyCast)) {
+                            if (conversionKind != CastKind.Invalid) {
+                                generator.Emit(OpCodes.Ldarg, ldArgIdx);
+                                if (conversionKind == CastKind.ByVal) {
+                                    // This check is not technically necessary if the caller can guarantee type correctness
+                                    generator.Emit(OpCodes.Castclass, methodTypes[ldArgIdx]);
+                                } else if (conversionKind == CastKind.ByRef) {
+                                    // TODO cast check byrefs
+                                    // (possibly by allocating a local and assigning to the outer ref after)
+
+                                    // Not doing anything is similar to substituting the converted reference in high-level code with
+                                    // to: ref Unsafe.As<TFrom, TTo>(ref from)
+                                    // so in this case, the caller must guarantee type correctness
+                                }
+                                ldArgIdx++;
+                            } else {
+                                throw new InvalidOperationException($"Can't downcast parameter {ldArgIdx}'s type ({methodTypes[ldArgIdx]}) to its desired type ({delegateTypes[ldArgIdx]}).");
+                            }
+                        }
+
+                        generator.Emit(OpCodes.Call, method);
+
+                        CastKind returnTypeConversionKind = ClassifyCast(method.ReturnType, delegateInfo.ReturnType);
+                        if (returnTypeConversionKind != CastKind.Invalid) {
+                            if (returnTypeConversionKind == CastKind.ByVal) {
+                                generator.Emit(OpCodes.Castclass, method.ReturnType);
+                            } else if (returnTypeConversionKind == CastKind.ByRef) {
+                                // TODO byref return type?
+                                // TODO cast check byrefs
+                            }
+                        } else {
+                            throw new InvalidOperationException($"Can't upcast return type ({method.ReturnType}) to its desired type ({delegateInfo.ReturnType}).");
+                        }
+
+                        generator.Emit(OpCodes.Ret);
+
+                        return dynMethod.CreateDelegate(typeof(TDelegate)) as TDelegate;
+                    }
+
                 default:
                     throw new NotSupportedException();
             }
@@ -206,6 +265,68 @@ namespace BedOwnershipTools.Whathecode.System
                             ConvertOrWrapDelegate( methodCall, delegateInfo.ReturnType ), // Convert return type when necessary.
                             new[] { instance }.Concat( delegateParameterExpressions.OriginalParameters )
                             ).Compile();
+                    }
+
+                case CreateOptions.DowncastingILG:
+                    {
+                        MethodInfo delegateInfo = MethodInfoFromDelegateType( typeof( TDelegate ) );
+                        ParameterInfo[] delegateParameters = delegateInfo.GetParameters();
+
+                        // Convert instance type when necessary.
+                        Type delegateInstanceType = delegateParameters.Select( p => p.ParameterType ).First();
+                        Type methodInstanceType = method.DeclaringType;
+
+                        // Create delegate original and converted arguments.
+                        Type[] delegateTypes = delegateParameters.Select( d => d.ParameterType ).Skip( 1 ).ToArray();
+                        Type[] methodTypes = method.GetParameters().Select( m => m.ParameterType ).ToArray();
+
+                        DynamicMethod dynMethod = new($"{method.Name}_DelegateHelperDowncastingILG", delegateInfo.ReturnType, new[] { delegateInstanceType }.Concat(delegateTypes).ToArray() );
+                        ILGenerator generator = dynMethod.GetILGenerator();
+
+                        CastKind instanceTypeConversionKind = ClassifyCast(delegateInstanceType, methodInstanceType);
+                        if (instanceTypeConversionKind != CastKind.Invalid) {
+                            generator.Emit(OpCodes.Ldarg_0);
+                            if (instanceTypeConversionKind == CastKind.ByVal) {
+                                generator.Emit(OpCodes.Castclass, methodInstanceType);
+                            } else if (instanceTypeConversionKind == CastKind.ByRef) {
+                                // TODO cast check byrefs
+                            }
+                        } else {
+                            throw new InvalidOperationException($"Can't downcast parameter 0's type ({methodInstanceType}) to its desired type ({delegateInstanceType}).");
+                        }
+
+                        int ldArgIdx = 1;
+                        foreach (CastKind conversionKind in delegateTypes.Zip(methodTypes, ClassifyCast)) {
+                            if (conversionKind != CastKind.Invalid) {
+                                generator.Emit(OpCodes.Ldarg, ldArgIdx);
+                                if (conversionKind == CastKind.ByVal) {
+                                    generator.Emit(OpCodes.Castclass, methodTypes[ldArgIdx]);
+                                } else if (conversionKind == CastKind.ByRef) {
+                                    // TODO cast check byrefs
+                                }
+                                ldArgIdx++;
+                            } else {
+                                throw new InvalidOperationException($"Can't downcast parameter {ldArgIdx}'s type ({methodTypes[ldArgIdx]}) to its desired type ({delegateTypes[ldArgIdx]}).");
+                            }
+                        }
+
+                        generator.Emit(OpCodes.Call, method);
+
+                        CastKind returnTypeConversionKind = ClassifyCast(method.ReturnType, delegateInfo.ReturnType);
+                        if (returnTypeConversionKind != CastKind.Invalid) {
+                            if (returnTypeConversionKind == CastKind.ByVal) {
+                                generator.Emit(OpCodes.Castclass, method.ReturnType);
+                            } else if (returnTypeConversionKind == CastKind.ByRef) {
+                                // TODO byref return type?
+                                // TODO cast check byrefs
+                            }
+                        } else {
+                            throw new InvalidOperationException($"Can't upcast return type ({method.ReturnType}) to its desired type ({delegateInfo.ReturnType}).");
+                        }
+
+                        generator.Emit(OpCodes.Ret);
+
+                        return dynMethod.CreateDelegate(typeof(TDelegate)) as TDelegate;
                     }
 
                 default:
@@ -277,6 +398,34 @@ namespace BedOwnershipTools.Whathecode.System
             }
 
             return convertedExpression;
+        }
+
+        public enum CastKind
+        {
+            Invalid,
+            Identical,
+            ByVal,
+            ByRef
+        }
+
+        static CastKind ClassifyCast(Type fromType, Type toType) {
+            TypeInfo fromTypeInfo = fromType.GetTypeInfo();
+            TypeInfo toTypeInfo = toType.GetTypeInfo();
+
+            if ( toTypeInfo == fromTypeInfo ) {
+                return CastKind.Identical;
+            } else {
+                if (
+                    // TODO does not account for in-ness/out-ness of ref
+                    fromTypeInfo.IsByRef && toTypeInfo.IsByRef &&
+                    fromType.GetElementType().GetTypeInfo().CanConvertTo(toType.GetElementType().GetTypeInfo(), CastType.SameHierarchy)
+                ) {
+                    return CastKind.ByRef;
+                } else if (fromTypeInfo.CanConvertTo( toTypeInfo, CastType.SameHierarchy )) {
+                    return CastKind.ByVal;
+                }
+            }
+            return CastKind.Invalid;
         }
     }
 }
