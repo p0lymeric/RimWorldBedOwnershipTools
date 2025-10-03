@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using RimWorld;
 using Verse;
-using Verse.AI;
 using UnityEngine;
 using HarmonyLib;
+using BedOwnershipTools.Whathecode.System;
 
 // Summary of patches
 
@@ -18,12 +17,32 @@ namespace BedOwnershipTools {
                 public static MethodDelegate_BunkBed_Utils_IsBunkBed BunkBed_Utils_IsBunkBed =
                     (ThingWithComps bed) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
+                // Building_Bed_DrawGUIOverlay_Patch.guestBedType
+                public static AccessTools.FieldRef<Type> Building_Bed_DrawGUIOverlay_Patch_guestBedType =
+                    () => throw new NotImplementedException("[BOT] Tried to call a field ref access delegate stub");
+
+                // CompBunkBed.GetMultiOwnersLabelScreenPosFor()
+                public delegate Vector3 MethodDelegate_CompBunkBed_GetMultiOwnersLabelScreenPosFor(object thiss, int slotIndex);
+                public static MethodDelegate_CompBunkBed_GetMultiOwnersLabelScreenPosFor CompBunkBed_GetMultiOwnersLabelScreenPosFor =
+                    (object thiss, int slotIndex) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+
                 public static void ApplyHarmonyPatches(Harmony harmony) {
                     Type typeUtils = BedOwnershipTools.Singleton.runtimeHandles.typeBunkBeds_Utils;
+                    Type typeBuilding_Bed_DrawGUIOverlay_Patch = BedOwnershipTools.Singleton.runtimeHandles.typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch;
+                    Type typeCompBunkBed = BedOwnershipTools.Singleton.runtimeHandles.typeBunkBeds_CompBunkBed;
 
                     BunkBed_Utils_IsBunkBed =
                         AccessTools.MethodDelegate<MethodDelegate_BunkBed_Utils_IsBunkBed>(
                             AccessTools.Method(typeUtils, "IsBunkBed", new Type[] { typeof(ThingWithComps) })
+                        );
+
+                    Building_Bed_DrawGUIOverlay_Patch_guestBedType =
+                        AccessTools.StaticFieldRefAccess<Type>(AccessTools.Field(typeBuilding_Bed_DrawGUIOverlay_Patch, "guestBedType"));
+
+                    CompBunkBed_GetMultiOwnersLabelScreenPosFor =
+                        DelegateHelper.CreateOpenInstanceDelegate<MethodDelegate_CompBunkBed_GetMultiOwnersLabelScreenPosFor>(
+                            AccessTools.Method(typeCompBunkBed, "GetMultiOwnersLabelScreenPosFor"),
+                            DelegateHelper.CreateOptions.Downcasting
                         );
                 }
             }
@@ -109,7 +128,7 @@ namespace BedOwnershipTools {
                     Color defaultThingLabelColor = GenMapUI.DefaultThingLabelColor;
                     Color grey = new Color(0.5f, 0.5f, 0.5f, 1f);
                     List<Pawn> assignedPawns = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups ? xAttrs.assignedPawnsOverlay : building_Bed.CompAssignableToPawn.AssignedPawnsForReading;
-                    Type Building_Bed_DrawGUIOverlay_Patch_guestBedType = Traverse.CreateWithType("BunkBeds.Building_Bed_DrawGUIOverlay_Patch").Field("guestBedType").GetValue<Type>();
+                    Type Building_Bed_DrawGUIOverlay_Patch_guestBedType = DelegatesAndRefs.Building_Bed_DrawGUIOverlay_Patch_guestBedType();
                     if (!building_Bed.ForPrisoners && !building_Bed.Medical && xAttrs.IsAssignedToCommunity) {
                         if (showCommunalGUIOverlayInsteadOfBlankUnderBed && !hideDisplayStringForNonHumanlikeBeds) {
                             GenMapUI.DrawThingLabel(building_Bed, "BedOwnershipTools.CommunalAbbrevBrackets".Translate(), defaultThingLabelColor);
@@ -136,9 +155,9 @@ namespace BedOwnershipTools {
                                 }
                                 if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                                     bool active = building_Bed.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn2);
-                                    GenMapUI.DrawThingLabel(Traverse.Create(__instance).Method("GetMultiOwnersLabelScreenPosFor", i).GetValue<Vector3>(), pawn2.LabelShort, active ? defaultThingLabelColor : grey);
+                                    GenMapUI.DrawThingLabel(DelegatesAndRefs.CompBunkBed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, active ? defaultThingLabelColor : grey);
                                 } else {
-                                    GenMapUI.DrawThingLabel(Traverse.Create(__instance).Method("GetMultiOwnersLabelScreenPosFor", i).GetValue<Vector3>(), pawn2.LabelShort, defaultThingLabelColor);
+                                    GenMapUI.DrawThingLabel(DelegatesAndRefs.CompBunkBed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, defaultThingLabelColor);
                                 }
                             }
                         }

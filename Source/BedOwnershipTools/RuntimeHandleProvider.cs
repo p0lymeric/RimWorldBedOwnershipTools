@@ -22,6 +22,8 @@ namespace BedOwnershipTools {
 
         public bool modBunkBedsLoadedForCompatPatching = false;
         public Type typeBunkBeds_Utils;
+        public Type typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch;
+        public Type typeBunkBeds_CompBunkBed;
 
         public bool modMultiFloorsLoadedForCompatPatching = false;
         public Type typeMultiFloors_StairPathFinderUtility;
@@ -49,7 +51,9 @@ namespace BedOwnershipTools {
             }
             if (settings.enableBunkBedsModCompatPatches) {
                 typeBunkBeds_Utils = Type.GetType("BunkBeds.Utils, BunkBeds");
-                if (typeBunkBeds_Utils != null) {
+                typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch = Type.GetType("BunkBeds.Building_Bed_DrawGUIOverlay_Patch, BunkBeds");
+                typeBunkBeds_CompBunkBed = Type.GetType("BunkBeds.CompBunkBed, BunkBeds");
+                if (typeBunkBeds_Utils != null && typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch != null && typeBunkBeds_CompBunkBed != null) {
                     modBunkBedsLoadedForCompatPatching = true;
                 }
             }
