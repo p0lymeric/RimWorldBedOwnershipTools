@@ -29,6 +29,13 @@ namespace BedOwnershipTools.Whathecode.System
         {
             None,
             /// <summary>
+            /// Makes a delegate that points to the target method like that made by CreateDelegate or a compiler,
+            /// but without the type verification normally required for soundness.
+            /// Possibly justifiable for use in simple cases where only out refs are "implicitly" upcast.
+            /// Ignore the fact this option exists and use the downcasting options instead.
+            /// </summary>
+            Unchecked,
+            /// <summary>
             /// Downcasts of delegate parameter types to the correct types required for the method are done where necessary.
             /// Performs generation-time type verification and inserts runtime casting checks.
             /// Cannot handle ref parameters.
@@ -37,7 +44,7 @@ namespace BedOwnershipTools.Whathecode.System
             /// <summary>
             /// Downcasts of delegate parameter types to the correct types required for the method are done where necessary.
             /// Performs generation-time type verification and inserts runtime casting checks.
-            /// Can handle ref parameters, but does not typecheck at runtime.
+            /// Can handle ref parameters, but does not typecheck ref conversions at runtime.
             /// </summary>
             DowncastingILG
         }
@@ -135,6 +142,25 @@ namespace BedOwnershipTools.Whathecode.System
                     // Ordinary delegate creation, maintaining variance safety.
                     return method.CreateDelegate( typeof( TDelegate ), instance ) as TDelegate;
 
+                case CreateOptions.Unchecked:
+                    {
+                        DynamicMethod makerDynMethod = new($"{method.Name}_DelegateHelperUncheckedMaker", typeof(TDelegate), new Type[] {});
+                        ILGenerator generator = makerDynMethod.GetILGenerator();
+
+                        // ECMA-335 II.14.6.1 -- delegate construction routine
+                        // ECMA-335 III.4.21 -- verification process for invokations of newobj on delegate constructors
+                        // Roslyn generates this rough sequence when it knows that a delegate will be bound to a compatible method
+                        generator.Emit(OpCodes.Ldnull);
+                        generator.Emit(OpCodes.Ldftn, method);
+                        generator.Emit(OpCodes.Newobj, typeof(TDelegate).GetConstructor(new[] { typeof(object), typeof(IntPtr) }));
+                        generator.Emit(OpCodes.Ret);
+
+                        // The delegate manufactured by this maker behaves in a bounded manner if callers externally
+                        // verify type correctness by inspection or insert appropriate runtime checks
+
+                        return makerDynMethod.CreateDelegate(typeof(Func<TDelegate>)).DynamicInvoke() as TDelegate;
+                    }
+
                 case CreateOptions.Downcasting:
                     {
                         MethodInfo delegateInfo = MethodInfoFromDelegateType( typeof( TDelegate ) );
@@ -167,19 +193,23 @@ namespace BedOwnershipTools.Whathecode.System
                         DynamicMethod dynMethod = new($"{method.Name}_DelegateHelperDowncastingILG", delegateInfo.ReturnType, delegateTypes );
                         ILGenerator generator = dynMethod.GetILGenerator();
 
+                        // should generate identical code as the Downcasting generator in mutually supported cases
+
+                        // ref casting is for the most part unverified and unchecked
+                        // but note that it is safe to upcast an out parameter to a less derived type
+
                         int ldArgIdx = 0;
                         foreach (CastKind conversionKind in delegateTypes.Zip(methodTypes, ClassifyCast)) {
                             if (conversionKind != CastKind.Invalid) {
-                                generator.Emit(OpCodes.Ldarg, ldArgIdx);
+                                ILGEmitSpaceOptimalLdargVariant(generator, ldArgIdx);
                                 if (conversionKind == CastKind.ByVal) {
                                     // This check is not technically necessary if the caller can guarantee type correctness
                                     generator.Emit(OpCodes.Castclass, methodTypes[ldArgIdx]);
                                 } else if (conversionKind == CastKind.ByRef) {
-                                    // TODO cast check byrefs
-                                    // (possibly by allocating a local and assigning to the outer ref after)
+                                    // TODO cast check byrefs (with in semantics)
 
                                     // Not doing anything is similar to substituting the converted reference in high-level code with
-                                    // to: ref Unsafe.As<TFrom, TTo>(ref from)
+                                    // "toParam: ref Unsafe.As<TFrom, TTo>(ref fromParam)"
                                     // so in this case, the caller must guarantee type correctness
                                 }
                                 ldArgIdx++;
@@ -193,14 +223,16 @@ namespace BedOwnershipTools.Whathecode.System
                         CastKind returnTypeConversionKind = ClassifyCast(method.ReturnType, delegateInfo.ReturnType);
                         if (returnTypeConversionKind != CastKind.Invalid) {
                             if (returnTypeConversionKind == CastKind.ByVal) {
+                                // For single-target function pointer generation, it's unlikely we'd intentionally specify a delegate whose
+                                // return type is more derived than its wrapped function's return type, but handling is well-defined
                                 generator.Emit(OpCodes.Castclass, method.ReturnType);
                             } else if (returnTypeConversionKind == CastKind.ByRef) {
                                 // TODO byref return type?
-                                // TODO cast check byrefs
                             }
                         } else {
                             throw new InvalidOperationException($"Can't upcast return type ({method.ReturnType}) to its desired type ({delegateInfo.ReturnType}).");
                         }
+                        // TODO cast check byrefs (with out semantics)
 
                         generator.Emit(OpCodes.Ret);
 
@@ -238,6 +270,28 @@ namespace BedOwnershipTools.Whathecode.System
                 case CreateOptions.None:
                     // Ordinary delegate creation, maintaining variance safety.
                     return method.CreateDelegate( typeof( TDelegate ) ) as TDelegate;
+
+                case CreateOptions.Unchecked:
+                    {
+                        DynamicMethod makerDynMethod = new($"{method.Name}_DelegateHelperUncheckedMaker", typeof(TDelegate), new Type[] {});
+                        ILGenerator generator = makerDynMethod.GetILGenerator();
+
+                        // ECMA-335 II.14.6.1 -- delegate construction routine
+                        // ECMA-335 III.4.21 -- verification process for invokations of newobj on delegate constructors
+                        // Roslyn generates this rough sequence when it knows that a delegate will be bound to a compatible method
+                        generator.Emit(OpCodes.Ldnull);
+                        generator.Emit(OpCodes.Ldftn, method);
+                        generator.Emit(OpCodes.Newobj, typeof(TDelegate).GetConstructor(new[] { typeof(object), typeof(IntPtr) }));
+                        generator.Emit(OpCodes.Ret);
+
+                        // The delegate manufactured by this maker behaves in a bounded manner if callers externally
+                        // verify type correctness by inspection or insert appropriate runtime checks
+
+                        // In the case of an instance method, this will call the most derived variant of a virtual method
+                        // ldvirtftn appears to be for closed instance delegates only
+
+                        return makerDynMethod.CreateDelegate(typeof(Func<TDelegate>)).DynamicInvoke() as TDelegate;
+                    }
 
                 case CreateOptions.Downcasting:
                     {
@@ -289,7 +343,7 @@ namespace BedOwnershipTools.Whathecode.System
                             if (instanceTypeConversionKind == CastKind.ByVal) {
                                 generator.Emit(OpCodes.Castclass, methodInstanceType);
                             } else if (instanceTypeConversionKind == CastKind.ByRef) {
-                                // TODO cast check byrefs
+                                // likely unhittable
                             }
                         } else {
                             throw new InvalidOperationException($"Can't downcast parameter 0's type ({methodInstanceType}) to its desired type ({delegateInstanceType}).");
@@ -298,11 +352,11 @@ namespace BedOwnershipTools.Whathecode.System
                         int ldArgIdx = 1;
                         foreach (CastKind conversionKind in delegateTypes.Zip(methodTypes, ClassifyCast)) {
                             if (conversionKind != CastKind.Invalid) {
-                                generator.Emit(OpCodes.Ldarg, ldArgIdx);
+                                ILGEmitSpaceOptimalLdargVariant(generator, ldArgIdx);
                                 if (conversionKind == CastKind.ByVal) {
                                     generator.Emit(OpCodes.Castclass, methodTypes[ldArgIdx]);
                                 } else if (conversionKind == CastKind.ByRef) {
-                                    // TODO cast check byrefs
+                                    // TODO cast check byrefs (with in semantics)
                                 }
                                 ldArgIdx++;
                             } else {
@@ -310,7 +364,7 @@ namespace BedOwnershipTools.Whathecode.System
                             }
                         }
 
-                        generator.Emit(OpCodes.Call, method);
+                        generator.Emit(OpCodes.Callvirt, method);
 
                         CastKind returnTypeConversionKind = ClassifyCast(method.ReturnType, delegateInfo.ReturnType);
                         if (returnTypeConversionKind != CastKind.Invalid) {
@@ -318,11 +372,11 @@ namespace BedOwnershipTools.Whathecode.System
                                 generator.Emit(OpCodes.Castclass, method.ReturnType);
                             } else if (returnTypeConversionKind == CastKind.ByRef) {
                                 // TODO byref return type?
-                                // TODO cast check byrefs
                             }
                         } else {
                             throw new InvalidOperationException($"Can't upcast return type ({method.ReturnType}) to its desired type ({delegateInfo.ReturnType}).");
                         }
+                        // TODO cast check byrefs (with out semantics)
 
                         generator.Emit(OpCodes.Ret);
 
@@ -426,6 +480,29 @@ namespace BedOwnershipTools.Whathecode.System
                 }
             }
             return CastKind.Invalid;
+        }
+
+        static void ILGEmitSpaceOptimalLdargVariant(ILGenerator generator, int idx) {
+            switch (idx) {
+                case 0:
+                    generator.Emit(OpCodes.Ldarg_0);
+                    break;
+                case 1:
+                    generator.Emit(OpCodes.Ldarg_1);
+                    break;
+                case 2:
+                    generator.Emit(OpCodes.Ldarg_2);
+                    break;
+                case 3:
+                    generator.Emit(OpCodes.Ldarg_3);
+                    break;
+                case int n when n <= 255:
+                    generator.Emit(OpCodes.Ldarg_S, n);
+                    break;
+                default:
+                    generator.Emit(OpCodes.Ldarg, idx);
+                    break;
+            }
         }
     }
 }
