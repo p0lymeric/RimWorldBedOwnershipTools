@@ -23,6 +23,12 @@
         </Methods>
         <NestedTypes>
             <li>BedOwnershipTools.HarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_BunkBeds+ModInteropHarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_Hospitality+ModInteropHarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_LoftBed+ModInteropHarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_LoftBedBunkBeds+ModInteropHarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_MultiFloors+ModInteropHarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_OneBedToSleepWithAll+ModInteropHarmonyPatches</li>
         </NestedTypes>
     </BedOwnershipTools>
 </Analyzer>

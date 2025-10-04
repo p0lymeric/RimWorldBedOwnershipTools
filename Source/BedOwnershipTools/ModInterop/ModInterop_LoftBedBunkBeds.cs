@@ -57,8 +57,27 @@ using HarmonyLib;
 // 4.2.3. Loft bed above bunk bed
 
 namespace BedOwnershipTools {
-    public static partial class HarmonyPatches {
-        public static class ModCompatPatches_LoftBedBunkBeds {
+    public class ModInterop_LoftBedBunkBeds : ModInterop {
+        public ModInterop_LoftBedBunkBeds(bool enabled) : base(enabled) {
+            if (this.enabled) {
+                this.detected = true;
+                this.qualified = true;
+            }
+        }
+
+        public override void ApplyHarmonyPatches(Harmony harmony) {
+            if (this.qualified) {
+                HarmonyPatches.PatchInClassShallow(harmony, typeof(ModInteropHarmonyPatches));
+                this.active = true;
+            }
+        }
+
+        public override void Notify_AGMCompartment_HarmonyPatchState_Constructed() {
+            ModInteropHarmonyPatches.JobDriverToLayDownBedTargetIndexCache.Clear();
+            ModInteropHarmonyPatches.JobDriverDevWarningFilter.Clear();
+        }
+
+        public static class ModInteropHarmonyPatches {
 
             // TPS with 224 chickens in 224 animal sleeping spots
             // (to gauge overhead impact on non-loft, non-bunk beds)
@@ -185,8 +204,8 @@ namespace BedOwnershipTools {
                         return false;
                     }
 
-                    bool checkLoftBed = BedOwnershipTools.Singleton.runtimeHandles.modLoftBedLoadedForCompatPatching;
-                    bool checkBunkBeds = BedOwnershipTools.Singleton.runtimeHandles.modBunkBedsLoadedForCompatPatching;
+                    bool checkLoftBed = BedOwnershipTools.Singleton.modInteropMarshal.modInterop_LoftBed.active;
+                    bool checkBunkBeds = BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.active;
 
                     List<Thing> thingList = p.Position.GetThingList(p.Map);
                     List<Building_Bed> beds = new List<Building_Bed>(2);
@@ -210,7 +229,7 @@ namespace BedOwnershipTools {
                     }
 
                     bool isOnLoftBedTower = checkLoftBed && bedsCnt > 1;
-                    bool isSingleBunkBed = checkBunkBeds && bedsCnt == 1 && HarmonyPatches.ModCompatPatches_BunkBeds.RemoteCall_IsBunkBed(beds[0]);
+                    bool isSingleBunkBed = checkBunkBeds && bedsCnt == 1 && BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.RemoteCall_IsBunkBed(beds[0]);
                     bool couldBeLoftBedXBunkBedsCrossing = isOnLoftBedTower && checkBunkBeds && !isSingleBunkBed;
 
                     // 2. Fastpath, one pawn and one non-bunk bed
@@ -264,7 +283,7 @@ namespace BedOwnershipTools {
                             } else if (couldBeLoftBedXBunkBedsCrossing) {
                                 // yes, we handle the pathological case where the player has both mods installed and placed a loft bed atop a bunk bed
                                 // this requires extra filtering deferred to this scope
-                                if (HarmonyPatches.ModCompatPatches_BunkBeds.RemoteCall_IsBunkBed(bed3)) {
+                                if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.RemoteCall_IsBunkBed(bed3)) {
                                     int slotIndex = -1;
                                     CompBuilding_BedXAttrs bedXAttrs = bed3.GetComp<CompBuilding_BedXAttrs>();
                                     if (bed3.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
@@ -309,9 +328,9 @@ namespace BedOwnershipTools {
                         return false;
                     }
 
-                    bool checkLoftBed = BedOwnershipTools.Singleton.runtimeHandles.modLoftBedLoadedForCompatPatching;
-                    bool checkBunkBeds = BedOwnershipTools.Singleton.runtimeHandles.modBunkBedsLoadedForCompatPatching;
-                    bool isBunkBed = checkBunkBeds && HarmonyPatches.ModCompatPatches_BunkBeds.RemoteCall_IsBunkBed(__instance);
+                    bool checkLoftBed = BedOwnershipTools.Singleton.modInteropMarshal.modInterop_LoftBed.active;
+                    bool checkBunkBeds = BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.active;
+                    bool isBunkBed = checkBunkBeds && BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.RemoteCall_IsBunkBed(__instance);
 
                     IntVec3 sleepingSlotPos;
                     if (isBunkBed) {
@@ -446,7 +465,7 @@ namespace BedOwnershipTools {
                 // IL_0056: brtrue.s IL_005a
                 static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
                     // TODO rewrite with token lookahead
-                    return TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
+                    return HarmonyPatches.TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
                         instructions,
                         (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(ReservationUtility), nameof(ReservationUtility.ReserveSittableOrSpot))),
                         new[] {

@@ -33,9 +33,7 @@ namespace BedOwnershipTools {
                     if (sleeperXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                         if (RestUtility.IsValidBedFor(bed, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus)) {
                             sleeper.ownership.ClaimBedIfNonMedical(bed);
-                            if (BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching) {
-                                HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IfIsPolygamyThenDefineMaster(bed);
-                            }
+                            BedOwnershipTools.Singleton.modInteropMarshal.modInterop_OneBedToSleepWithAll.RemoteCall_IfIsPolygamyThenDefineMaster(bed);
                             break;
                         }
                     }

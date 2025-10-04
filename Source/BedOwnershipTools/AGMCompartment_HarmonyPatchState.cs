@@ -10,8 +10,9 @@ namespace BedOwnershipTools {
             HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.ClearHints();
             HarmonyPatches.Patch_Pawn_Ownership_UnclaimDeathrestCasket.ClearHints();
             HarmonyPatches.Patch_CompDeathrestBindable_Notify_DeathrestGeneRemoved.ClearHints();
-            HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.JobDriverToLayDownBedTargetIndexCache.Clear();
-            HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.JobDriverDevWarningFilter.Clear();
+            foreach (ModInterop modInterop in BedOwnershipTools.Singleton.modInteropMarshal.modInteropList) {
+                modInterop.Notify_AGMCompartment_HarmonyPatchState_Constructed();
+            }
         }
     }
 }
