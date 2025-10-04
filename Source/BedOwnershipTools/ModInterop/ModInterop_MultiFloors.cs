@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using RimWorld;
 using Verse;
@@ -20,52 +22,76 @@ using BedOwnershipTools.Whathecode.System;
 //    b) go to the closest floor with communal beds
 
 namespace BedOwnershipTools {
-    public static partial class HarmonyPatches {
-        public static class ModCompatPatches_MultiFloors {
-            public static class DelegatesAndRefs {
-                // StairPathFinderUtility.CanReachAcrossLevel()
-                public delegate bool MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel(Pawn pawn, Thing thing, Map map, bool isRaider = false);
-                public static MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel StairPathFinderUtility_CanReachAcrossLevel =
-                    (Pawn pawn, Thing thing, Map map, bool isRaider) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+    public class ModInterop_MultiFloors : ModInterop {
+        public Assembly assemblyMultiFloors;
+        public Type typeMultiFloors_StairPathFinderUtility;
+        public Type typeMultiFloors_LevelUtility;
 
-                public delegate bool MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile(Map map, out object controller);
-                public static MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile LevelUtility_TryGetLevelControllerOnCurrentTile =
-                    (Map map, out object controller) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public delegate IEnumerable<Map> MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache(Map map, object controller, int maxMapsToExplore = -1);
-                public static MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache LevelUtility_GetOtherMapVerticallyOutwardFromCache =
-                    (Map map, object controller, int maxMapsToExplore) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
-
-                public static void ApplyHarmonyPatches(Harmony harmony) {
-                    Type typeStairPathFinderUtility = BedOwnershipTools.Singleton.runtimeHandles.typeMultiFloors_StairPathFinderUtility;
-                    Type typeLevelUtility = BedOwnershipTools.Singleton.runtimeHandles.typeMultiFloors_LevelUtility;
-
-                    StairPathFinderUtility_CanReachAcrossLevel =
-                        AccessTools.MethodDelegate<MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel>(
-                            AccessTools.Method(typeStairPathFinderUtility, "CanReachAcrossLevel")
-                        );
-
-                    LevelUtility_TryGetLevelControllerOnCurrentTile =
-                        DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile>(
-                            AccessTools.Method(typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
-                            null,
-                            DelegateHelper.CreateOptions.DowncastingILG
-                        );
-
-                    LevelUtility_GetOtherMapVerticallyOutwardFromCache =
-                        DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache>(
-                            AccessTools.Method(typeLevelUtility, "GetOtherMapVerticallyOutwardFromCache"),
-                            null,
-                            DelegateHelper.CreateOptions.Downcasting
-                        );
+        public ModInterop_MultiFloors(bool enabled) : base(enabled) {
+            if (enabled) {
+                this.assemblyMultiFloors = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "MultiFloors");
+                if (assemblyMultiFloors != null) {
+                    this.detected = true;
+                    this.typeMultiFloors_StairPathFinderUtility = assemblyMultiFloors.GetType("MultiFloors.StairPathFinderUtility");
+                    this.typeMultiFloors_LevelUtility = assemblyMultiFloors.GetType("MultiFloors.LevelUtility");
+                    this.qualified =
+                        this.typeMultiFloors_StairPathFinderUtility != null &&
+                        this.typeMultiFloors_LevelUtility != null;
                 }
             }
+        }
 
-            public static object RemoteCall_TryGetLevelControllerOnCurrentTile(Map map) {
-                DelegatesAndRefs.LevelUtility_TryGetLevelControllerOnCurrentTile(map, out object controller);
-                return controller;
+        public override void ApplyHarmonyPatches(Harmony harmony) {
+            if (this.qualified) {
+                HarmonyPatches.PatchInClassShallow(harmony, typeof(ModInteropHarmonyPatches));
+                ModInteropDelegatesAndRefs.ApplyHarmonyPatches(this, harmony);
+                this.active = true;
             }
+        }
 
+        public override void Notify_AGMCompartment_HarmonyPatchState_Constructed() {
+        }
+
+        public static class ModInteropDelegatesAndRefs {
+            // StairPathFinderUtility.CanReachAcrossLevel()
+            public delegate bool MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel(Pawn pawn, Thing thing, Map map, bool isRaider = false);
+            public static MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel StairPathFinderUtility_CanReachAcrossLevel =
+                (Pawn pawn, Thing thing, Map map, bool isRaider) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+
+            public delegate bool MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile(Map map, out object controller);
+            public static MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile LevelUtility_TryGetLevelControllerOnCurrentTile =
+                (Map map, out object controller) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+
+            public delegate IEnumerable<Map> MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache(Map map, object controller, int maxMapsToExplore = -1);
+            public static MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache LevelUtility_GetOtherMapVerticallyOutwardFromCache =
+                (Map map, object controller, int maxMapsToExplore) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+
+            public static void ApplyHarmonyPatches(ModInterop_MultiFloors modInterop, Harmony harmony) {
+                Type typeStairPathFinderUtility = modInterop.typeMultiFloors_StairPathFinderUtility;
+                Type typeLevelUtility = modInterop.typeMultiFloors_LevelUtility;
+
+                StairPathFinderUtility_CanReachAcrossLevel =
+                    AccessTools.MethodDelegate<MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel>(
+                        AccessTools.Method(typeStairPathFinderUtility, "CanReachAcrossLevel")
+                    );
+
+                LevelUtility_TryGetLevelControllerOnCurrentTile =
+                    DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile>(
+                        AccessTools.Method(typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
+                        null,
+                        DelegateHelper.CreateOptions.DowncastingILG
+                    );
+
+                LevelUtility_GetOtherMapVerticallyOutwardFromCache =
+                    DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache>(
+                        AccessTools.Method(typeLevelUtility, "GetOtherMapVerticallyOutwardFromCache"),
+                        null,
+                        DelegateHelper.CreateOptions.Downcasting
+                    );
+            }
+        }
+
+        public static class ModInteropHarmonyPatches {
             [HarmonyPatch("MultiFloors.HarmonyPatches.HarmonyPatch_MainColonistBehavior", "BackToLivingLevelForGetRest")]
             public class DoublePatch_JobGiver_GetRest_TryGiveJob_Prefix {
                 public static Building_Bed PreprocessAndReturnBedCandidate(Pawn sleeper) {
@@ -83,7 +109,7 @@ namespace BedOwnershipTools {
                                     return candidateBed;
                                 } else if (candidateBed.Map?.Tile == sleeper.Map.Tile) {
                                     // repro for issue: tri103
-                                    if (DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, candidateBed, null)) {
+                                    if (ModInteropDelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, candidateBed, null)) {
                                         sleeper.ownership.ClaimBedIfNonMedical(candidateBed);
                                         return candidateBed;
                                     }
@@ -101,13 +127,13 @@ namespace BedOwnershipTools {
                         // if (HarmonyPatch_ScanJobsOnOtherLevel.ScanningOtherLevel || HarmonyPatch_ScanJobsOnOtherLevelPrioritized.ScanningOtherLevels) {
                         //     return null;
                         // }
-                        if (RemoteCall_TryGetLevelControllerOnCurrentTile(sleeper.Map) is object controller) {
-                            foreach (Map item in DelegatesAndRefs.LevelUtility_GetOtherMapVerticallyOutwardFromCache(sleeper.Map, controller)) {
+                        if (ModInteropDelegatesAndRefs.LevelUtility_TryGetLevelControllerOnCurrentTile(sleeper.Map, out object controller)) {
+                            foreach (Map item in ModInteropDelegatesAndRefs.LevelUtility_GetOtherMapVerticallyOutwardFromCache(sleeper.Map, controller)) {
                                 foreach (Thing item2 in item.listerThings.ThingsInGroup(ThingRequestGroup.Bed)) {
                                     if (item2 is Building_Bed building_Bed) {
                                         CompBuilding_BedXAttrs bedXAttrs = building_Bed.GetComp<CompBuilding_BedXAttrs>();
                                         // could also do a IsValidBedFor check, but AnyUnoccupiedSleepingSlot is probably good enough
-                                        if (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity && building_Bed.AnyUnoccupiedSleepingSlot && DelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, building_Bed, item)) {
+                                        if (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity && building_Bed.AnyUnoccupiedSleepingSlot && ModInteropDelegatesAndRefs.StairPathFinderUtility_CanReachAcrossLevel(sleeper, building_Bed, item)) {
                                             return building_Bed;
                                         }
                                     }

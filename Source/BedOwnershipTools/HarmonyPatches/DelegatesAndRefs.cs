@@ -5,7 +5,7 @@ using UnityEngine;
 using HarmonyLib;
 using Verse.AI;
 
-// Delegates and refs that belong to the base game and hence can be populated before mod init
+// Delegates and refs that belong to the base game and hence can be populated any time before use
 
 namespace BedOwnershipTools {
     public static partial class HarmonyPatches {

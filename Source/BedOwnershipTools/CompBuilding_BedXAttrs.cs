@@ -152,8 +152,7 @@ namespace BedOwnershipTools {
         private void SettingsFixupTasks() {
             if (this.parent is Building_Bed bed) {
                 if (
-                    BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching &&
-                    HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed) &&
+                    BedOwnershipTools.Singleton.modInteropMarshal.modInterop_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed) &&
                     this.isAssignedToCommunity
                 ) {
                     this.isAssignedToCommunity = false;
@@ -169,10 +168,7 @@ namespace BedOwnershipTools {
         public IEnumerable<Gizmo> CompGetGizmosExtraImpl() {
             bool disableGizmos = false;
             bool disableToggleIsAssignedToCommunity = false;
-            if (
-                BedOwnershipTools.Singleton.runtimeHandles.modHospitalityLoadedForCompatPatching &&
-                BedOwnershipTools.Singleton.runtimeHandles.typeHospitalityBuilding_GuestBed.IsInstanceOfType(this.parent)
-            ) {
+            if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_Hospitality.RemoteCall_IsGuestBed(this.parent)) {
                 disableGizmos = true;
             }
 
@@ -183,10 +179,7 @@ namespace BedOwnershipTools {
                 // let's ignore handling this race condition for now
                 SettingsFixupTasks();
 
-                if (
-                    BedOwnershipTools.Singleton.runtimeHandles.modOneBedToSleepWithAllLoadedForCompatPatching &&
-                    HarmonyPatches.ModCompatPatches_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed)
-                ) {
+                if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_OneBedToSleepWithAll.RemoteCall_IsPolygamy(bed)) {
                     disableToggleIsAssignedToCommunity = true;
                 }
 

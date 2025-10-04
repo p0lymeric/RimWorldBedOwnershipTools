@@ -58,7 +58,7 @@ namespace BedOwnershipTools {
                 }
 
                 stringBuilder.AppendInNewLine("TargetBed: ");
-                if (pawn.CurJob != null && HarmonyPatches.ModCompatPatches_LoftBedBunkBeds.GetJobTargetedBedFromPawn(pawn, false, false) is Thing thing) {
+                if (pawn.CurJob != null && ModInterop_LoftBedBunkBeds.ModInteropHarmonyPatches.GetJobTargetedBedFromPawn(pawn, false, false) is Thing thing) {
                     stringBuilder.Append($"{thing.GetUniqueLoadID()}");
                 } else {
                     stringBuilder.Append("null");

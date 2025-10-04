@@ -7,7 +7,7 @@ namespace BedOwnershipTools {
     public class BedOwnershipTools : Mod {
         public static BedOwnershipTools Singleton = null;
         public ModSettingsImpl settings = null;
-        public RuntimeHandleProvider runtimeHandles = null;
+        public ModInteropMarshal modInteropMarshal = null;
         public Harmony harmony = null;
 
         public BedOwnershipTools(ModContentPack content) : base(content) {
@@ -18,10 +18,14 @@ namespace BedOwnershipTools {
 
             this.settings = GetSettings<ModSettingsImpl>();
 
-            this.runtimeHandles = new RuntimeHandleProvider(settings);
+            this.modInteropMarshal = new ModInteropMarshal(settings);
 
             harmony = new("polymeric.bedownershiptools");
             HarmonyPatches.ApplyHarmonyPatches(this);
+
+            if (Prefs.DevMode && settings.devEnableUnaccountedCaseLogging) {
+                Log.Message(this.modInteropMarshal.EmitReport());
+            }
         }
 
         public override void DoSettingsWindowContents(Rect inRect) {
