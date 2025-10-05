@@ -5,7 +5,7 @@ namespace BedOwnershipTools {
     public class Command_ToggleAutoWake : Command_Toggle {
         public Command_ToggleAutoWake(CompPawnXAttrs xAttrs) {
             this.defaultLabel = "AutoWake".Translate().CapitalizeFirst();
-            this.icon = HarmonyPatches.DelegatesAndRefs.Gene_Deathrest_AutoWakeCommandTex().Texture;
+            this.icon = DelegatesAndRefs.Gene_Deathrest_AutoWakeCommandTex().Texture;
             Gene_Deathrest gene_Deathrest = xAttrs?.parentPawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
             if (gene_Deathrest != null && gene_Deathrest.Active) {
                 this.defaultDesc = "AutoWakeDesc".Translate(xAttrs.parentPawn.Named("PAWN")).Resolve();

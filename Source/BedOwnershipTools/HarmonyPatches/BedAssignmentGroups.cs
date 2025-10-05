@@ -267,7 +267,7 @@ namespace BedOwnershipTools {
                     ClearHints();
                     return;
                 }
-                Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                Pawn pawn = DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                 if (!setBeforeCallingToNotInvalidateAllOverlays) {
                     if (!setBeforeCallingToInvalidateAllOverlaysWithoutWarning) {
                         if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging) {
@@ -397,7 +397,7 @@ namespace BedOwnershipTools {
                 if (!enableBedAssignmentGroups) {
                     return;
                 }
-                Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_AgeTracker_pawn(__instance);
+                Pawn pawn = DelegatesAndRefs.Pawn_AgeTracker_pawn(__instance);
                 CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
                 if (pawnXAttrs == null) {
                     return;
@@ -480,7 +480,7 @@ namespace BedOwnershipTools {
         [HarmonyPatch(typeof(Pawn_IdeoTracker), nameof(Pawn_IdeoTracker.SetIdeo))]
         public class Patch_Pawn_IdeoTracker_SetIdeo {
             static void Postfix(Pawn_IdeoTracker __instance, Ideo ideo) {
-                Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_IdeoTracker_pawn(__instance);
+                Pawn pawn = DelegatesAndRefs.Pawn_IdeoTracker_pawn(__instance);
                 // after the base method, __instance.Ideo == ideo will be true
                 // if (__instance.Ideo == ideo || pawn.DevelopmentalStage.Baby()) {
                 //     return;
@@ -522,7 +522,7 @@ namespace BedOwnershipTools {
                 if (!enableBedAssignmentGroups) {
                     return;
                 }
-                Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                Pawn pawn = DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                 CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
                 if (pawnXAttrs == null) {
                     return;

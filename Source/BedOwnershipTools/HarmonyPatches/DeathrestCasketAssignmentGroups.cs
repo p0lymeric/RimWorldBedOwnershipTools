@@ -15,7 +15,7 @@ namespace BedOwnershipTools {
             static void Postfix(Pawn_Ownership __instance, ref bool __result, Building_Bed deathrestCasket) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (enableBedAssignmentGroups) {
-                    Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                    Pawn pawn = DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                     CATPBAndPOMethodReplacements.ClaimDeathrestCasket(pawn, deathrestCasket);
                 }
             }
@@ -77,7 +77,7 @@ namespace BedOwnershipTools {
                     ClearHints();
                     return;
                 }
-                Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                Pawn pawn = DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                 if (!setBeforeCallingToNotInvalidateAllOverlays) {
                     if (!setBeforeCallingToInvalidateAllOverlaysWithoutWarning) {
                         if (Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging) {

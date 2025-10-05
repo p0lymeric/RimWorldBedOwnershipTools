@@ -177,7 +177,7 @@ namespace BedOwnershipTools {
                 // This makes a heavy assumption that all sleep-like jobs invoke the vanilla game's Toils_LayDown toil
                 // and that the toil can be uniquely identified by matching a debug string
                 if (jobDriver != null && jobDriver.CurToilString == "LayDown") {
-                    Toil curToil = HarmonyPatches.DelegatesAndRefs.JobDriver_CurToil_Get(jobDriver);
+                    Toil curToil = DelegatesAndRefs.JobDriver_CurToil_Get(jobDriver);
                     if (curToil != null && curToil.initAction != null) {
                         object initActionTarget = curToil.initAction.Target;
                         // If the above assumption is violated, this would return None (on reflection mismatch) or a reference to some arbitrary Thing

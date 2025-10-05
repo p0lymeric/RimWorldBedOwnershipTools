@@ -33,7 +33,7 @@ namespace BedOwnershipTools {
             if (this.qualified) {
                 HarmonyPatches.PatchInClassShallow(harmony, typeof(ModInteropHarmonyPatches));
                 ModInteropHarmonyPatches.Patch_UnclaimBedCalls.ApplyHarmonyPatches(this, harmony);
-                ModInteropDelegatesAndRefs.ApplyHarmonyPatches(this, harmony);
+                ModInteropDelegatesAndRefs.Resolve(this);
                 this.active = true;
             }
         }
@@ -77,7 +77,7 @@ namespace BedOwnershipTools {
             public static MethodDelegate_ThingWithComps_GetComp_SpecializedCompPolygamyMode ThingWithComps_GetComp_SpecializedCompPolygamyMode =
                 (ThingWithComps thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
-            public static void ApplyHarmonyPatches(ModInterop_OneBedToSleepWithAll modInterop, Harmony harmony) {
+            public static void Resolve(ModInterop_OneBedToSleepWithAll modInterop) {
                 Type typeCompPolygamyMode = modInterop.typeOneBedToSleepWithAll_CompPolygamyMode;
 
                 CompPolygamyMode_DefineMaster =

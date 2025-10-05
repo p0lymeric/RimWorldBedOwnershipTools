@@ -26,7 +26,7 @@ namespace BedOwnershipTools {
                     return true;
                 }
 
-                __result = GetInspectStringImpl(__instance, xAttrs, HarmonyPatches.DelegatesAndRefs.NonVirtual_ThingWithComps_GetInspectString(__instance));
+                __result = GetInspectStringImpl(__instance, xAttrs, DelegatesAndRefs.NonVirtual_ThingWithComps_GetInspectString(__instance));
                 return false;
             }
 
@@ -209,7 +209,7 @@ namespace BedOwnershipTools {
                                 bool active = __instance.CompAssignableToPawn.AssignedPawnsForReading.Contains(pawn2);
                                 GenMapUI.DrawThingLabel(GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, boundButNotAssigned ? lightGrey : active ? defaultThingLabelColor : grey);
                             } else {
-                                GenMapUI.DrawThingLabel(HarmonyPatches.DelegatesAndRefs.Building_Bed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, defaultThingLabelColor);
+                                GenMapUI.DrawThingLabel(DelegatesAndRefs.Building_Bed_GetMultiOwnersLabelScreenPosFor(__instance, i), pawn2.LabelShort, defaultThingLabelColor);
                             }
                         }
                     }

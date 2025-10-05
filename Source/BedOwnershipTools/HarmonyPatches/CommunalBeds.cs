@@ -33,7 +33,7 @@ namespace BedOwnershipTools {
                 // Perform an equivalent claim on the assignment group overlay
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
                 if (enableBedAssignmentGroups) {
-                    Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                    Pawn pawn = DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                     CATPBAndPOMethodReplacements.ClaimBedIfNonMedical(pawn, newBed);
                 }
 
@@ -42,7 +42,7 @@ namespace BedOwnershipTools {
                 bool enableSpareDeathrestBindings = BedOwnershipTools.Singleton.settings.enableSpareDeathrestBindings;
                 if (enableSpareDeathrestBindings) {
                     if (CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(newBed.def)) {
-                        Pawn pawn = HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
+                        Pawn pawn = DelegatesAndRefs.Pawn_Ownership_pawn(__instance);
                         if (!newBed.IsOwner(pawn) && !newBed.Medical) {
                             for (int num = newBed.OwnersForReading.Count - 1; num >= 0; num--) {
                                 Pawn pawnToEvict = newBed.OwnersForReading[num];

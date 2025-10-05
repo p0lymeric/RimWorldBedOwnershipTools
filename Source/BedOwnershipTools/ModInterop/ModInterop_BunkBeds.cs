@@ -37,7 +37,7 @@ namespace BedOwnershipTools {
             if (this.qualified) {
                 HarmonyPatches.PatchInClassShallow(harmony, typeof(ModInteropHarmonyPatches));
                 ModInteropHarmonyPatches.Patch_Unpatches.ApplyHarmonyPatches(this, harmony);
-                ModInteropDelegatesAndRefs.ApplyHarmonyPatches(this, harmony);
+                ModInteropDelegatesAndRefs.Resolve(this);
                 this.active = true;
             }
         }
@@ -67,7 +67,7 @@ namespace BedOwnershipTools {
             public static MethodDelegate_CompBunkBed_GetMultiOwnersLabelScreenPosFor CompBunkBed_GetMultiOwnersLabelScreenPosFor =
                 (object thiss, int slotIndex) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
-            public static void ApplyHarmonyPatches(ModInterop_BunkBeds modInterop, Harmony harmony) {
+            public static void Resolve(ModInterop_BunkBeds modInterop) {
                 Type typeUtils = modInterop.typeBunkBeds_Utils;
                 Type typeBuilding_Bed_DrawGUIOverlay_Patch = modInterop.typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch;
                 Type typeCompBunkBed = modInterop.typeBunkBeds_CompBunkBed;

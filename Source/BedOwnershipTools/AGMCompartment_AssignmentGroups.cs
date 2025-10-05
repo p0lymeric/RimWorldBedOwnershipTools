@@ -142,7 +142,7 @@ namespace BedOwnershipTools {
                         Log.Warning($"[BOT] A bed ({bed.GetUniqueLoadID()}) doesn't have a CompAssignableToPawn component.");
                     } else {
                         // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
-                        bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
+                        bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
                         // assignedPawnsOverlay is initialized by save data load or by calling TryAssignPawn through the compPawnXAttrsRegistry loop above
                         foreach (Pawn pawn in bed.CompAssignableToPawn.AssignedPawnsForReading) {
                             if (!bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
@@ -207,7 +207,7 @@ namespace BedOwnershipTools {
             foreach (CompPawnXAttrs pawnXAttrs in parent.compPawnXAttrsRegistry) {
                 if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToOwnedBedMap.TryGetValue(assignmentGroup, out Building_Bed bed)) {
                     // to generate the message that a pawn has become unlinked from a bed
-                    HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
+                    DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
                 }
                 if (pawnXAttrs.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap.TryGetValue(assignmentGroup, out Building_Bed bed2)) {
                     CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected(pawnXAttrs.parentPawn, assignmentGroup);

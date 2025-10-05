@@ -123,7 +123,7 @@ namespace BedOwnershipTools {
                                 if (pawn.ownership.AssignedDeathrestCasket == oldBed) {
                                     oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
                                     bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                    HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_AssignedDeathrestCasket_Set(pawn.ownership, bed);
+                                    DelegatesAndRefs.Pawn_Ownership_AssignedDeathrestCasket_Set(pawn.ownership, bed);
                                 }
                             }
                             CATPBAndPOMethodReplacements.UnclaimDeathrestCasketDirected(pawn, assignmentGroup);
@@ -134,7 +134,7 @@ namespace BedOwnershipTools {
                                 if (pawn.ownership.OwnedBed == oldBed) {
                                     oldBed.CompAssignableToPawn.ForceRemovePawn(pawn);
                                     bed.CompAssignableToPawn.ForceAddPawn(pawn);
-                                    HarmonyPatches.DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
+                                    DelegatesAndRefs.Pawn_Ownership_intOwnedBed(pawn.ownership) = bed;
                                 }
                             }
                             CATPBAndPOMethodReplacements.UnclaimBedDirected(pawn, assignmentGroup);
@@ -227,7 +227,7 @@ namespace BedOwnershipTools {
                 toggleIsAssignedToCommunity.isActive = () => this.isAssignedToCommunity;
                 toggleIsAssignedToCommunity.toggleAction = delegate {
                     if (!this.isAssignedToCommunity) {
-                        HarmonyPatches.DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
+                        DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
                     }
                     this.isAssignedToCommunity = !this.isAssignedToCommunity;
                 };
@@ -343,7 +343,7 @@ namespace BedOwnershipTools {
                     }
                 }
                 StringBuilder_PrintOwnersList(stringBuilder, "assignedPawns", bed.CompAssignableToPawn.AssignedPawnsForReading);
-                StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", HarmonyPatches.DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(bed.CompAssignableToPawn));
+                StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawns", DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(bed.CompAssignableToPawn));
                 StringBuilder_PrintOwnersList(stringBuilder, "assignedPawnsOverlay", this.assignedPawnsOverlay);
                 StringBuilder_PrintOwnersList(stringBuilder, "uninstalledAssignedPawnsOverlay", this.uninstalledAssignedPawnsOverlay);
             }

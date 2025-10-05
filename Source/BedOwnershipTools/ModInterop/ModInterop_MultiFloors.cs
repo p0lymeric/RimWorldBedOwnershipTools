@@ -44,7 +44,7 @@ namespace BedOwnershipTools {
         public override void ApplyHarmonyPatches(Harmony harmony) {
             if (this.qualified) {
                 HarmonyPatches.PatchInClassShallow(harmony, typeof(ModInteropHarmonyPatches));
-                ModInteropDelegatesAndRefs.ApplyHarmonyPatches(this, harmony);
+                ModInteropDelegatesAndRefs.Resolve(this);
                 this.active = true;
             }
         }
@@ -66,7 +66,7 @@ namespace BedOwnershipTools {
             public static MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache LevelUtility_GetOtherMapVerticallyOutwardFromCache =
                 (Map map, object controller, int maxMapsToExplore) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
-            public static void ApplyHarmonyPatches(ModInterop_MultiFloors modInterop, Harmony harmony) {
+            public static void Resolve(ModInterop_MultiFloors modInterop) {
                 Type typeStairPathFinderUtility = modInterop.typeMultiFloors_StairPathFinderUtility;
                 Type typeLevelUtility = modInterop.typeMultiFloors_LevelUtility;
 
