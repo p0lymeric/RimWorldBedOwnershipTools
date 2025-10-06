@@ -175,18 +175,20 @@ namespace BedOwnershipTools {
                         CompDeathrestBindableXAttrs cdbXAttrs = bed.GetComp<CompDeathrestBindableXAttrs>();
                         int indexOfStartDeathrest = opts.FindIndex(x => x.Label == "StartDeathrest".Translate());
                         if (indexOfStartDeathrest >= 0) {
+                            // replace existing StartDeathrest option
                             // Check the assignment overlay (internal assignment is separately checked by caller)
                             if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
                                 if ((!CATPBAndPOMethodReplacements.HasFreeSlot(bed) || !CATPBAndPOMethodReplacements.BedOwnerWillShare(bed, pawn, pawn.guest.GuestStatus)) && !CATPBAndPOMethodReplacements.IsOwner(bed, pawn)) {
                                     opts[indexOfStartDeathrest] = new FloatMenuOption("CannotDeathrest".Translate().CapitalizeFirst() + ": " + "AssignedToOtherPawn".Translate(bed).CapitalizeFirst(), null);
                                 }
                             }
+                        } else {
+                            // append new option
                             // Check reservations (game will silently block if reservation fails, make it explicit)
-                            // FIXME doesn't seem to work in 1.5
                             if (!pawn.HasReserved(bed) && !pawn.CanReserve(bed, bed.SleepingSlotsCount, 0, null, ignoreOtherReservations: false)) {
                                 Pawn conflictPawn = pawn.Map.reservationManager.FirstRespectedReserver(bed, pawn, null);
                                 conflictPawn ??= pawn.Map.physicalInteractionReservationManager.FirstReserverOf(bed);
-                                opts[indexOfStartDeathrest] = new FloatMenuOption("CannotDeathrest".Translate().CapitalizeFirst() + ": " + (bed.AnyUnoccupiedSleepingSlot ? "ReservedBy" : "SomeoneElseSleeping").Translate(conflictPawn.LabelShort, conflictPawn).CapitalizeFirst(), null);
+                                opts.Add(new FloatMenuOption("CannotDeathrest".Translate().CapitalizeFirst() + ": " + (bed.AnyUnoccupiedSleepingSlot ? "ReservedBy" : "SomeoneElseSleeping").Translate(conflictPawn.LabelShort, conflictPawn).CapitalizeFirst(), null));
                             }
                         }
                     }
@@ -249,10 +251,20 @@ namespace BedOwnershipTools {
             // // if (boundPawn != null)
             // IL_001d: ldarg.0
             // IL_001e: ldfld class Verse.Pawn RimWorld.CompDeathrestBindable::boundPawn <- S0 match
-            // IL_0023: brfalse.s IL_002f                                                <- S1 branch target is <EXIT POINT>. Replace with pop and jump to <EXIT POINT>
+            // -IL_0023: brfalse.s IL_002f                                               <- S1 branch target is <EXIT POINT>. Replace with pop and jump to <EXIT POINT>
+            // +pop
+            // +br <EXIT POINT>
             // // return boundPawn == pawn;
             // ...
             // // return true;
+            // +<EXIT POINT>:
+            // +ldarg.0
+            // +ldarg.1
+            // +call MyBoundPawnCheck
+            // +brtrue <OLD EXIT POINT>
+            // +ldc.i4 0
+            // +ret
+            // ~<OLD EXIT POINT>:
             // IL_002f: ldc.i4.1                                                         <- S2 at <EXIT POINT>, prepend call to MyBoundPawnCheck and if false then return false
             // IL_0030: ret
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator) {
@@ -349,10 +361,24 @@ namespace BedOwnershipTools {
             // // CompDeathrestBindable compDeathrestBindable = parent.TryGetComp<CompDeathrestBindable>();
             // IL_0074: ldarg.0
             // IL_0075: ldfld class Verse.ThingWithComps Verse.ThingComp::parent
-            // IL_007a: call !!0 Verse.ThingCompUtility::TryGetComp<class RimWorld.CompDeathrestBindable>(class Verse.Thing) <- S0 replace with with pop, push null
+            // -IL_007a: call !!0 Verse.ThingCompUtility::TryGetComp<class RimWorld.CompDeathrestBindable>(class Verse.Thing) <- S0 replace with with pop, push null
+            // +pop
+            // +ldnull
             // IL_007f: stloc.1
             // ...
             // // return AcceptanceReport.WasAccepted;
+            // +<EXIT POINT>
+            // +ldarg.0
+            // +ldarg.1
+            // +call MyBoundPawnAcceptanceReport
+            // +stloc myBoundPawnAcceptanceReportLocal
+            // +ldloca myBoundPawnAcceptanceReportLocal
+            // +call HasValue
+            // +brfalse <OLD EXIT POINT>
+            // +ldloca myBoundPawnAcceptanceReportLocal
+            // +call Value
+            // +ret
+            // ~<OLD EXIT POINT>:
             // IL_0106: call valuetype Verse.AcceptanceReport Verse.AcceptanceReport::get_WasAccepted() <- S1 insert custom acceptance checks
             // IL_010b: ret
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator) {

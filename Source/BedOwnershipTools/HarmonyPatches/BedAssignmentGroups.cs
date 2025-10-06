@@ -79,7 +79,7 @@ namespace BedOwnershipTools {
 
         public class Patch_CompAssignableToPawn_TryUnassignPawn {
             // Since callers are unaware of multiple bed ownership, there is some ambiguity over
-            // if a caller wishes to unbind everything the Pawn owns, or if they'd just want the single bed unassigned.
+            // if a caller wishes to unbind everything the Pawn owns, or if it just wants the single bed unassigned.
 
             // The complicating factor is that virtual calls to CATPB/CATPDC reference the base class, so the patches
             // on the derived implementations need to proxy these hints and clear this tracker's state.

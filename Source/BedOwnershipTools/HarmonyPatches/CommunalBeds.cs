@@ -116,7 +116,11 @@ namespace BedOwnershipTools {
                             break;
                         case 1: // CAPTURE_TRAP_POINT
                             yield return instruction;
-                            instruction.Branches(out trapPointLabelNullable);
+                            if (instruction.Branches(out trapPointLabelNullable)) {
+                            } else {
+                                Log.Error("[BOT] Transpiler could not match branch after call to Medical property getter.");
+                                yield break;
+                            }
                             state++;
                             break;
                         case 2: // COPY_UNTIL_MATCH_SHOULDSEEKMEDICALREST
@@ -127,7 +131,11 @@ namespace BedOwnershipTools {
                             break;
                         case 3: // CAPTURE_EXIT_POINT
                             yield return instruction;
-                            instruction.Branches(out exitPointLabelNullable);
+                            if (instruction.Branches(out exitPointLabelNullable)) {
+                            } else {
+                                Log.Error("[BOT] Transpiler could not match branch after call to ShouldSeekMedicalRest.");
+                                yield break;
+                            }
                             state++;
                             break;
                         case 4: // COPY_UNTIL_AT_TRAP_POINT_INSERT_GOTO
@@ -147,6 +155,9 @@ namespace BedOwnershipTools {
                                     );
                                     state++;
                                 }
+                            } else {
+                                Log.Error("[BOT] Transpiler reached state 4 without a valid value in trapPointLabelNullable or exitPointLabelNullable.");
+                                yield break;
                             }
                             yield return instruction;
                             break;

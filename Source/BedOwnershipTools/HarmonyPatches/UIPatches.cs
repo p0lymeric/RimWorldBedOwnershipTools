@@ -265,7 +265,6 @@ namespace BedOwnershipTools {
             }
         }
 
-        // TODO refactor changes into transpiler
         [HarmonyPatch(typeof(CompAssignableToPawn_Bed), "AssigningCandidates", MethodType.Getter)]
         public class Patch_CompAssignableToPawn_Bed_AssigningCandidatesGetterImpl {
             static IEnumerable<Pawn> MyAssigningCandidatesGetterImpl(CompAssignableToPawn_Bed thiss) {
@@ -323,15 +322,15 @@ namespace BedOwnershipTools {
                     foreach (Pawn pawn in __result) {
                         yield return pawn;
                     }
-                }
-
-                // for compatibility with other mods that insert additional Pawns into the colonist list
-                // e.g. MultiFloors
-                // we'll take a deduplicated superset if we also touched the list
-                HashSet<Pawn> seenPawns = new HashSet<Pawn>();
-                foreach (Pawn pawn in __result) {
-                    if (seenPawns.Add(pawn)) {
-                        yield return pawn;
+                } else {
+                    // for compatibility with other mods that insert additional Pawns into the colonist list
+                    // e.g. MultiFloors
+                    // we'll take a deduplicated superset if we also touched the list
+                    HashSet<Pawn> seenPawns = new();
+                    foreach (Pawn pawn in __result) {
+                        if (seenPawns.Add(pawn)) {
+                            yield return pawn;
+                        }
                     }
                 }
             }
