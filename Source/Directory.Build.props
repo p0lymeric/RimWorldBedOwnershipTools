@@ -8,7 +8,6 @@
         <Company>polymeric</Company>
         <Copyright>Copyright © polymeric. All rights reserved.</Copyright>
         <Version>1.1.1</Version>
-        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
         <TargetFramework>net472</TargetFramework>
         <LangVersion>12.0</LangVersion>
