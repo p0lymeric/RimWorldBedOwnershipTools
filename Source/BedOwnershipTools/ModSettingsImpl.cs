@@ -8,6 +8,7 @@ namespace BedOwnershipTools {
     public class ModSettingsImpl : ModSettings {
         public bool enableCommunalBeds = true;
         public bool communalBedsSupportOrderedMedicalSleep = true;
+        public bool communalBedsAreRelationshipAware = true;
 
         public bool enableBedAssignmentPinning = true;
         public bool pawnsMaySelfAssignToUnownedPinnedBeds = true;
@@ -40,6 +41,7 @@ namespace BedOwnershipTools {
         public void Reset() {
             this.enableCommunalBeds = true;
             this.communalBedsSupportOrderedMedicalSleep = true;
+            this.communalBedsAreRelationshipAware = true;
 
             this.enableBedAssignmentPinning = true;
             this.pawnsMaySelfAssignToUnownedPinnedBeds = true;
@@ -74,6 +76,7 @@ namespace BedOwnershipTools {
         public override void ExposeData() {
             Scribe_Values.Look(ref this.enableCommunalBeds, "enableCommunalBeds", true);
             Scribe_Values.Look(ref this.communalBedsSupportOrderedMedicalSleep, "communalBedsSupportOrderedMedicalSleep", true);
+            Scribe_Values.Look(ref this.communalBedsAreRelationshipAware, "communalBedsAreRelationshipAware", true);
 
             Scribe_Values.Look(ref this.enableBedAssignmentPinning, "enableBedAssignmentPinning", true);
             Scribe_Values.Look(ref this.pawnsMaySelfAssignToUnownedPinnedBeds, "pawnsMaySelfAssignToUnownedPinnedBeds", true);

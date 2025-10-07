@@ -26,6 +26,7 @@ namespace BedOwnershipTools {
         public AGMCompartment_HarmonyPatchState agmCompartment_HarmonyPatchState;
         public AGMCompartment_SpareDeathrestBindings agmCompartment_SpareDeathrestBindings;
         public AGMCompartment_AutomaticDeathrest agmCompartment_AutomaticDeathrest;
+        public AGMCompartment_JobDriverTargetBedLUT agmCompartment_JobDriverTargetBedLUT;
 
         // Observed execution order
         // New game
@@ -66,6 +67,7 @@ namespace BedOwnershipTools {
             this.agmCompartment_HarmonyPatchState = new(game, this);
             this.agmCompartment_SpareDeathrestBindings = new(game, this);
             this.agmCompartment_AutomaticDeathrest = new(game, this);
+            this.agmCompartment_JobDriverTargetBedLUT = new(game, this);
         }
 
         public void Notify_WriteSettings() {

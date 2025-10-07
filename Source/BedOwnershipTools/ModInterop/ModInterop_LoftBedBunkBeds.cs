@@ -1,9 +1,5 @@
 // Fastpath can be bypassed to help exercise static and dynamic job target lookup
 // #define BYPASS_FASTPATH
-// Static job target lookup can be bypassed to exercise dynamic job target lookup
-// #define BYPASS_STATIC_JOB_TARGET_LOOKUP
-// Dynamic job target lookup caching can be disabled for debugging cache related issues
-// #define BYPASS_DYNAMIC_JOB_TARGET_LOOKUP_CACHE
 
 using System;
 using System.Collections.Generic;
@@ -73,8 +69,6 @@ namespace BedOwnershipTools {
         }
 
         public override void Notify_AGMCompartment_HarmonyPatchState_Constructed() {
-            ModInteropHarmonyPatches.JobDriverToLayDownBedTargetIndexCache.Clear();
-            ModInteropHarmonyPatches.JobDriverDevWarningFilter.Clear();
         }
 
         public static class ModInteropHarmonyPatches {
@@ -92,104 +86,6 @@ namespace BedOwnershipTools {
             // Bed Ownership Tools x Loft Bed (slowpath static): 650-690 TPS
             // Bed Ownership Tools x Loft Bed (slowpath dynamic cached): 650-690 TPS
             // Bed Ownership Tools x Loft Bed (slowpath dynamic uncached): 520-550 TPS
-
-            public static Building_Bed GetJobTargetedBedFromPawn(Pawn pawn, bool insertCache = true, bool warn = true) {
-                if (pawn.jobs.curDriver is JobDriver driver) {
-                    TargetIndex bedIndex = TargetIndex.None;
-                    switch (driver) {
-                        // We use a static lookup against all vanilla sleep jobs as a safe optimization before a catch-all dynamic lookup
-#if !BYPASS_STATIC_JOB_TARGET_LOOKUP
-                        case JobDriver_Wait: // HIT (WaitMaintainPosture, transient state after praying)
-                            // A, false
-                            bedIndex = TargetIndex.A;
-                            break;
-                        case JobDriver_RelaxAlone: // HIT (praying)
-                            // A, true
-                            bedIndex = TargetIndex.A;
-                            break;
-                        case JobDriver_WatchBuilding: // HIT (WatchTelevision)
-                            // C, true
-                            bedIndex = TargetIndex.C;
-                            break;
-                        case JobDriver_Deathrest: // HIT
-                            // A, parameterized
-                            bedIndex = TargetIndex.A;
-                            break;
-                        case JobDriver_LayDownResting: // 2nd gen subclass of JobDriver_LayDown, SmokeleafHigh, not sure how to trigger
-                            // A, parameterized
-                            bedIndex = TargetIndex.A;
-                            break;
-                        case JobDriver_LayDown: // HIT
-                            // A, parameterized
-                            bedIndex = TargetIndex.A;
-                            break;
-                        case JobDriver_Lovin: // HIT
-                            // B, true
-                            // funny enough, the issue that led to these decoders being written was, in fact related to two Pawns performin' Jobs on their double bed
-                            bedIndex = TargetIndex.B;
-                            break;
-                        case JobDriver_Meditate: // HIT (note, don't cut off legs, instead give plague)
-                            // B, parameterized
-                            bedIndex = TargetIndex.B;
-                            break;
-#endif
-                        default:
-                            bedIndex = GetLayDownToilTargetedBedFromJobDriver(driver, insertCache, warn);
-                            break;
-                    }
-                    if (bedIndex != TargetIndex.None) {
-                        if (pawn.CurJob.GetTarget(bedIndex).Thing is Building_Bed bed) {
-                            return bed;
-                        }
-                    }
-                }
-                return null;
-            }
-
-            // The upper limit to this cache's size is naturally bounded by the variety of JobDriver subclasses a Pawn could hold
-            // in parallel with CurrentBed/GetCurOccupant calls, which should be a fixed and small set. Issues could occur if
-            // an unbounded number of JobDriver types are generated during runtime. We ignore that pathology for now.
-            public static Dictionary<Type, TargetIndex> JobDriverToLayDownBedTargetIndexCache = new Dictionary<Type, TargetIndex>();
-            public static HashSet<Type> JobDriverDevWarningFilter = new HashSet<Type>();
-            public static TargetIndex GetLayDownToilTargetedBedFromJobDriver(JobDriver jobDriver, bool insertCache, bool warn) {
-                // Permanent blind caching isn't sufficient for JobDriver implementations where TargetIndex usage
-                // varies between invokations. We ignore that limitation for now.
-                Type jobDriverType = jobDriver.GetType();
-                if (warn && Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging && !JobDriverDevWarningFilter.Contains(jobDriverType)) {
-                    Log.Warning($"[BOT] A Pawn ({jobDriver.pawn.Label}) is performing a Job ({jobDriver.job}) on some bed, but Bed Ownership Tools couldn't match its JobDriver ({jobDriver}) with a statically defined handling case. Future warnings related to this JobDriver type will be suppressed.");
-                    JobDriverDevWarningFilter.Add(jobDriverType);
-                }
-                TargetIndex returnVal;
-                if (JobDriverToLayDownBedTargetIndexCache.TryGetValue(jobDriverType, out returnVal)) {
-                    return returnVal;
-                } else {
-                    returnVal = GetLayDownToilTargetedBedFromJobDriverDirect(jobDriver);
-#if !BYPASS_DYNAMIC_JOB_TARGET_LOOKUP_CACHE
-                    if (insertCache) {
-                        JobDriverToLayDownBedTargetIndexCache[jobDriverType] = returnVal;
-                    }
-#endif
-                    return returnVal;
-                }
-            }
-
-            public static TargetIndex GetLayDownToilTargetedBedFromJobDriverDirect(JobDriver jobDriver) {
-                // This makes a heavy assumption that all sleep-like jobs invoke the vanilla game's Toils_LayDown toil
-                // and that the toil can be uniquely identified by matching a debug string
-                if (jobDriver != null && jobDriver.CurToilString == "LayDown") {
-                    Toil curToil = DelegatesAndRefs.JobDriver_CurToil_Get(jobDriver);
-                    if (curToil != null && curToil.initAction != null) {
-                        object initActionTarget = curToil.initAction.Target;
-                        // If the above assumption is violated, this would return None (on reflection mismatch) or a reference to some arbitrary Thing
-                        // That appears to be a reasonable bound.
-                        TargetIndex bedOrRestSpotIndex = Traverse.Create(initActionTarget).Field("bedOrRestSpotIndex").GetValue<TargetIndex>();
-                        // We don't check hasBed because a null check is sufficient
-                        // bool hasBed = Traverse.Create(initActionTarget).Field("hasBed").GetValue<bool>();
-                        return bedOrRestSpotIndex;
-                    }
-                }
-                return TargetIndex.None;
-            }
 
             [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.CurrentBed))]
             [HarmonyPatch(new Type[] { typeof(Pawn), typeof(int?) }, new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
@@ -268,7 +164,7 @@ namespace BedOwnershipTools {
                             return false;
                         }
                     // 4. Loft tower
-                    } else if (GetJobTargetedBedFromPawn(p) is Building_Bed bed3) {
+                    } else if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(p) is Building_Bed bed3) {
                         if (beds.Contains(bed3)) {
                             if (bedsCnt == 1 || (isOnLoftBedTower && !couldBeLoftBedXBunkBedsCrossing)) {
                                 // 4.1. Loft tower, no bunk beds in tower
@@ -289,7 +185,7 @@ namespace BedOwnershipTools {
                                     if (bed3.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
                                         // 4.2.1. Bunk bed below loft bed, medical or communal
                                         // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
-                                        List<Pawn> pawnsInThisBed = pawns.Where(x => GetJobTargetedBedFromPawn(x) == bed3).ToList();
+                                        List<Pawn> pawnsInThisBed = pawns.Where(x => GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(x) == bed3).ToList();
                                         slotIndex = pawnsInThisBed.IndexOf(p);
                                     } else {
                                         // 4.2.2. Bunk bed below loft bed, owned
@@ -391,7 +287,7 @@ namespace BedOwnershipTools {
                     // 4.2.3. Loft bed above bunk bed
                     } else if (bedsCnt == 1 || (isOnLoftBedTower && !isBunkBed)) {
                         foreach (Pawn pawn in pawns) {
-                            if (GetJobTargetedBedFromPawn(pawn) is Building_Bed bed) {
+                            if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(pawn) is Building_Bed bed) {
                                 if (bed == __instance) {
                                     __result = pawn;
                                     return false;
@@ -405,7 +301,7 @@ namespace BedOwnershipTools {
                         if (__instance.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
                             // 4.2.1. Bunk bed below loft bed, medical or communal
                             // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
-                            indexingList = pawns.Where(x => GetJobTargetedBedFromPawn(x) == __instance).ToList();
+                            indexingList = pawns.Where(x => GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(x) == __instance).ToList();
                         } else {
                             // 4.2.2. Bunk bed below loft bed, owned
                             // the game expects the pawn to sleep at the same slot as their bed's assignedPawns idx
@@ -413,7 +309,7 @@ namespace BedOwnershipTools {
                         }
                         if (slotIndex < indexingList.Count) {
                             Pawn pawn = indexingList[slotIndex];
-                            if (GetJobTargetedBedFromPawn(pawn) is Building_Bed bed) {
+                            if (GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(pawn) is Building_Bed bed) {
                                 if (bed == __instance) {
                                     // Log.Message($"{__instance.GetUniqueLoadID()} called GetCurOccupant on slot {slotIndex} and matched {pawn.Label}");
                                     __result = pawn;

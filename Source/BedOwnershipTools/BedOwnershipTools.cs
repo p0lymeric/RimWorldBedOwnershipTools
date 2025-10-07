@@ -47,6 +47,11 @@ namespace BedOwnershipTools {
                 ref settings.communalBedsSupportOrderedMedicalSleep,
                 "BedOwnershipTools.CommunalBedsSupportOrderedMedicalSleep_Tooltip".Translate()
             );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.CommunalBedsAreRelationshipAware".Translate(),
+                ref settings.communalBedsAreRelationshipAware,
+                "BedOwnershipTools.CommunalBedsAreRelationshipAware_Tooltip".Translate()
+            );
 
             listingStandard.GapLine();
             listingStandard.Label("BedOwnershipTools.AssignmentPinningHeading".Translate().Colorize(ColoredText.SubtleGrayColor));

@@ -268,8 +268,6 @@ namespace BedOwnershipTools {
         }
 
         // TODO
-        // implement relationship based search for double bed
-        // veto - can't see a way to do this easily without adding to FindBedFor's search loops. too messy
         // implement lingering thought for ThoughtWorker_WantToSleepWithSpouseOrLover, ThoughtWorker_SharedBed for recent slumbers with or without lover
         // implement ThoughtWorker_BedroomJealous ThoughtWorker_BedroomRequirementsNotMet ThoughtWorker_Greedy
         // veto - would either need to use the overlay system to make the pawn treat the communal bed as owned and take the vanilla mood effect
