@@ -14,7 +14,7 @@ Any colonist can rest in a communal bed subject to availability.
 
 Only occupancy is checked to qualify sleeping in a communal bed. Sleeping in a communal bed does not change the colonist's existing owned beds. Gizmos relating to setting owners are hidden to emphasize this fact.
 
-Colonists attempt to coordinate communal bed usage, so that partners can sleep together. Single pawns prefer single beds, whereas pawns in relationships prefer beds currently occupied by their partner or empty double beds. This relationship-aware search routine can be disabled via a mod setting.
+Colonists attempt to coordinate picking communal beds, so that partners can sleep together. Single pawns prefer single beds. Pawns in relationships prefer beds occupied by their partner or empty double beds. Colonists who use communal beds gain relationship-related mood effects similar to that of assigned beds. These relationship-aware behaviours can be disabled by mod setting.
 
 ## Assignment pinning
 Pinned ownership cannot be relinquished by a colonist's own will. This is accomplished by blocking voluntary actions that lead to its loss (like sleeping in another bed within the same assignment group). Involuntary (e.g. death) or player-driven actions can lead to loss of pinned ownership.

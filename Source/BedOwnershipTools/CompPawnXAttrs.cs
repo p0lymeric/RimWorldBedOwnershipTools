@@ -10,10 +10,12 @@ namespace BedOwnershipTools {
         public Pawn parentPawn;
         public PawnXAttrs_AssignmentGroupTracker assignmentGroupTracker;
         public PawnXAttrs_AutomaticDeathrestTracker automaticDeathrestTracker;
+        public PawnXAttrs_RelationshipAwareTracker relationshipAwareTracker;
 
         public CompPawnXAttrs() : base() {
             this.assignmentGroupTracker = new(this);
             this.automaticDeathrestTracker = new(this);
+            this.relationshipAwareTracker = new(this);
         }
 
         public override void Initialize(CompProperties props) {
@@ -33,6 +35,11 @@ namespace BedOwnershipTools {
 
             assignmentGroupTracker.ShallowExposeData();
             automaticDeathrestTracker.ShallowExposeData();
+            relationshipAwareTracker.ShallowExposeData();
+        }
+
+        public string FormatTickAsDateTimeString(int offsetAbsTick) {
+            return $"{GenDate.DayOfQuadrum(offsetAbsTick, 0) + 1} {GenDate.Quadrum(offsetAbsTick, 0).Label()} {GenDate.Year(offsetAbsTick, 0)} {GenDate.HourFloat(offsetAbsTick, 0):F1}h";
         }
 
         public override string CompInspectStringExtra() {
@@ -83,12 +90,12 @@ namespace BedOwnershipTools {
                 stringBuilder.AppendInNewLine($"ScheduleTest: {(automaticDeathrestTracker.ScheduleTest() ? "Armed" : "Disarmed")}");
                 float myLongitude = automaticDeathrestTracker.LongitudeForLocalDateCalc();
                 int tickCompletedLastDeathrest = GenDate.TickGameToAbs(this.automaticDeathrestTracker.tickCompletedLastDeathrest) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
-                stringBuilder.AppendInNewLine($"tickCompletedLastDeathrest: {GenDate.DayOfQuadrum(tickCompletedLastDeathrest, 0) + 1} {GenDate.Quadrum(tickCompletedLastDeathrest, 0).Label()} {GenDate.Year(tickCompletedLastDeathrest, 0)} {GenDate.HourFloat(tickCompletedLastDeathrest, 0):F1}h LOC");
+                stringBuilder.AppendInNewLine($"tickCompletedLastDeathrest: {FormatTickAsDateTimeString(tickCompletedLastDeathrest)} LOC");
                 int localTwelfthAbs = (Find.TickManager.TicksAbs + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude)) / GenDate.TicksPerTwelfth;
                 int tickStartOfLocalTwelfthAnywhereOnPlanet = localTwelfthAbs * GenDate.TicksPerTwelfth - GenDate.TicksPerHour * 12 + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
-                stringBuilder.AppendInNewLine($"tickStartOfLocalTwelfthAnywhereOnPlanet: {GenDate.DayOfQuadrum(tickStartOfLocalTwelfthAnywhereOnPlanet, 0) + 1} {GenDate.Quadrum(tickStartOfLocalTwelfthAnywhereOnPlanet, 0).Label()} {GenDate.Year(tickStartOfLocalTwelfthAnywhereOnPlanet, 0)} {GenDate.HourFloat(tickStartOfLocalTwelfthAnywhereOnPlanet, 0):F1}h LOC");
+                stringBuilder.AppendInNewLine($"tickStartOfLocalTwelfthAnywhereOnPlanet: {FormatTickAsDateTimeString(tickStartOfLocalTwelfthAnywhereOnPlanet)} LOC");
                 int projectedExhaustionTick = Find.TickManager.TicksAbs + (int)Math.Round(automaticDeathrestTracker.TicksToDeathrestExhaustion()) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude);
-                stringBuilder.AppendInNewLine($"TicksToDeathrestExhaustion: {GenDate.DayOfQuadrum(projectedExhaustionTick, 0) + 1} {GenDate.Quadrum(projectedExhaustionTick, 0).Label()} {GenDate.Year(projectedExhaustionTick, 0)} {GenDate.HourFloat(projectedExhaustionTick, 0):F1}h LOC");
+                stringBuilder.AppendInNewLine($"TicksToDeathrestExhaustion: {FormatTickAsDateTimeString(projectedExhaustionTick)} LOC");
 
                 if (pawn.ownership.AssignedDeathrestCasket != null) {
                     stringBuilder.AppendInNewLine("INTERNALDC: " + pawn.ownership.AssignedDeathrestCasket.GetUniqueLoadID());
@@ -97,6 +104,17 @@ namespace BedOwnershipTools {
                 foreach(var (assignmentGroup, deathrestCasket) in this.assignmentGroupTracker.assignmentGroupToAssignedDeathrestCasketMap) {
                     stringBuilder.AppendInNewLine(assignmentGroup.name + "DC: " + deathrestCasket.GetUniqueLoadID());
                 }
+
+                stringBuilder.AppendInNewLine("IOwnABedOnThisMap: " + this.relationshipAwareTracker.IOwnABedOnThisMap());
+                stringBuilder.AppendInNewLine("IRecentlySleptInACommunalBed: " + this.relationshipAwareTracker.IRecentlySleptInACommunalBed());
+                stringBuilder.AppendInNewLine("MyMostLikedLovePartnerHasRestNeed: " + this.relationshipAwareTracker.MyMostLikedLovePartnerHasRestNeed());
+                stringBuilder.AppendInNewLine("IHaveRestNeed: " + this.relationshipAwareTracker.IHaveRestNeed());
+                stringBuilder.AppendInNewLine($"tickGameLastSleptInCommunalBed: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptInCommunalBed + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
+                stringBuilder.AppendInNewLine($"tickGameLastSleptWithPartner: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptWithPartner + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
+                stringBuilder.AppendInNewLine($"tickGameLastSleptWithNonPartner: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptWithNonPartner + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
+                stringBuilder.AppendInNewLine("sharedBedMoodOffset: " + this.relationshipAwareTracker.sharedBedMoodOffset);
+                stringBuilder.AppendInNewLine("ThinkWantToSleepWithSpouseOrLover: " + this.relationshipAwareTracker.ThinkWantToSleepWithSpouseOrLover());
+                stringBuilder.AppendInNewLine("ThinkSharedBed: " + this.relationshipAwareTracker.ThinkSharedBed());
             }
             return stringBuilder.ToString();
         }

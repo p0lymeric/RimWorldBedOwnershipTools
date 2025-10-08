@@ -10,36 +10,36 @@ using HarmonyLib;
 
 // Summary of patches
 
-// FindBedFor
-// if "sleeper is a mechanoid":
-//     return null;
-// if "sleeper is deathresting and sleeper has a valid deathrest casket that is bound to sleeper":
-//     return assignedDeathrestCasket;
-// medicalBedDefList := "the sleeper must sleep in a slab bed" ? bedsBestToWorst_SlabBed_Medical : bedsBestToWorst_Medical
-// bedDefList := "the sleeper must sleep in a slab bed" ? bedsBestToWorst_SlabBed : bedsBestToWorst
-// if "sleeper should seek medical rest":
-//     if "sleeper is in a medical bed and the bed is valid for the sleeper":
-//         return sleeper.CurrentBed()
-//     if exists x st. "search for a medical bed, first prioritizing order of medicalBedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance":
-//         return x
-// if "sleeper is a dryad":
-//     return null;
-// if "sleeper owns a bed and can reach the bed over a 'Danger.Some' path":
-//     return ownedBed
-// <- INSERTION POINT 1: if exists partner st. "if relationship-aware bed search is enabled, search for a sleeping partner by opinion, where that partner and their current bed can accept the sleeper and the sleeper can reach the bed over a 'Danger.Some' path":
-//                           return partner.CurrentBed()
-// if "sleeper has a most liked partner and that partner and their owned bed can accept the sleeper and the sleeper can reach the bed over a 'Danger.Some' path":
-//     return mostLikedPartner.ownedBed
-// v EDIT POINT 1 append check "and is not communal if relationship-aware bed search is enabled"
-// if exists x st. "search for a bed, first prioritizing order of bedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance"
-//     // NB the game will check Danger.None twice
-//     return x
-// <- INSERTION POINT 2: if exists x st. "if relationship-aware bed search is enabled, search for a communal bed, preferring single if the pawn doesn't have a partner, then prioritizing order of bedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance"
-//                           return x
-// return null
-
 namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
+        // FindBedFor
+        // if "sleeper is a mechanoid":
+        //     return null;
+        // if "sleeper is deathresting and sleeper has a valid deathrest casket that is bound to sleeper":
+        //     return assignedDeathrestCasket;
+        // medicalBedDefList := "the sleeper must sleep in a slab bed" ? bedsBestToWorst_SlabBed_Medical : bedsBestToWorst_Medical
+        // bedDefList := "the sleeper must sleep in a slab bed" ? bedsBestToWorst_SlabBed : bedsBestToWorst
+        // if "sleeper should seek medical rest":
+        //     if "sleeper is in a medical bed and the bed is valid for the sleeper":
+        //         return sleeper.CurrentBed()
+        //     if exists x st. "search for a medical bed, first prioritizing order of medicalBedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance":
+        //         return x
+        // if "sleeper is a dryad":
+        //     return null;
+        // if "sleeper owns a bed and can reach the bed over a 'Danger.Some' path":
+        //     return ownedBed
+        // <- INSERTION POINT 1: if exists partner st. "if relationship-aware bed search is enabled, search for a sleeping partner by opinion, where that partner and their current bed can accept the sleeper and the sleeper can reach the bed over a 'Danger.Some' path":
+        //                           return partner.CurrentBed()
+        // if "sleeper has a most liked partner and that partner and their owned bed can accept the sleeper and the sleeper can reach the bed over a 'Danger.Some' path":
+        //     return mostLikedPartner.ownedBed
+        // v EDIT POINT 1 append check "and is not communal if relationship-aware bed search is enabled"
+        // if exists x st. "search for a bed, first prioritizing order of bedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance"
+        //     // NB the game will check Danger.None twice
+        //     return x
+        // <- INSERTION POINT 2: if exists x st. "if relationship-aware bed search is enabled, search for a communal bed, preferring single if the pawn doesn't have a partner, then prioritizing order of bedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance"
+        //                           return x
+        // return null
+
         [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.FindBedFor))]
         [HarmonyPatch(new Type[] { typeof(Pawn), typeof(Pawn), typeof(bool), typeof(bool), typeof(GuestStatus?) })]
         public class Patch_RelationshipAwareSearch_RestUtility_FindBedFor {
@@ -369,6 +369,86 @@ namespace BedOwnershipTools {
                 }
                 if (state != TState.Terminal) {
                     Log.Error($"[BOT] Transpiler did not reach its terminal state. It only reached state {state}.");
+                }
+            }
+        }
+
+        // Thoughts
+        [HarmonyPatch(typeof(ThoughtWorker_WantToSleepWithSpouseOrLover), "CurrentStateInternal")]
+        public class Patch_ThoughtWorker_WantToSleepWithSpouseOrLover_CurrentStateInternal {
+            static void Postfix(ThoughtWorker_WantToSleepWithSpouseOrLover __instance, ref ThoughtState __result, Pawn p) {
+                if (!BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
+                    return;
+                }
+                CompPawnXAttrs pawnXAttrs = p.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs != null && pawnXAttrs.relationshipAwareTracker.UseRelationshipAwareTrackerThoughts()) {
+                    __result = pawnXAttrs.relationshipAwareTracker.ThinkWantToSleepWithSpouseOrLover();
+                }
+            }
+        }
+        [HarmonyPatch(typeof(ThoughtWorker_SharedBed), "CurrentStateInternal")]
+        public class Patch_ThoughtWorker_SharedBed_CurrentStateInternal {
+            static void Postfix(ThoughtWorker_SharedBed __instance, ref ThoughtState __result, Pawn p) {
+                if (!BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
+                    return;
+                }
+                CompPawnXAttrs pawnXAttrs = p.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs != null && pawnXAttrs.relationshipAwareTracker.UseRelationshipAwareTrackerThoughts()) {
+                    __result = pawnXAttrs.relationshipAwareTracker.ThinkSharedBed();
+                }
+            }
+        }
+        [HarmonyPatch(typeof(Thought_SharedBed), "BaseMoodOffset", MethodType.Getter)]
+        public class Patch_Thought_SharedBed_BaseMoodOffsetGetterImpl {
+            static void Postfix(Thought_SharedBed __instance, ref float __result) {
+                if (!BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
+                    return;
+                }
+                CompPawnXAttrs pawnXAttrs = __instance.pawn.GetComp<CompPawnXAttrs>();
+                if (pawnXAttrs != null && pawnXAttrs.relationshipAwareTracker.UseRelationshipAwareTrackerThoughts()) {
+                    if (pawnXAttrs.relationshipAwareTracker.ThinkSharedBed()) {
+                        __result = pawnXAttrs.relationshipAwareTracker.sharedBedMoodOffset;
+                    }
+                }
+            }
+        }
+        [HarmonyPatch(typeof(Toils_LayDown), "ApplyBedRelatedEffects")]
+        public class Patch_Toils_LayDown_ApplyBedRelatedEffects {
+#if RIMWORLD__1_6
+            static void Postfix(Pawn p, Building_Bed bed, bool asleep, bool gainRest, int delta) {
+#else
+            static void Postfix(Pawn p, Building_Bed bed, bool asleep, bool gainRest, bool deathrest) {
+#endif
+                if (!BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
+                    return;
+                }
+#if RIMWORLD__1_6
+                if (p.IsHashIntervalTick(GenDate.TicksPerHour, delta)) {
+#else
+                if (p.IsHashIntervalTick(GenDate.TicksPerHour)) {
+#endif
+                    if (bed == null) {
+                        return;
+                    }
+                    CompPawnXAttrs pawnXAttrs = p.GetComp<CompPawnXAttrs>();
+                    if (pawnXAttrs != null) {
+                        CompBuilding_BedXAttrs bedXAttrs = bed.GetComp<CompBuilding_BedXAttrs>();
+                        if (bedXAttrs != null) {
+                            if (bedXAttrs.IsAssignedToCommunity) {
+                                pawnXAttrs.relationshipAwareTracker.Notify_SleptInCommunalBed();
+                            }
+                        }
+                        foreach (Pawn bedPartner in bed.CurOccupants) {
+                            if (bedPartner != p && !bedPartner.Awake()) {
+                                if (LovePartnerRelationUtility.LovePartnerRelationExists(p, bedPartner)) {
+                                    pawnXAttrs.relationshipAwareTracker.Notify_SleptWithSpouseOrLover(bedPartner);
+                                } else {
+                                    pawnXAttrs.relationshipAwareTracker.Notify_SleptWithNonPartner(bedPartner);
+                                }
+                            }
+
+                        }
+                    }
                 }
             }
         }

@@ -268,7 +268,6 @@ namespace BedOwnershipTools {
         }
 
         // TODO
-        // implement lingering thought for ThoughtWorker_WantToSleepWithSpouseOrLover, ThoughtWorker_SharedBed for recent slumbers with or without lover
         // implement ThoughtWorker_BedroomJealous ThoughtWorker_BedroomRequirementsNotMet ThoughtWorker_Greedy
         // veto - would either need to use the overlay system to make the pawn treat the communal bed as owned and take the vanilla mood effect
         //        or add some extra tracking logic. maybe later
