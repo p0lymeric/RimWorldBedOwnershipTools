@@ -5,6 +5,7 @@
             <li>BedOwnershipTools.AGMCompartment_AssignmentGroups</li>
             <li>BedOwnershipTools.AGMCompartment_AutomaticDeathrest</li>
             <li>BedOwnershipTools.AGMCompartment_HarmonyPatchState</li>
+            <li>BedOwnershipTools.AGMCompartment_JobDriverTargetBedLUT</li>
             <li>BedOwnershipTools.AGMCompartment_SpareDeathrestBindings</li>
             <li>BedOwnershipTools.Alert_NeedAutoDeathrestBuilding</li>
             <li>BedOwnershipTools.AssignmentGroup</li>
@@ -17,6 +18,7 @@
             <li>BedOwnershipTools.JobGiver_AutomaticDeathrest</li>
             <li>BedOwnershipTools.PawnXAttrs_AssignmentGroupTracker</li>
             <li>BedOwnershipTools.PawnXAttrs_AutomaticDeathrestTracker</li>
+            <li>BedOwnershipTools.PawnXAttrs_RelationshipAwareTracker</li>
         </Types>
         <Methods>
             <!-- <li>Verse.Thing:Tick</li> -->

@@ -105,10 +105,8 @@ namespace BedOwnershipTools {
                     stringBuilder.AppendInNewLine(assignmentGroup.name + "DC: " + deathrestCasket.GetUniqueLoadID());
                 }
 
-                stringBuilder.AppendInNewLine("IOwnABedOnThisMap: " + this.relationshipAwareTracker.IOwnABedOnThisMap());
+                stringBuilder.AppendInNewLine("MyActiveOwnedBedIsOnThisMap: " + this.relationshipAwareTracker.MyActiveOwnedBedIsOnThisMap());
                 stringBuilder.AppendInNewLine("IRecentlySleptInACommunalBed: " + this.relationshipAwareTracker.IRecentlySleptInACommunalBed());
-                stringBuilder.AppendInNewLine("MyMostLikedLovePartnerHasRestNeed: " + this.relationshipAwareTracker.MyMostLikedLovePartnerHasRestNeed());
-                stringBuilder.AppendInNewLine("IHaveRestNeed: " + this.relationshipAwareTracker.IHaveRestNeed());
                 stringBuilder.AppendInNewLine($"tickGameLastSleptInCommunalBed: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptInCommunalBed + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
                 stringBuilder.AppendInNewLine($"tickGameLastSleptWithPartner: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptWithPartner + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
                 stringBuilder.AppendInNewLine($"tickGameLastSleptWithNonPartner: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptWithNonPartner + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");

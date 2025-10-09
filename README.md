@@ -28,6 +28,8 @@ Communal beds are good for situations when colonists need a bed, but cannot acce
 
 Instead of assigning named owners to beds, you can now mark a bed for "communal" use. When a colonist cannot access or claim an owned bed, they'll use a communal bed before sleeping on the ground. While using a communal bed, they'll still remember their previous bed.
 
+Colonists will coordinate use of single and double communal beds to allow couples to sleep together.
+
 ![communal beds](Collateral/DocMedia/ReadmeCommunal.png)
 
 ## Pinned assignments

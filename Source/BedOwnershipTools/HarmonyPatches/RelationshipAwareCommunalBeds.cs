@@ -34,10 +34,14 @@ namespace BedOwnershipTools {
         //     return mostLikedPartner.ownedBed
         // v EDIT POINT 1 append check "and is not communal if relationship-aware bed search is enabled"
         // if exists x st. "search for a bed, first prioritizing order of bedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance"
-        //     // NB the game will check Danger.None twice
+        //     // NB the game will check Danger.None twice probably due to some uncleaned cruft
+        //     // NB the game can return a deathrest casket in this stage, but we don't want to sleep in it if a communal bed is available
+        //    v EDIT POINT 2 if the bed is a deathrest casket belonging to me, save me in LOCAL reorderedFromPrevStage and jump to INSERTION POINT 2
         //     return x
         // <- INSERTION POINT 2: if exists x st. "if relationship-aware bed search is enabled, search for a communal bed, preferring single if the pawn doesn't have a partner, then prioritizing order of bedDefList, then 'Danger.None' paths over 'Danger.Deadly' paths, then shortest distance"
         //                           return x
+        //                       if reorderedFromPrevStage != null
+        //                           return reorderedFromPrevStage
         // return null
 
         [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.FindBedFor))]
@@ -60,6 +64,12 @@ namespace BedOwnershipTools {
                     return true;
                 }
                 return false;
+            }
+            public static bool IsDeathRestCasketAndDefer(Building_Bed bed) {
+                if (!BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
+                    return false;
+                }
+                return CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def);
             }
             public static Building_Bed MyLovePartnersCurrentOrJobBed(Pawn sleeper, Pawn traveler, bool checkSocialProperness, bool ignoreOtherReservations, GuestStatus? guestStatus) {
                 if (MyApplySimpleSearchIfTrueCondition(sleeper)) {
@@ -101,7 +111,7 @@ namespace BedOwnershipTools {
                                          ((Building_Bed)b).GetComp<CompBuilding_BedXAttrs>() is CompBuilding_BedXAttrs bedXAttrs && bedXAttrs.IsAssignedToCommunity &&
                                          (int)b.Position.GetDangerFor(sleeper, sleeper.MapHeld) <= (int)maxDanger && RestUtility.IsValidBedFor(b, sleeper, traveler, checkSocialProperness, allowMedBedEvenIfSetToNoCare: false, ignoreOtherReservations, guestStatus) &&
                                          (dg > 0 || !b.Position.GetItems(b.Map).Any((Thing thing) => thing.def.IsCorpse)) &&
-                                         (ignoreSleepingSlots || (sleepingSlotsOneFalseManyTrue ? ((Building_Bed)b).SleepingSlotsCount > 1 : ((Building_Bed)b).SleepingSlotsCount == 1)) &&
+                                         (ignoreSleepingSlots || (sleepingSlotsOneFalseManyTrue ? (((Building_Bed)b).SleepingSlotsCount > 1 && !BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.RemoteCall_IsBunkBed((Building_Bed)b)) : ((Building_Bed)b).SleepingSlotsCount == 1) || BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.RemoteCall_IsBunkBed((Building_Bed)b)) &&
                                          // reservation checks are more eager than occupation checks
                                          (!disallowPartiallyOccupied /*|| !((Building_Bed)b).AnyOccupants*/ || sleeper.HasReserved((Building_Bed)b) || traveler.CanReserve((Building_Bed)b, 1, -1, null, ignoreOtherReservations))
                         );
@@ -112,7 +122,7 @@ namespace BedOwnershipTools {
                 }
                 return null;
             }
-            public static Building_Bed MyClosestFreeCommunalBed(Pawn sleeper, Pawn traveler, bool checkSocialProperness, bool ignoreOtherReservations, GuestStatus? guestStatus, List<ThingDef> bedDefsBestToWorst) {
+            public static Building_Bed MyClosestFreeCommunalBed(Pawn sleeper, Pawn traveler, bool checkSocialProperness, bool ignoreOtherReservations, GuestStatus? guestStatus, List<ThingDef> bedDefsBestToWorst, Building_Bed reorderedFromPrevStage) {
                 if (MyApplySimpleSearchIfTrueCondition(sleeper)) {
                     if (MyClosestFreeCommunalBedParamSleepingSlots(
                         sleeper, traveler, checkSocialProperness, ignoreOtherReservations, guestStatus, bedDefsBestToWorst,
@@ -120,14 +130,14 @@ namespace BedOwnershipTools {
                     ) is Building_Bed any) {
                         return any;
                     }
-                    return null;
+                    return reorderedFromPrevStage;
                 }
                 // dear god the total unrolled number of calls to ClosestThingReachable...
-                if (LovePartnerRelationUtility.ExistingLovePartnersCount(sleeper) == 0) {
+                if (!PawnXAttrs_RelationshipAwareTracker.WouldWantToSleepWithSpouseOrLover(sleeper)) {
                     // single bed
                     if (MyClosestFreeCommunalBedParamSleepingSlots(
                         sleeper, traveler, checkSocialProperness, ignoreOtherReservations, guestStatus, bedDefsBestToWorst,
-                        ignoreSleepingSlots: false, sleepingSlotsOneFalseManyTrue: false, disallowPartiallyOccupied: true
+                        ignoreSleepingSlots: false, sleepingSlotsOneFalseManyTrue: false, disallowPartiallyOccupied: false
                     ) is Building_Bed single) {
                         return single;
                     }
@@ -156,7 +166,7 @@ namespace BedOwnershipTools {
                     // single bed
                     if (MyClosestFreeCommunalBedParamSleepingSlots(
                         sleeper, traveler, checkSocialProperness, ignoreOtherReservations, guestStatus, bedDefsBestToWorst,
-                        ignoreSleepingSlots: false, sleepingSlotsOneFalseManyTrue: false, disallowPartiallyOccupied: true
+                        ignoreSleepingSlots: false, sleepingSlotsOneFalseManyTrue: false, disallowPartiallyOccupied: false
                     ) is Building_Bed single) {
                         return single;
                     }
@@ -168,33 +178,37 @@ namespace BedOwnershipTools {
                         return doubleocc;
                     }
                 }
-                return null;
+                return reorderedFromPrevStage;
             }
             // // return sleeper.ownership.OwnedBed;
             // ...
             // IL_02e1: callvirt instance class RimWorld.Building_Bed RimWorld.Pawn_Ownership::get_OwnedBed() // <- S0 find
             // IL_02e6: ret
             // // return sleeper.ownership.OwnedBed;
-            // IL_02d6: ldloc.0 // <- S1 insert
+            // IL_02d6: ldloc.0 // <- InsertMyLovePartnersCurrentOrJobBed
             // ...
-            // // DirectPawnRelation directPawnRelation = LovePartnerRelationUtility.ExistingMostLikedLovePartnerRel(sleeper, allowDead: false);
-            // IL_02e7: ldloc.0
+            // // return building_Bed2;
+            // IL_0443: ldloc.s 19
+            // IL_0445: ret <- InsertDeferralForFoundDeathrestCasket
             // ...
-            // return null; <- S2 insert
+            // return null;
             // IL_0476: ldnull
-            // IL_0477: ret
+            // IL_0477: ret <- InsertMyClosestFreeCommunalBedCall
             enum TState {
                 InsertMyLovePartnersCurrentOrJobBed,
+                InsertDeferralForFoundDeathrestCasket,
                 InsertMyClosestFreeCommunalBedCall,
                 Terminal
             }
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator) {
                 TState state = TState.InsertMyLovePartnersCurrentOrJobBed;
 
-                int maxLookbehindWindow = 2;
+                int maxLookbehindWindow = 3;
                 List<CodeInstruction> editBuffer = new(maxLookbehindWindow);
 
                 LocalBuilder myBypassIfTrueConditionLocal = generator.DeclareLocal(typeof(bool));
+                LocalBuilder reorderedFromPrevStage = generator.DeclareLocal(typeof(Building_Bed));
+                Label myClosestFreeCommunalBedStageLabel = generator.DefineLabel();
 
                 editBuffer.Add(new CodeInstruction(
                     OpCodes.Call,
@@ -239,6 +253,38 @@ namespace BedOwnershipTools {
 
                                 instruction.WithLabels(bypassPoint);
                                 editBuffer.Add(instruction);
+                                state = TState.InsertDeferralForFoundDeathrestCasket;
+                            } else {
+                                editBuffer.Add(instruction);
+                            }
+                            break;
+                        case TState.InsertDeferralForFoundDeathrestCasket:
+                            if (
+                                instruction.opcode == OpCodes.Ret &&
+                                editBuffer.Count >= 3 &&
+                                editBuffer[editBuffer.Count - 1].opcode == OpCodes.Ldloc_S &&
+                                editBuffer[editBuffer.Count - 2].opcode == OpCodes.Brfalse_S &&
+                                editBuffer[editBuffer.Count - 3].opcode == OpCodes.Ldloc_S
+                            ) {
+                                // ldloc.s 19 (bed)
+                                // +dup (bed bed)
+                                // +stloc reorderedFromPrevStage (bed)
+                                // +call isDeathRestCasketAndDefer (bool)
+                                // +brtrue myClosestFreeCommunalBedStageLabel ()
+                                // +ldloc reorderedFromPrevStage (bed)
+                                // ret ()
+                                editBuffer.Add(new CodeInstruction(OpCodes.Dup));
+                                editBuffer.Add(new CodeInstruction(OpCodes.Stloc, reorderedFromPrevStage));
+                                editBuffer.Add(new CodeInstruction(
+                                    OpCodes.Call,
+                                    AccessTools.Method(
+                                        typeof(Patch_RelationshipAwareSearch_RestUtility_FindBedFor),
+                                        nameof(Patch_RelationshipAwareSearch_RestUtility_FindBedFor.IsDeathRestCasketAndDefer)
+                                    )
+                                ));
+                                editBuffer.Add(new CodeInstruction(OpCodes.Brtrue_S, myClosestFreeCommunalBedStageLabel));
+                                editBuffer.Add(new CodeInstruction(OpCodes.Ldloc, reorderedFromPrevStage));
+                                editBuffer.Add(instruction);
                                 state = TState.InsertMyClosestFreeCommunalBedCall;
                             } else {
                                 editBuffer.Add(instruction);
@@ -258,7 +304,7 @@ namespace BedOwnershipTools {
                                 int insertionCursor = editBuffer.Count - 1;
                                 CodeInstruction firstOriginalInstruction = editBuffer[insertionCursor];
 
-                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldloc, myBypassIfTrueConditionLocal).MoveLabelsFrom(firstOriginalInstruction));
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldloc, myBypassIfTrueConditionLocal).MoveLabelsFrom(firstOriginalInstruction).WithLabels(myClosestFreeCommunalBedStageLabel));
                                 editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Brtrue_S, bypassPoint));
                                 editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldarg_0));
                                 editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldarg_1));
@@ -267,6 +313,7 @@ namespace BedOwnershipTools {
                                 editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldarg_S, 4));
                                 // TODO recalculate the list selection so that we don't depend on a locals index
                                 editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldloc_3));
+                                editBuffer.Insert(insertionCursor++, new CodeInstruction(OpCodes.Ldloc, reorderedFromPrevStage));
                                 editBuffer.Insert(insertionCursor++, new CodeInstruction(
                                     OpCodes.Call,
                                     AccessTools.Method(
@@ -427,6 +474,10 @@ namespace BedOwnershipTools {
 #else
                 if (p.IsHashIntervalTick(GenDate.TicksPerHour)) {
 #endif
+                    // to avoid updating when animals last slept in a communal animal bed
+                    if (!p.RaceProps.Humanlike) {
+                        return;
+                    }
                     if (bed == null) {
                         return;
                     }
