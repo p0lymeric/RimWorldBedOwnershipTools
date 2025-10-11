@@ -47,6 +47,23 @@ namespace BedOwnershipTools {
         // instance when an owner assignment dialog is opened
         [HarmonyPatch(typeof(CompAssignableToPawn), "<CompGetGizmosExtra>b__31_0")]
         public class Patch_CompAssignableToPawn_CompGetGizmosExtra_DelegateAssignGizmoAction {
+            static CompAssignableToPawn_Bed MakeCATPBAssignmentGroupOverlayAdapter(CompAssignableToPawn_Bed inner) {
+                // CompAssignableToPawn_DeathrestCasket (base game binary)
+                if (inner is CompAssignableToPawn_DeathrestCasket catpDC) {
+                    return new CATPDCAssignmentGroupOverlayAdapter(catpDC);
+                }
+                // CompAssignableToPawn_AndroidStand (VRE Android)
+                if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_VanillaRacesExpandedAndroid.RemoteCall_IsCompAssignableToPawn_AndroidStand(inner)) {
+                    return new CATPBUnspecializedAssignmentGroupOverlayAdapter(
+                        inner,
+                        assignedAnythingImpl: ModInterop_VanillaRacesExpandedAndroid.AssignedAnythingImpl,
+                        assigningCandidatesGetterImpl: ModInterop_VanillaRacesExpandedAndroid.AssigningCandidatesGetterImpl
+                    );
+                }
+                // CompAssignableToPawn_Bed (base game binary)
+                return new CATPBAssignmentGroupOverlayAdapter(inner);
+            }
+
             [HarmonyPriority(Priority.First)]
             static void Prefix(ref CompAssignableToPawn __instance) {
                 bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
@@ -57,10 +74,9 @@ namespace BedOwnershipTools {
                     if (x.parent.GetComp<CompBuilding_BedXAttrs>() == null) {
                         return;
                     }
-                    if(__instance is CompAssignableToPawn_DeathrestCasket y) {
-                        __instance = new CATPDCAssignmentGroupOverlayAdapter(y);
-                    } else {
-                        __instance = new CATPBAssignmentGroupOverlayAdapter(x);
+                    CompAssignableToPawn wrappedInstance = MakeCATPBAssignmentGroupOverlayAdapter(x);
+                    if (wrappedInstance != null) {
+                        __instance = wrappedInstance;
                     }
                 }
             }

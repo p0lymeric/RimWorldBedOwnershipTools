@@ -144,6 +144,11 @@ namespace BedOwnershipTools {
                         // Needed to initialize overlays on existing saves where the mod is newly added, or when the subsystem is activated via settings toggle
                         bedXAttrs.uninstalledAssignedPawnsOverlay.AddRange(DelegatesAndRefs.CompAssignableToPawn_uninstalledAssignedPawns(catp).Except(bedXAttrs.uninstalledAssignedPawnsOverlay));
                         // assignedPawnsOverlay is initialized by save data load or by calling TryAssignPawn through the compPawnXAttrsRegistry loop above
+                        // or here for CATPs that aren't tracked by the pawn
+                        if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_VanillaRacesExpandedAndroid.RemoteCall_IsCompAssignableToPawn_AndroidStand(bed.CompAssignableToPawn)) {
+                            bedXAttrs.assignedPawnsOverlay.AddRange(catp.AssignedPawns.Except(bedXAttrs.assignedPawnsOverlay));
+                        }
+                        // verify the superset property of the overlays
                         foreach (Pawn pawn in bed.CompAssignableToPawn.AssignedPawnsForReading) {
                             if (!bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
                                 // Should never happen because we ensure that the overlay is a superset of the internal ownership list
@@ -168,6 +173,8 @@ namespace BedOwnershipTools {
                             foreach (Pawn pawn in pawnsToRemove) {
                                 bedXAttrs.assignedPawnsOverlay.Remove(pawn);
                             }
+                        } else if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_VanillaRacesExpandedAndroid.RemoteCall_IsCompAssignableToPawn_AndroidStand(bed.CompAssignableToPawn)) {
+                            // starting in 1.1.3 we support VRE Android stands, which are derived from Building_Bed but whose ownership is not tracked by Pawns
                         } else {
                             List<Pawn> pawnsToRemove = new List<Pawn>();
                             foreach (Pawn pawn in bedXAttrs.assignedPawnsOverlay) {

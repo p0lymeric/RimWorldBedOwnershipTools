@@ -70,7 +70,7 @@ namespace BedOwnershipTools {
 
             // CompPolygamyMode.isPolygamy
             public static AccessTools.FieldRef<object, bool> CompPolygamyMode_isPolygamy =
-                (object thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
+                (object thiss) => throw new NotImplementedException("[BOT] Tried to call a field ref access delegate stub");
 
             // ThingWithComps.GetComp<CompPolygamyMode>()
             public delegate object MethodDelegate_ThingWithComps_GetComp_SpecializedCompPolygamyMode(ThingWithComps thiss);

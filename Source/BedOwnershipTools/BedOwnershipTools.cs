@@ -10,6 +10,29 @@ namespace BedOwnershipTools {
         public ModInteropMarshal modInteropMarshal = null;
         public Harmony harmony = null;
 
+        // RimWorld's "Assembly-CSharp" assembly is loaded and entered.
+        //   - All of RimWorld's statically compiled code have linked into the CLR past this point
+        // Control reaches Verse.PlayDataLoader.DoPlayLoad()
+        // Control reaches Verse.LoadedModManager.LoadAllActiveMods()
+        //   1. Lists of assembly files for enabled mods are collected by InitializeMods()
+        //   2. All mod assemblies are loaded by LoadModContent()
+        //     - All loaded mods' static code are linked into the CLR
+        //     * including BedOwnershipTools.dll *
+        //   3. All "Mod" subclasses are instantiated by CreateModClasses()
+        //     - All loaded mods' Mod subclass constructors are executed in UI load order, defined by LoadedModManager.RunningMods
+        //     * The bulk of Bed Ownership Tools is initialized in this phase *
+        //         a) mod settings are retrieved
+        //         b) ModInteropMarshal queries mod settings and the game's environment to decide which interop patch sets to qualify for application.
+        //         c) HarmonyPatches applies all patches against "Assembly-CSharp" and scans ModInteropMarshal to apply all qualified patch sets.
+        //   4. New defs are loaded by LoadModXML()/CombineIntoUnifiedXML()
+        //   5. Patches against the def database are applied by ApplyPatches()
+        //     - XML-defined patches are applied
+        //         - Application order is defined by LoadedModManager.RunningMods (though unsure about intra/inter-file ordering within one mod)
+        //         * Bed Ownership Tools' XML patches are applied in this phase *
+        // Control returns to Verse.PlayDataLoader.DoPlayLoad()
+        //   1. An initial phase of code-driven def generation/modification is applied during GenerateImpliedDefs_PreResolve()
+        //     * Bed Ownership Tools installs hooks on this phase to apply def patches that depend on ModInteropMarshal qualification *
+
         public BedOwnershipTools(ModContentPack content) : base(content) {
             if (BedOwnershipTools.Singleton is not null) {
                 Log.Error("[BOT] Game tried to initialize mod multiple times!");
@@ -155,6 +178,11 @@ namespace BedOwnershipTools {
             listingStandard.CheckboxLabeled(
                 "BedOwnershipTools.EnableModCompatPatches".Translate("MultiFloors"),
                 ref settings.enableMultiFloorsModCompatPatches,
+                "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
+            );
+            listingStandard.CheckboxLabeled(
+                "BedOwnershipTools.EnableModCompatPatches".Translate("Vanilla Races Expanded - Android"),
+                ref settings.enableVanillaRacesExpandedAndroidPatches,
                 "BedOwnershipTools.EnableModCompatPatches_Tooltip".Translate()
             );
 

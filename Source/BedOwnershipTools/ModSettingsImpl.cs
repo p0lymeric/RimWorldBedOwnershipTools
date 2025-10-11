@@ -32,6 +32,7 @@ namespace BedOwnershipTools {
         public bool enableLoftBedModCompatPatches = true;
         public bool enableBunkBedsModCompatPatches = true;
         public bool enableMultiFloorsModCompatPatches = true;
+        public bool enableVanillaRacesExpandedAndroidPatches = true;
         // TODO bed linking in Dubs Hygiene is not aware of overlay owners
 
         public bool devEnableDebugInspectStringListings = false;
@@ -65,6 +66,7 @@ namespace BedOwnershipTools {
             this.enableLoftBedModCompatPatches = true;
             this.enableBunkBedsModCompatPatches = true;
             this.enableMultiFloorsModCompatPatches = true;
+            this.enableVanillaRacesExpandedAndroidPatches = true;
         }
 
         public void ResetDev() {
@@ -100,6 +102,7 @@ namespace BedOwnershipTools {
             Scribe_Values.Look(ref this.enableLoftBedModCompatPatches, "enableLoftBedModCompatPatches", true);
             Scribe_Values.Look(ref this.enableBunkBedsModCompatPatches, "enableBunkBedsModCompatPatches", true);
             Scribe_Values.Look(ref this.enableMultiFloorsModCompatPatches, "enableMultiFloorsModCompatPatches", true);
+            Scribe_Values.Look(ref this.enableVanillaRacesExpandedAndroidPatches, "enableVanillaRacesExpandedAndroidPatches", true);
 
             Scribe_Values.Look(ref this.devEnableDebugInspectStringListings, "devEnableDebugInspectStringListings", false);
             Scribe_Values.Look(ref this.devEnableUnaccountedCaseLogging, "devEnableUnaccountedCaseLogging", false);

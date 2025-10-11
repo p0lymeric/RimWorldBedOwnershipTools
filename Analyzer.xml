@@ -31,6 +31,7 @@
             <li>BedOwnershipTools.ModInterop_LoftBedBunkBeds+ModInteropHarmonyPatches</li>
             <li>BedOwnershipTools.ModInterop_MultiFloors+ModInteropHarmonyPatches</li>
             <li>BedOwnershipTools.ModInterop_OneBedToSleepWithAll+ModInteropHarmonyPatches</li>
+            <li>BedOwnershipTools.ModInterop_VanillaRacesExpandedAndroid+ModInteropHarmonyPatches</li>
         </NestedTypes>
     </BedOwnershipTools>
 </Analyzer>

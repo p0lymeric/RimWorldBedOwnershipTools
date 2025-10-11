@@ -10,6 +10,17 @@
         <value><li><compClass>BedOwnershipTools.CompBuilding_BedXAttrs</compClass></li></value>
     </Operation>
 
+    <!-- conditional injection controlled in code (see ModInterop_VanillaRacesExpandedAndroid.cs) -->
+    <!-- <Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Races Expanded - Android</li>
+        </mods>
+        <match Class="PatchOperationAdd">
+            <xpath>Defs/ThingDef/comps[./li/compClass="VREAndroids.CompAssignableToPawn_AndroidStand"]</xpath>
+            <value><li><compClass>BedOwnershipTools.CompBuilding_BedXAttrs</compClass></li></value>
+        </match>
+    </Operation> -->
+
     <Operation Class="PatchOperationFindMod">
         <mods>
             <li>Biotech</li>

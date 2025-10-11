@@ -189,8 +189,7 @@ namespace BedOwnershipTools {
             if (!ModsConfig.BiotechActive) {
                 return false;
             }
-            if (bedXAttrs.assignedPawnsOverlay.Contains(pawn))
-            {
+            if (bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
                 return false;
             }
             UnclaimDeathrestCasketDirected(pawn, bedXAttrs.MyAssignmentGroup);

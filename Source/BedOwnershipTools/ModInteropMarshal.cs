@@ -19,6 +19,7 @@ namespace BedOwnershipTools {
         public ModInterop_BunkBeds modInterop_BunkBeds;
         public ModInterop_LoftBedBunkBeds modInterop_LoftBedBunkBeds;
         public ModInterop_MultiFloors modInterop_MultiFloors;
+        public ModInterop_VanillaRacesExpandedAndroid modInterop_VanillaRacesExpandedAndroid;
 
         public ModInteropMarshal(ModSettingsImpl settings) {
             modInteropList = new();
@@ -40,6 +41,9 @@ namespace BedOwnershipTools {
 
             modInterop_MultiFloors = new(settings.enableMultiFloorsModCompatPatches);
             modInteropList.Add(modInterop_MultiFloors);
+
+            modInterop_VanillaRacesExpandedAndroid = new(settings.enableVanillaRacesExpandedAndroidPatches);
+            modInteropList.Add(modInterop_VanillaRacesExpandedAndroid);
         }
 
         public string EmitReport() {
