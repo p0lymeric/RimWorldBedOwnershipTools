@@ -490,11 +490,18 @@ namespace BedOwnershipTools {
                             }
                         }
                         foreach (Pawn bedPartner in bed.CurOccupants) {
-                            if (bedPartner != p && !bedPartner.Awake()) {
+                            if (bedPartner != p) {
                                 if (LovePartnerRelationUtility.LovePartnerRelationExists(p, bedPartner)) {
+                                    // we don't check Awake in this branch
+                                    // e.g. androids don't sleep so just being in bed is good enough
+                                    // (generosity is positive)
                                     pawnXAttrs.relationshipAwareTracker.Notify_SleptWithSpouseOrLover(bedPartner);
                                 } else {
-                                    pawnXAttrs.relationshipAwareTracker.Notify_SleptWithNonPartner(bedPartner);
+                                    // we check Awake in this branch but it's probably unnecessary to do so
+                                    // (pessimism is positive)
+                                    if (!bedPartner.Awake()) {
+                                        pawnXAttrs.relationshipAwareTracker.Notify_SleptWithNonPartner(bedPartner);
+                                    }
                                 }
                             }
 

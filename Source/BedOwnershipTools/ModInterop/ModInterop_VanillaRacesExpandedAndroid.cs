@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -307,6 +308,62 @@ namespace BedOwnershipTools {
             //         }
             //     }
             // }
+
+            [HarmonyPatch("VREAndroids.JobGiver_MakeLovin", "TryGiveJob")]
+            public class Patch_JobGiver_MakeLovin_TryGiveJob {
+                static Building_Bed MyCurrentBedImpl(Pawn pawn) {
+                    // if I'm already in bed, then use my current bed
+                    Building_Bed targetBed = pawn.CurrentBed();
+                    if (targetBed != null) {
+                        return targetBed;
+                    }
+
+                    // iterate over my partners and check if they are in bed
+                    // call frequency seems to be acceptable after the game has ticked beyond canLovinTick
+                    targetBed = HarmonyPatches.Patch_RelationshipAwareSearch_RestUtility_FindBedFor.MyLovePartnersCurrentOrJobBed(pawn, pawn, checkSocialProperness: true, ignoreOtherReservations: false, pawn.GuestStatus);
+                    if (targetBed != null) {
+                        CompBuilding_BedXAttrs bedXAttrs = targetBed.GetComp<CompBuilding_BedXAttrs>();
+                        if (bedXAttrs != null) {
+                            if (bedXAttrs.IsAssignedToCommunity) {
+                                if (BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
+                                    // tie picking a communal bed with the relationship-aware toggle
+                                    return targetBed;
+                                }
+                            } else {
+                                if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+                                    // we won't cause the android to claim a new bed to be consistent with VREA behaviour
+                                    // the partner, however, may choose to occupy the android's bed (FindBedFor)
+                                    if (bedXAttrs.assignedPawnsOverlay.Contains(pawn)) {
+                                        // formality to update the pawn's active bed
+                                        pawn.ownership.ClaimBedIfNonMedical(targetBed);
+                                        return targetBed;
+                                    }
+                                } else {
+                                    // not handled here as the caller will defer to checking pawn.ownership.OwnedBed
+                                }
+                            }
+                        }
+                    }
+
+                    return null;
+                }
+
+                static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
+                    return HarmonyPatches.TranspilerTemplates.ReplaceAtMatchingCodeInstructionTranspiler(
+                        instructions,
+                        (CodeInstruction instruction) => instruction.Calls(AccessTools.Method(typeof(RestUtility), nameof(RestUtility.CurrentBed), new Type[] { typeof(Pawn) })),
+                        new[] {
+                            new CodeInstruction(
+                                OpCodes.Call,
+                                AccessTools.Method(typeof(Patch_JobGiver_MakeLovin_TryGiveJob),
+                                nameof(Patch_JobGiver_MakeLovin_TryGiveJob.MyCurrentBedImpl))
+                            )
+                        },
+                        firstMatchOnly: true,
+                        errorOnNonMatch: true
+                    );
+                }
+            }
 
             [HarmonyPatch(typeof(DefGenerator), nameof(DefGenerator.GenerateImpliedDefs_PreResolve))]
             public class Patch_DefGenerator_GenerateImpliedDefs_PreResolve {

@@ -676,10 +676,18 @@ namespace BedOwnershipTools {
                             }
                         }
                     }
+                    // otherwise the stand will throw "Could not find good sleeping slot position for ..." errors
+                    // if it is marked Medical or communal
                     foreach (Pawn item in __instance.OwnersForReading.ToList()) {
                         __instance.CompAssignableToPawn.ForceRemovePawn(item);
                     }
                 }
+                // else if(__state == BedKind.DeathrestCasket) {
+                //     // the "right" thing to do here might be to iterate through OwnersForReading and call TryUnassignPawn
+                //     // but we don't do it in our workaround patch since it doesn't create problems for us
+                //     // pawns will retain ownership of their deathrest casket when the casket's guest type is changed
+                //     // deathrest caskets don't support ownerless modes like Medical or communal that could cause them to throw
+                // }
             }
         }
     }
