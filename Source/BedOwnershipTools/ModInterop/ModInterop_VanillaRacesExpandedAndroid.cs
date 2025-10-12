@@ -236,7 +236,7 @@ namespace BedOwnershipTools {
                     Building_Bed bed = (Building_Bed)__instance.parent;
                     CompBuilding_BedXAttrs newBedXAttrs = __instance.parent.GetComp<CompBuilding_BedXAttrs>();
                     if (bed.Medical || (newBedXAttrs?.IsAssignedToCommunity ?? false)) {
-                        // here we avoid a small issue with VRE Androids, because it does not hide the assignment dialog for medical stands
+                        // here we avoid a small issue with VRE Android, because it does not hide the assignment dialog for medical stands
                         // "Could not find good sleeping slot position for ..."
                         // we'll prevent assignments from successfully occurring if a stand is medical or communal
                         foreach (Pawn item in bed.OwnersForReading.ToList()) {
@@ -284,28 +284,29 @@ namespace BedOwnershipTools {
                 }
             }
 
-            [HarmonyPatch(typeof(Building_Bed), "RemoveAllOwners")]
-            public class Patch_Building_Bed_RemoveAllOwners {
-                static void Postfix(Building_Bed __instance, bool destroyed = false) {
-                    // here we avoid a small issue with VRE Androids (setting a stand to Medical does not clear its underlying owners)
-                    // "Could not find good sleeping slot position for ..."
-                    // we also want to clear owners for communal use, to avoid implicating this mod in these error messages
-                    if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_VanillaRacesExpandedAndroid.RemoteCall_IsCompAssignableToPawn_AndroidStand(__instance.CompAssignableToPawn)) {
-                        CompBuilding_BedXAttrs bedXAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
-                        if (bedXAttrs == null) {
-                            return;
-                        }
-                        if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
-                            foreach (Pawn item in bedXAttrs.assignedPawnsOverlay.ToList()) {
-                                CATPBAndPOMethodReplacements.ForceRemovePawn(__instance.CompAssignableToPawn, item);
-                            }
-                        }
-                        foreach (Pawn item in __instance.OwnersForReading.ToList()) {
-                            __instance.CompAssignableToPawn.ForceRemovePawn(item);
-                        }
-                    }
-                }
-            }
+            // we include these patches in BedAssignmentGroups.cs as we have a case decoder there
+            // [HarmonyPatch(typeof(Building_Bed), "RemoveAllOwners")]
+            // public class Patch_Building_Bed_RemoveAllOwners {
+            //     static void Postfix(Building_Bed __instance, bool destroyed = false) {
+            //         // here we avoid a small issue with VRE Android (setting a stand to Medical does not clear its underlying owners)
+            //         // "Could not find good sleeping slot position for ..."
+            //         // we also want to clear owners for communal use, to avoid implicating this mod in these error messages
+            //         if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_VanillaRacesExpandedAndroid.RemoteCall_IsCompAssignableToPawn_AndroidStand(__instance.CompAssignableToPawn)) {
+            //             CompBuilding_BedXAttrs bedXAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
+            //             if (bedXAttrs == null) {
+            //                 return;
+            //             }
+            //             if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+            //                 foreach (Pawn item in bedXAttrs.assignedPawnsOverlay.ToList()) {
+            //                     CATPBAndPOMethodReplacements.ForceRemovePawn(__instance.CompAssignableToPawn, item);
+            //                 }
+            //             }
+            //             foreach (Pawn item in __instance.OwnersForReading.ToList()) {
+            //                 __instance.CompAssignableToPawn.ForceRemovePawn(item);
+            //             }
+            //         }
+            //     }
+            // }
 
             [HarmonyPatch(typeof(DefGenerator), nameof(DefGenerator.GenerateImpliedDefs_PreResolve))]
             public class Patch_DefGenerator_GenerateImpliedDefs_PreResolve {

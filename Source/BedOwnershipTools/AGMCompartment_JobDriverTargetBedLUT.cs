@@ -16,8 +16,8 @@ namespace BedOwnershipTools {
         // in parallel with CurrentBed/GetCurOccupant calls, which should be a fixed and small set.
         // The permanent nature of the caching would probably not interact well with code that dynamically generates throwaway
         // JobDriver types, if any were to exist. We ignore that pathology for now.
-        public static Dictionary<Type, TargetIndex> JobDriverToLayDownBedTargetIndexCache = new Dictionary<Type, TargetIndex>();
-        public static HashSet<Type> JobDriverDevWarningFilter = new HashSet<Type>();
+        public Dictionary<Type, TargetIndex> jobDriverToLayDownBedTargetIndexCache = new();
+        public HashSet<Type> jobDriverDevWarningFilter = new();
 
         public AGMCompartment_JobDriverTargetBedLUT(Game game, GameComponent_AssignmentGroupManager parent) : base(game, parent) {
         }
@@ -81,18 +81,18 @@ namespace BedOwnershipTools {
             // Permanent blind caching isn't sufficient for JobDriver implementations where TargetIndex usage
             // varies between invokations. We ignore that limitation for now.
             Type jobDriverType = jobDriver.GetType();
-            if (warn && Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging && !JobDriverDevWarningFilter.Contains(jobDriverType)) {
+            if (warn && Prefs.DevMode && BedOwnershipTools.Singleton.settings.devEnableUnaccountedCaseLogging && !jobDriverDevWarningFilter.Contains(jobDriverType)) {
                 Log.Warning($"[BOT] A Pawn ({jobDriver.pawn.Label}) is performing a Job ({jobDriver.job}) on some bed, but Bed Ownership Tools couldn't match its JobDriver ({jobDriver}) with a statically defined handling case. Future warnings related to this JobDriver type will be suppressed.");
-                JobDriverDevWarningFilter.Add(jobDriverType);
+                jobDriverDevWarningFilter.Add(jobDriverType);
             }
             TargetIndex returnVal;
-            if (JobDriverToLayDownBedTargetIndexCache.TryGetValue(jobDriverType, out returnVal)) {
+            if (jobDriverToLayDownBedTargetIndexCache.TryGetValue(jobDriverType, out returnVal)) {
                 return returnVal;
             } else {
                 returnVal = GetLayDownToilTargetedBedFromJobDriverDirect(jobDriver);
 #if !BYPASS_DYNAMIC_JOB_TARGET_LOOKUP_CACHE
                 if (insertCache) {
-                    JobDriverToLayDownBedTargetIndexCache[jobDriverType] = returnVal;
+                    jobDriverToLayDownBedTargetIndexCache[jobDriverType] = returnVal;
                 }
 #endif
                 return returnVal;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection.Emit;
 using RimWorld;
 using Verse;
@@ -628,13 +629,57 @@ namespace BedOwnershipTools {
 
         [HarmonyPatch(typeof(Building_Bed), "RemoveAllOwners")]
         public class Patch_Building_Bed_RemoveAllOwners {
-            static void Postfix(Building_Bed __instance, bool destroyed = false) {
-                bool enableBedAssignmentGroups = BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups;
-                if (!enableBedAssignmentGroups) {
-                    return;
+            enum BedKind {
+                Bed,
+                DeathrestCasket,
+                AndroidStand
+            }
+
+            static bool Prefix(Building_Bed __instance, ref BedKind __state, bool destroyed = false) {
+                // destroying a Building_Bed/marking it as Medical/communal calls RemoveAllOwners, which in turn blindly calls UnclaimBed
+                // problem is that bed assignments are affected when performing these actions with deathrest caskets and android stands
+                if (__instance.CompAssignableToPawn is CompAssignableToPawn_DeathrestCasket) {
+                    // bug filed against the base game for this case
+                    // "[1.6.4566] Deconstructing a deathrest casket also unassigns the owner's bed"
+                    __state = BedKind.DeathrestCasket;
+                    return false;
                 }
-                // this call won't cover deathrest caskets but neither does the base implementation
-                CATPBAndPOMethodReplacements.RemoveAllOwners(__instance, destroyed);
+                if (BedOwnershipTools.Singleton.modInteropMarshal.modInterop_VanillaRacesExpandedAndroid.RemoteCall_IsCompAssignableToPawn_AndroidStand(__instance.CompAssignableToPawn)) {
+                    __state = BedKind.AndroidStand;
+                    return false;
+                }
+                __state = BedKind.Bed;
+                return true;
+            }
+
+            static void Postfix(Building_Bed __instance, ref BedKind __state, bool destroyed = false) {
+                if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+                    if (__state == BedKind.Bed) {
+                        CATPBAndPOMethodReplacements.RemoveAllOwners(__instance, destroyed);
+                    }
+                }
+                if (__state != BedKind.Bed) {
+                    foreach (Pawn item in __instance.OwnersForReading.ToList()) {
+                        string key = "MessageBedLostAssignment";
+                        if (destroyed) {
+                            key = "MessageBedDestroyed";
+                        }
+                        Messages.Message(key.Translate(__instance.def, item), new LookTargets(__instance, item), MessageTypeDefOf.CautionInput, historical: false);
+                    }
+                }
+                if (__state == BedKind.AndroidStand) {
+                    CompBuilding_BedXAttrs bedXAttrs = __instance.GetComp<CompBuilding_BedXAttrs>();
+                    if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+                        if (bedXAttrs != null) {
+                            foreach (Pawn item in bedXAttrs.assignedPawnsOverlay.ToList()) {
+                                CATPBAndPOMethodReplacements.ForceRemovePawn(__instance.CompAssignableToPawn, item);
+                            }
+                        }
+                    }
+                    foreach (Pawn item in __instance.OwnersForReading.ToList()) {
+                        __instance.CompAssignableToPawn.ForceRemovePawn(item);
+                    }
+                }
             }
         }
     }

@@ -65,7 +65,7 @@ namespace BedOwnershipTools {
                 }
                 return false;
             }
-            public static bool IsDeathRestCasketAndDefer(Building_Bed bed) {
+            public static bool IsDeathrestCasketAndDefer(Building_Bed bed) {
                 if (!BedOwnershipTools.Singleton.settings.communalBedsAreRelationshipAware) {
                     return false;
                 }
@@ -269,7 +269,7 @@ namespace BedOwnershipTools {
                                 // ldloc.s 19 (bed)
                                 // +dup (bed bed)
                                 // +stloc reorderedFromPrevStage (bed)
-                                // +call isDeathRestCasketAndDefer (bool)
+                                // +call isDeathrestCasketAndDefer (bool)
                                 // +brtrue myClosestFreeCommunalBedStageLabel ()
                                 // +ldloc reorderedFromPrevStage (bed)
                                 // ret ()
@@ -279,7 +279,7 @@ namespace BedOwnershipTools {
                                     OpCodes.Call,
                                     AccessTools.Method(
                                         typeof(Patch_RelationshipAwareSearch_RestUtility_FindBedFor),
-                                        nameof(Patch_RelationshipAwareSearch_RestUtility_FindBedFor.IsDeathRestCasketAndDefer)
+                                        nameof(Patch_RelationshipAwareSearch_RestUtility_FindBedFor.IsDeathrestCasketAndDefer)
                                     )
                                 ));
                                 editBuffer.Add(new CodeInstruction(OpCodes.Brtrue_S, myClosestFreeCommunalBedStageLabel));
