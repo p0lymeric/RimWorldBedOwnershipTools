@@ -4,7 +4,7 @@ using HarmonyLib;
 
 // Summary of patches
 // Pinned beds
-// - while a pawn is searching for a bed, restrict the set of valid search candididates to exclude:
+// - while a pawn is searching for a bed, restrict the set of valid search candidates to exclude:
 //   a) other ownable beds, in the case that sleeping in one would make them let go of a pinned bed
 //   b) if forbidden by mod settings, unowned pinned beds, in the case that sleeping in one would bind them to a pinned assignment
 

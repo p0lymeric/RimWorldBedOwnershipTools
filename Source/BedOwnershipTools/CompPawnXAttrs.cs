@@ -107,9 +107,9 @@ namespace BedOwnershipTools {
 
                 stringBuilder.AppendInNewLine("MyActiveOwnedBedIsOnThisMap: " + this.relationshipAwareTracker.MyActiveOwnedBedIsOnThisMap());
                 stringBuilder.AppendInNewLine("IRecentlySleptInACommunalBed: " + this.relationshipAwareTracker.IRecentlySleptInACommunalBed());
-                stringBuilder.AppendInNewLine($"tickGameLastSleptInCommunalBed: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptInCommunalBed + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
-                stringBuilder.AppendInNewLine($"tickGameLastSleptWithPartner: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptWithPartner + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
-                stringBuilder.AppendInNewLine($"tickGameLastSleptWithNonPartner: {FormatTickAsDateTimeString(this.relationshipAwareTracker.tickGameLastSleptWithNonPartner + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
+                stringBuilder.AppendInNewLine($"tickGameLastSleptInCommunalBed: {FormatTickAsDateTimeString(GenDate.TickGameToAbs(this.relationshipAwareTracker.tickGameLastSleptInCommunalBed) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
+                stringBuilder.AppendInNewLine($"tickGameLastSleptWithPartner: {FormatTickAsDateTimeString(GenDate.TickGameToAbs(this.relationshipAwareTracker.tickGameLastSleptWithPartner) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
+                stringBuilder.AppendInNewLine($"tickGameLastSleptWithNonPartner: {FormatTickAsDateTimeString(GenDate.TickGameToAbs(this.relationshipAwareTracker.tickGameLastSleptWithNonPartner) + (int)GenDate.LocalTicksOffsetFromLongitude(myLongitude))}");
                 stringBuilder.AppendInNewLine("sharedBedMoodOffset: " + this.relationshipAwareTracker.sharedBedMoodOffset);
                 stringBuilder.AppendInNewLine("ThinkWantToSleepWithSpouseOrLover: " + this.relationshipAwareTracker.ThinkWantToSleepWithSpouseOrLover());
                 stringBuilder.AppendInNewLine("ThinkSharedBed: " + this.relationshipAwareTracker.ThinkSharedBed());

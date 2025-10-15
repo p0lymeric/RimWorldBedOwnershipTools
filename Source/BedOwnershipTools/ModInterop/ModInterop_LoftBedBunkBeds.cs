@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Threading;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -69,6 +70,15 @@ namespace BedOwnershipTools {
         }
 
         public override void Notify_AGMCompartment_HarmonyPatchState_Constructed() {
+            // completely unnecessary and perhaps even a bit silly
+            // but we do like to reset our static structures
+            // as an offering of peace to the dark wizard
+            ModInteropHarmonyPatches.Patch_RestUtility_CurrentBed.Beds.Dispose();
+            ModInteropHarmonyPatches.Patch_RestUtility_CurrentBed.Beds = new(() => new(2));
+            ModInteropHarmonyPatches.Patch_RestUtility_CurrentBed.Pawns.Dispose();
+            ModInteropHarmonyPatches.Patch_RestUtility_CurrentBed.Pawns = new(() => new(4));
+            ModInteropHarmonyPatches.Patch_Building_Bed_GetCurOccupant.Pawns.Clear();
+            ModInteropHarmonyPatches.Patch_Building_Bed_GetCurOccupant.Pawns.Capacity = 4;
         }
 
         public static class ModInteropHarmonyPatches {
@@ -76,20 +86,20 @@ namespace BedOwnershipTools {
             // TPS with 224 chickens in 224 animal sleeping spots
             // (to gauge overhead impact on non-loft, non-bunk beds)
             // -----------------------------------------------------
-            // profiler only: 740-800 TPS
-            // Bed Ownership Tools: 750-780 TPS
+            // profiler only: 740-780 TPS
+            // Bed Ownership Tools: 720-750 TPS
             // Bunk Beds: 690-720 TPS
             // Loft Bed: 690-720 TPS
-            // Bed Ownership Tools x Bunk Beds (fastpath): 620-660 TPS
-            // Bed Ownership Tools (1.0.5) x Loft Bed: 680-720 TPS
-            // Bed Ownership Tools x Loft Bed (fastpath): 680-720 TPS
-            // Bed Ownership Tools x Loft Bed (slowpath static): 650-690 TPS
-            // Bed Ownership Tools x Loft Bed (slowpath dynamic cached): 650-690 TPS
-            // Bed Ownership Tools x Loft Bed (slowpath dynamic uncached): 520-550 TPS
+            // Bed Ownership Tools x Bunk Beds (fastpath): 650-690 TPS
+            // Bed Ownership Tools x Loft Bed (fastpath): 690-720 TPS
 
             [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.CurrentBed))]
             [HarmonyPatch(new Type[] { typeof(Pawn), typeof(int?) }, new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
             public class Patch_RestUtility_CurrentBed {
+                // parallel calls through PawnRenderer.ParallelPreRenderPawnAt
+                public static ThreadLocal<List<Building_Bed>> Beds = new(() => new(2));
+                public static ThreadLocal<List<Pawn>> Pawns = new(() => new(4));
+
                 static bool Prefix(ref Building_Bed __result, Pawn p, ref int? sleepingSlot) {
                     // Iterate through the sleeping Pawns and Building_Beds at the given Pawn p's position
                     // and map sleepers to the bed in their job's bed target
@@ -104,8 +114,10 @@ namespace BedOwnershipTools {
                     bool checkBunkBeds = BedOwnershipTools.Singleton.modInteropMarshal.modInterop_BunkBeds.active;
 
                     List<Thing> thingList = p.Position.GetThingList(p.Map);
-                    List<Building_Bed> beds = new List<Building_Bed>(2);
-                    List<Pawn> pawns = new List<Pawn>(4);
+                    List<Building_Bed> beds = Patch_RestUtility_CurrentBed.Beds.Value;
+                    List<Pawn> pawns = Patch_RestUtility_CurrentBed.Pawns.Value;
+                    beds.Clear();
+                    pawns.Clear();
                     for (int i = 0; i < thingList.Count; i++) {
                         if (thingList[i] is Building_Bed bed) {
                             beds.Add(bed);
@@ -185,6 +197,8 @@ namespace BedOwnershipTools {
                                     if (bed3.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
                                         // 4.2.1. Bunk bed below loft bed, medical or communal
                                         // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
+                                        // NOTE there will be a heap allocation here but unlike GetOccupant's implementation,
+                                        // Roslyn refrains from pushing the alloc outside this block
                                         List<Pawn> pawnsInThisBed = pawns.Where(x => GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(x) == bed3).ToList();
                                         slotIndex = pawnsInThisBed.IndexOf(p);
                                     } else {
@@ -218,6 +232,12 @@ namespace BedOwnershipTools {
 
             [HarmonyPatch(typeof(Building_Bed), nameof(Building_Bed.GetCurOccupant))]
             public class Patch_Building_Bed_GetCurOccupant {
+                public static List<Pawn> Pawns = new(4);
+
+                static List<Pawn> PawnsInThisBed(IEnumerable<Pawn> pawns, Building_Bed bed) {
+                    return pawns.Where(x => GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(x) == bed).ToList();
+                }
+
                 static bool Prefix(Building_Bed __instance, ref Pawn __result, int slotIndex) {
                     if (!__instance.Spawned) {
                         __result = null;
@@ -237,7 +257,8 @@ namespace BedOwnershipTools {
                     }
                     List<Thing> list = __instance.Map.thingGrid.ThingsListAt(sleepingSlotPos);
                     int bedsCnt = 0;
-                    List<Pawn> pawns = new List<Pawn>(4);
+                    List<Pawn> pawns = Patch_Building_Bed_GetCurOccupant.Pawns;
+                    pawns.Clear();
                     for (int i = 0; i < list.Count; i++){
                         if (checkLoftBed && list[i] is Building_Bed bed) {
                             bedsCnt++;
@@ -301,7 +322,10 @@ namespace BedOwnershipTools {
                         if (__instance.Medical || (bedXAttrs != null && bedXAttrs.IsAssignedToCommunity)) {
                             // 4.2.1. Bunk bed below loft bed, medical or communal
                             // abusive indexing but let's hope that the order of still things returned by ThingsListAt is stable
-                            indexingList = pawns.Where(x => GameComponent_AssignmentGroupManager.Singleton.agmCompartment_JobDriverTargetBedLUT.GetJobTargetedBedFromPawn(x) == __instance).ToList();
+                            // NOTE we separate this list calculation behind a function call, otherwise
+                            // Roslyn would've allocated at the beginning of this function
+                            // for the closure in the Linq Where clause (not deferring to this block)
+                            indexingList = Patch_Building_Bed_GetCurOccupant.PawnsInThisBed(pawns, __instance);
                         } else {
                             // 4.2.2. Bunk bed below loft bed, owned
                             // the game expects the pawn to sleep at the same slot as their bed's assignedPawns idx

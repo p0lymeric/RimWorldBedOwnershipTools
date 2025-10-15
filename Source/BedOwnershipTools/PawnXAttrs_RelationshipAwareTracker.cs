@@ -41,16 +41,16 @@ namespace BedOwnershipTools {
         }
 
         public static bool WouldWantToSleepWithSpouseOrLover(Pawn sleeper) {
-            DirectPawnRelation myMostLikeLovePartnerRel = LovePartnerRelationUtility.ExistingMostLikedLovePartnerRel(sleeper, allowDead: false);
+            DirectPawnRelation myMostLikedLovePartnerRel = LovePartnerRelationUtility.ExistingMostLikedLovePartnerRel(sleeper, allowDead: false);
             bool iHaveRestNeed = sleeper.needs?.TryGetNeed<Need_Rest>() != null;
-            bool myMostLikedLovePartnerHasRestNeed = myMostLikeLovePartnerRel?.otherPawn.needs?.TryGetNeed<Need_Rest>() != null;
+            bool myMostLikedLovePartnerHasRestNeed = myMostLikedLovePartnerRel?.otherPawn.needs?.TryGetNeed<Need_Rest>() != null;
             // Log.Message($"{sleeper.LabelShort} {myMostLikeLovePartnerRel?.otherPawn.LabelShort}.");
             return iHaveRestNeed && myMostLikedLovePartnerHasRestNeed &&
                 // null check is bundled with myMostLikedLovePartnerHasRestNeed
-                myMostLikeLovePartnerRel.otherPawn.IsColonist &&
-                !myMostLikeLovePartnerRel.otherPawn.IsWorldPawn() &&
-                myMostLikeLovePartnerRel.otherPawn.relations.everSeenByPlayer &&
-                sleeper.IsSlaveOfColony == myMostLikeLovePartnerRel.otherPawn.IsSlaveOfColony;
+                myMostLikedLovePartnerRel.otherPawn.IsColonist &&
+                !myMostLikedLovePartnerRel.otherPawn.IsWorldPawn() &&
+                myMostLikedLovePartnerRel.otherPawn.relations.everSeenByPlayer &&
+                sleeper.IsSlaveOfColony == myMostLikedLovePartnerRel.otherPawn.IsSlaveOfColony;
         }
 
         public bool ThinkWantToSleepWithSpouseOrLover() {

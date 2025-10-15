@@ -7,7 +7,7 @@ using Verse;
 using HarmonyLib;
 
 // Harmony patches are applied after settings are loaded from the game and after
-// any requested and resolvable references are found by the RuntimeHandleProvider
+// any requested and resolvable references are found by ModInterop instances
 
 namespace BedOwnershipTools {
     public static partial class HarmonyPatches {
