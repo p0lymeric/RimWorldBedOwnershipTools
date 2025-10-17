@@ -9,11 +9,14 @@ namespace BedOwnershipTools {
 
         private CompBuilding_BedXAttrs xAttrs;
 
-        public Command_SetAssignmentGroup(CompBuilding_BedXAttrs xAttrs) {
+        public Command_SetAssignmentGroup(CompBuilding_BedXAttrs xAttrs, bool disable) {
             this.xAttrs = xAttrs;
             this.defaultLabel = "BedOwnershipTools.CommandSetAssignmentGroup".Translate();
             this.defaultDesc = "BedOwnershipTools.CommandSetAssignmentGroupDesc".Translate();
             this.icon = SetAssignmentGroupTex.Texture;
+            if (disable) {
+                this.Disable();
+            }
         }
 
         public override void ProcessInput(Event ev) {

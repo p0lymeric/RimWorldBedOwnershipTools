@@ -9,9 +9,6 @@ using UnityEngine;
 
 namespace BedOwnershipTools {
     public class CompBuilding_BedXAttrs : ThingComp {
-        private static readonly CachedTexture PinOwnerTex = new("BedOwnershipTools/UI/Commands/PinOwner");
-        private static readonly CachedTexture CommunalOwnerTex = new("BedOwnershipTools/UI/Commands/CommunalOwner");
-
         // Whether this bed is owned by the community -- i.e. no assigned owner and anyone may use it
         private bool isAssignedToCommunity = false;
         public bool IsAssignedToCommunity {
@@ -185,67 +182,30 @@ namespace BedOwnershipTools {
 
                 bool hasCATP_DeathrestCasket = bed.GetComp<CompAssignableToPawn>() is CompAssignableToPawn_DeathrestCasket;
 
-                Command_Toggle toggleIsAssignmentPinned = new Command_Toggle();
-                toggleIsAssignmentPinned.defaultLabel = "BedOwnershipTools.CommandToggleIsAssignmentPinned".Translate();
-                toggleIsAssignmentPinned.defaultDesc = "BedOwnershipTools.CommandToggleIsAssignmentPinnedDesc".Translate();
-                toggleIsAssignmentPinned.icon = PinOwnerTex.Texture;
-                toggleIsAssignmentPinned.isActive = () => this.isAssignmentPinned;
-                toggleIsAssignmentPinned.toggleAction = delegate {
-                    this.isAssignmentPinned = !this.isAssignmentPinned;
-                };
-                if (disableGizmos) {
-                    toggleIsAssignmentPinned.Disable();
-                }
-                if (BedOwnershipTools.Singleton.settings.enableBedAssignmentPinning) {
-                    if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
+                if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
+                    if(!this.isAssignedToCommunity) {
                         if(!hasCATP_DeathrestCasket) {
-                            if(!this.isAssignedToCommunity) {
-                                yield return toggleIsAssignmentPinned;
+                            if (BedOwnershipTools.Singleton.settings.enableBedAssignmentPinning) {
+                                yield return new Command_ToggleIsAssignmentPinned(this, disableGizmos);
                             }
                         }
                     }
-                }
 
-                Command_SetAssignmentGroup selectAssignmentGroup = new Command_SetAssignmentGroup(this);
-                if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
-                    if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if (disableGizmos) {
-                            selectAssignmentGroup.Disable();
-                        }
-                        if(!this.isAssignedToCommunity) {
-                            yield return selectAssignmentGroup;
+                    if(!this.isAssignedToCommunity) {
+                        if (BedOwnershipTools.Singleton.settings.enableBedAssignmentGroups) {
+                            yield return new Command_SetAssignmentGroup(this, disableGizmos);
                         }
                     }
-                }
 
-                Command_Toggle toggleIsAssignedToCommunity = new Command_Toggle();
-                toggleIsAssignedToCommunity.defaultLabel = "BedOwnershipTools.CommandToggleIsAssignedToCommunity".Translate();
-                toggleIsAssignedToCommunity.defaultDesc = this.isAssignedToCommunity ?
-                    "BedOwnershipTools.CommandToggleIsAssignedToCommunityCommunalDesc".Translate() :
-                    "BedOwnershipTools.CommandToggleIsAssignedToCommunityNonCommunalDesc".Translate();
-                toggleIsAssignedToCommunity.icon = CommunalOwnerTex.Texture;
-                toggleIsAssignedToCommunity.isActive = () => this.isAssignedToCommunity;
-                toggleIsAssignedToCommunity.toggleAction = delegate {
-                    if (!this.isAssignedToCommunity) {
-                        DelegatesAndRefs.Building_Bed_RemoveAllOwners(bed, false);
-                    }
-                    this.isAssignedToCommunity = !this.isAssignedToCommunity;
-                };
-                if (disableGizmos || disableToggleIsAssignedToCommunity) {
-                    toggleIsAssignedToCommunity.Disable();
-                }
-                if (BedOwnershipTools.Singleton.settings.enableCommunalBeds) {
-                    if (bed.Faction == Faction.OfPlayer && !bed.ForPrisoners && !bed.Medical) {
-                        if(!hasCATP_DeathrestCasket) {
-                            yield return toggleIsAssignedToCommunity;
+                    if(!hasCATP_DeathrestCasket) {
+                        if (BedOwnershipTools.Singleton.settings.enableCommunalBeds) {
+                            yield return new Command_ToggleIsAssignedToCommunity(this, disableGizmos || disableToggleIsAssignedToCommunity);
                         }
                     }
                 }
 
                 if (ModsConfig.BiotechActive && BedOwnershipTools.Singleton.settings.showDeathrestAutoControlsOnCasket && (
-                    // vanilla deathrest caskets
-                    //CATPBAndPOMethodReplacements.IsDefOfDeathrestCasket(bed.def) ||
-                    // more robust deathrest casket check
+                    // more robust than def check
                     hasCATP_DeathrestCasket ||
                     // if the player opts to use beds for automatic deathrest
                     !BedOwnershipTools.Singleton.settings.ignoreBedsForAutomaticDeathrest
@@ -265,7 +225,7 @@ namespace BedOwnershipTools {
                             if (pawn != null) {
                                 CompPawnXAttrs pawnXAttrs = pawn.GetComp<CompPawnXAttrs>();
                                 Gene_Deathrest gene_Deathrest = pawn.genes?.GetFirstGeneOfType<Gene_Deathrest>();
-                                if (pawnXAttrs != null) {
+                                if (pawnXAttrs != null && gene_Deathrest != null && gene_Deathrest.Active) {
                                     foreach (Gizmo x in pawnXAttrs.automaticDeathrestTracker.CompGetGizmosExtraImpl(true)) {
                                         yield return x;
                                     }
