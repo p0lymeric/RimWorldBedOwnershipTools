@@ -50,7 +50,7 @@ Automatic deathrest is triggered using the game's job system.
 
 Deathresters will only automatically deathrest if they can reach an assigned/bound deathrest casket. With an optional mod setting. they can also automatically target a non-communal or communal bed. Deathrest will never be automatically initiated on the ground or in the sun.
 
-An in-game alert is fired whenever a deathrester's automatic deathrest scheduler is in a armed state, but cannot locate a valid location to deathrest.
+An in-game alert is fired whenever a deathrester's automatic deathrest scheduler is in an armed state, but cannot locate a valid location to deathrest.
 
 Deathresters will normally respect their activity schedule and will attempt to start deathresting during assigned bedtime. If a deathrester is nearing exhaustion (after a "needs deathrest" alert is fired), they will ignore their activity schedule to deathrest. Similarly, if a pawn does not require normal sleep, they will attempt to initiate deathrest across all activity types.
 

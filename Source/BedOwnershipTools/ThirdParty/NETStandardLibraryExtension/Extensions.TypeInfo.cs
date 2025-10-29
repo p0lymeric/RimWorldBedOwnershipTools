@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Reflection;
-// using BedOwnershipTools.Whathecode.System.Linq;
 
 // https://github.com/Whathecode/NET-Standard-Library-Extension/blob/1f296b0ff7f44eedadf39854e3c94e6002c5775a/src/Whathecode.System/Reflection/Extensions.TypeInfo.cs
 

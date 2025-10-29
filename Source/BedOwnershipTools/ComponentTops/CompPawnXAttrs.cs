@@ -49,8 +49,7 @@ namespace BedOwnershipTools {
             StringBuilder stringBuilder = new StringBuilder();
             if (this.parent is Pawn pawn) {
                 stringBuilder.AppendInNewLine("CurrentBed: ");
-                int? sleepingSlotPos = -1;
-                Building_Bed bed = pawn.CurrentBed(out sleepingSlotPos);
+                Building_Bed bed = pawn.CurrentBed(out int? sleepingSlotPos);
                 if (bed != null) {
                     stringBuilder.Append($"{bed.GetUniqueLoadID()} {sleepingSlotPos}");
                 } else {

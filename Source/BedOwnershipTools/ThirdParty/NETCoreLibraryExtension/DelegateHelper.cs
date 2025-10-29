@@ -496,8 +496,8 @@ namespace BedOwnershipTools.Whathecode.System
                 case 3:
                     generator.Emit(OpCodes.Ldarg_3);
                     break;
-                case int n when n <= 255:
-                    generator.Emit(OpCodes.Ldarg_S, n);
+                case <= 255:
+                    generator.Emit(OpCodes.Ldarg_S, idx);
                     break;
                 default:
                     generator.Emit(OpCodes.Ldarg, idx);

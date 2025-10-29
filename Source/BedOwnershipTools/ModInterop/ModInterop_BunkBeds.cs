@@ -144,7 +144,7 @@ namespace BedOwnershipTools {
             }
 
             // mmm don't like this mingling and mangling of edits
-            // that's the story of UIPatches.cs too...
+            // that's the story of UserInterface.cs too...
             [HarmonyPatch("BunkBeds.CompBunkBed", "DrawGUIOverlay")]
             public class Patch_CompBunkBed_DrawGUIOverlay {
                 static bool Prefix(object __instance, ThingWithComps ___parent) {
