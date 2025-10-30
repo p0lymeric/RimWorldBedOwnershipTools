@@ -11,20 +11,20 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_OneBedToSleepWithAll : ModInterop {
-        public Assembly assemblyOneBedToSleepWithAll;
-        public Type typeOneBedToSleepWithAll_CompPolygamyMode;
-        public Type typeOneBedToSleepWithAll_PolygamyModeUtility;
+        public Assembly assembly;
+        public Type typeCompPolygamyMode;
+        public Type typePolygamyModeUtility;
 
         public ModInterop_OneBedToSleepWithAll(bool enabled) : base(enabled) {
             if (this.enabled) {
-                this.assemblyOneBedToSleepWithAll = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "OneBedToSleepWithAll");
-                if (this.assemblyOneBedToSleepWithAll != null) {
+                this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "OneBedToSleepWithAll");
+                if (this.assembly != null) {
                     this.detected = true;
-                    this.typeOneBedToSleepWithAll_CompPolygamyMode = assemblyOneBedToSleepWithAll.GetType("OneBedToSleepWithAll.CompPolygamyMode");
-                    this.typeOneBedToSleepWithAll_PolygamyModeUtility = assemblyOneBedToSleepWithAll.GetType("OneBedToSleepWithAll.PolygamyModeUtility");
+                    this.typeCompPolygamyMode = assembly.GetType("OneBedToSleepWithAll.CompPolygamyMode");
+                    this.typePolygamyModeUtility = assembly.GetType("OneBedToSleepWithAll.PolygamyModeUtility");
                     this.qualified =
-                        this.typeOneBedToSleepWithAll_CompPolygamyMode != null &&
-                        this.typeOneBedToSleepWithAll_PolygamyModeUtility != null;
+                        this.typeCompPolygamyMode != null &&
+                        this.typePolygamyModeUtility != null;
                 }
             }
         }
@@ -78,19 +78,17 @@ namespace BedOwnershipTools {
                 (ThingWithComps thiss) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
             public static void Resolve(ModInterop_OneBedToSleepWithAll modInterop) {
-                Type typeCompPolygamyMode = modInterop.typeOneBedToSleepWithAll_CompPolygamyMode;
-
                 CompPolygamyMode_DefineMaster =
                     DelegateHelper.CreateOpenInstanceDelegate<MethodDelegate_CompPolygamyMode_DefineMaster>(
-                        AccessTools.Method(typeCompPolygamyMode, "DefineMaster"),
+                        AccessTools.Method(modInterop.typeCompPolygamyMode, "DefineMaster"),
                         DelegateHelper.CreateOptions.Downcasting
                     );
 
-                CompPolygamyMode_isPolygamy = AccessTools.FieldRefAccess<bool>(typeCompPolygamyMode, "isPolygamy");
+                CompPolygamyMode_isPolygamy = AccessTools.FieldRefAccess<bool>(modInterop.typeCompPolygamyMode, "isPolygamy");
 
                 ThingWithComps_GetComp_SpecializedCompPolygamyMode =
                     AccessTools.MethodDelegate<MethodDelegate_ThingWithComps_GetComp_SpecializedCompPolygamyMode>(
-                        AccessTools.Method(typeof(ThingWithComps), nameof(ThingWithComps.GetComp), null, new Type[] { typeCompPolygamyMode })
+                        AccessTools.Method(typeof(ThingWithComps), nameof(ThingWithComps.GetComp), null, new Type[] { modInterop.typeCompPolygamyMode })
                     );
             }
         }
@@ -100,24 +98,24 @@ namespace BedOwnershipTools {
                 // TODO can accomplish this with TargetMethods
                 public static void ApplyHarmonyPatches(ModInterop_OneBedToSleepWithAll modInterop, Harmony harmony) {
                     harmony.Patch(
-                        AccessTools.Method(modInterop.typeOneBedToSleepWithAll_PolygamyModeUtility, "AddMakeMasterButton"),
+                        AccessTools.Method(modInterop.typePolygamyModeUtility, "AddMakeMasterButton"),
                         transpiler: new HarmonyMethod(HarmonyPatches.Patch_CompAssignableToPawn_TryUnassignPawn.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
                     );
                     harmony.Patch(
-                        AccessTools.Method(modInterop.typeOneBedToSleepWithAll_CompPolygamyMode, "AssignesUpdated"),
+                        AccessTools.Method(modInterop.typeCompPolygamyMode, "AssignesUpdated"),
                         transpiler: new HarmonyMethod(HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
                     );
                     harmony.Patch(
-                        AccessTools.Method(modInterop.typeOneBedToSleepWithAll_CompPolygamyMode, "DefineMaster"),
+                        AccessTools.Method(modInterop.typeCompPolygamyMode, "DefineMaster"),
                         transpiler: new HarmonyMethod(HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
                     );
                     // bedXAttrs.assignedPawnsOverlay.Count > bed.SleepingSlotsCount does not seem to be hittable in normal circumstances
                     harmony.Patch(
-                        AccessTools.Method(modInterop.typeOneBedToSleepWithAll_CompPolygamyMode, "UpdateCondition"),
+                        AccessTools.Method(modInterop.typeCompPolygamyMode, "UpdateCondition"),
                         transpiler: new HarmonyMethod(HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
                     );
                     harmony.Patch(
-                        AccessTools.Method(modInterop.typeOneBedToSleepWithAll_CompPolygamyMode, "ResetAll"),
+                        AccessTools.Method(modInterop.typeCompPolygamyMode, "ResetAll"),
                         transpiler: new HarmonyMethod(HarmonyPatches.Patch_Pawn_Ownership_UnclaimBed.InsertHintDontInvalidateOverlaysNoErrorTranspiler)
                     );
                 }

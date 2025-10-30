@@ -9,17 +9,17 @@ using HarmonyLib;
 
 namespace BedOwnershipTools {
     public class ModInterop_LoftBed : ModInterop {
-        public Assembly assemblyLoftBed;
-        public Type typeLoftBed_Building_LoftBed;
+        public Assembly assembly;
+        public Type typeBuilding_LoftBed;
 
         public ModInterop_LoftBed(bool enabled) : base(enabled) {
             if (enabled) {
-                this.assemblyLoftBed = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "LoftBed");
-                if (assemblyLoftBed != null) {
+                this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "LoftBed");
+                if (assembly != null) {
                     this.detected = true;
-                    this.typeLoftBed_Building_LoftBed = assemblyLoftBed.GetType("Nekoemi.LoftBed.Building_LoftBed");
+                    this.typeBuilding_LoftBed = assembly.GetType("Nekoemi.LoftBed.Building_LoftBed");
                     this.qualified =
-                        this.typeLoftBed_Building_LoftBed != null;
+                        this.typeBuilding_LoftBed != null;
                 }
             }
         }

@@ -9,17 +9,17 @@ using HarmonyLib;
 
 namespace BedOwnershipTools {
     public class ModInterop_Hospitality : ModInterop {
-        public Assembly assemblyHospitality;
-        public Type typeHospitalityBuilding_GuestBed;
+        public Assembly assembly;
+        public Type typeBuilding_GuestBed;
 
         public ModInterop_Hospitality(bool enabled) : base(enabled) {
             if (enabled) {
-                this.assemblyHospitality = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "Hospitality");
-                if (assemblyHospitality != null) {
+                this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "Hospitality");
+                if (assembly != null) {
                     this.detected = true;
-                    this.typeHospitalityBuilding_GuestBed = assemblyHospitality.GetType("Hospitality.Building_GuestBed");
+                    this.typeBuilding_GuestBed = assembly.GetType("Hospitality.Building_GuestBed");
                     this.qualified =
-                        this.typeHospitalityBuilding_GuestBed != null;
+                        this.typeBuilding_GuestBed != null;
                 }
             }
         }
@@ -36,7 +36,7 @@ namespace BedOwnershipTools {
 
         public bool RemoteCall_IsGuestBed(ThingWithComps thing) {
             if (this.active) {
-                return this.typeHospitalityBuilding_GuestBed.IsInstanceOfType(thing);
+                return this.typeBuilding_GuestBed.IsInstanceOfType(thing);
             }
             return false;
         }

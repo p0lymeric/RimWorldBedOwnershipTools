@@ -23,20 +23,20 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_MultiFloors : ModInterop {
-        public Assembly assemblyMultiFloors;
-        public Type typeMultiFloors_StairPathFinderUtility;
-        public Type typeMultiFloors_LevelUtility;
+        public Assembly assembly;
+        public Type typeStairPathFinderUtility;
+        public Type typeLevelUtility;
 
         public ModInterop_MultiFloors(bool enabled) : base(enabled) {
             if (enabled) {
-                this.assemblyMultiFloors = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "MultiFloors");
-                if (assemblyMultiFloors != null) {
+                this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "MultiFloors");
+                if (assembly != null) {
                     this.detected = true;
-                    this.typeMultiFloors_StairPathFinderUtility = assemblyMultiFloors.GetType("MultiFloors.StairPathFinderUtility");
-                    this.typeMultiFloors_LevelUtility = assemblyMultiFloors.GetType("MultiFloors.LevelUtility");
+                    this.typeStairPathFinderUtility = assembly.GetType("MultiFloors.StairPathFinderUtility");
+                    this.typeLevelUtility = assembly.GetType("MultiFloors.LevelUtility");
                     this.qualified =
-                        this.typeMultiFloors_StairPathFinderUtility != null &&
-                        this.typeMultiFloors_LevelUtility != null;
+                        this.typeStairPathFinderUtility != null &&
+                        this.typeLevelUtility != null;
                 }
             }
         }
@@ -67,24 +67,21 @@ namespace BedOwnershipTools {
                 (Map map, object controller, int maxMapsToExplore) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
             public static void Resolve(ModInterop_MultiFloors modInterop) {
-                Type typeStairPathFinderUtility = modInterop.typeMultiFloors_StairPathFinderUtility;
-                Type typeLevelUtility = modInterop.typeMultiFloors_LevelUtility;
-
                 StairPathFinderUtility_CanReachAcrossLevel =
                     AccessTools.MethodDelegate<MethodDelegate_StairPathFinderUtility_CanReachAcrossLevel>(
-                        AccessTools.Method(typeStairPathFinderUtility, "CanReachAcrossLevel")
+                        AccessTools.Method(modInterop.typeStairPathFinderUtility, "CanReachAcrossLevel")
                     );
 
                 LevelUtility_TryGetLevelControllerOnCurrentTile =
                     DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile>(
-                        AccessTools.Method(typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
+                        AccessTools.Method(modInterop.typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
                         null,
                         DelegateHelper.CreateOptions.DowncastingILG
                     );
 
                 LevelUtility_GetOtherMapVerticallyOutwardFromCache =
                     DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_GetOtherMapVerticallyOutwardFromCache>(
-                        AccessTools.Method(typeLevelUtility, "GetOtherMapVerticallyOutwardFromCache"),
+                        AccessTools.Method(modInterop.typeLevelUtility, "GetOtherMapVerticallyOutwardFromCache"),
                         null,
                         DelegateHelper.CreateOptions.Downcasting
                     );

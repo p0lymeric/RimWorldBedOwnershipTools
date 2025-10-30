@@ -12,23 +12,23 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_BunkBeds : ModInterop {
-        public Assembly assemblyBunkBeds;
-        public Type typeBunkBeds_Utils;
-        public Type typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch;
-        public Type typeBunkBeds_CompBunkBed;
+        public Assembly assembly;
+        public Type typeUtils;
+        public Type typeBuilding_Bed_DrawGUIOverlay_Patch;
+        public Type typeCompBunkBed;
 
         public ModInterop_BunkBeds(bool enabled) : base(enabled) {
             if (enabled) {
-                this.assemblyBunkBeds = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "BunkBeds");
-                if (this.assemblyBunkBeds != null) {
+                this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "BunkBeds");
+                if (this.assembly != null) {
                     this.detected = true;
-                    this.typeBunkBeds_Utils = assemblyBunkBeds.GetType("BunkBeds.Utils");
-                    this.typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch = assemblyBunkBeds.GetType("BunkBeds.Building_Bed_DrawGUIOverlay_Patch");
-                    this.typeBunkBeds_CompBunkBed = assemblyBunkBeds.GetType("BunkBeds.CompBunkBed");
+                    this.typeUtils = assembly.GetType("BunkBeds.Utils");
+                    this.typeBuilding_Bed_DrawGUIOverlay_Patch = assembly.GetType("BunkBeds.Building_Bed_DrawGUIOverlay_Patch");
+                    this.typeCompBunkBed = assembly.GetType("BunkBeds.CompBunkBed");
                     this.qualified =
-                        this.typeBunkBeds_Utils != null &&
-                        this.typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch != null &&
-                        this.typeBunkBeds_CompBunkBed != null;
+                        this.typeUtils != null &&
+                        this.typeBuilding_Bed_DrawGUIOverlay_Patch != null &&
+                        this.typeCompBunkBed != null;
                 }
             }
         }
@@ -68,21 +68,17 @@ namespace BedOwnershipTools {
                 (object thiss, int slotIndex) => throw new NotImplementedException("[BOT] Tried to call a method delegate stub");
 
             public static void Resolve(ModInterop_BunkBeds modInterop) {
-                Type typeUtils = modInterop.typeBunkBeds_Utils;
-                Type typeBuilding_Bed_DrawGUIOverlay_Patch = modInterop.typeBunkBeds_Building_Bed_DrawGUIOverlay_Patch;
-                Type typeCompBunkBed = modInterop.typeBunkBeds_CompBunkBed;
-
                 BunkBed_Utils_IsBunkBed =
                     AccessTools.MethodDelegate<MethodDelegate_BunkBed_Utils_IsBunkBed>(
-                        AccessTools.Method(typeUtils, "IsBunkBed", new Type[] { typeof(ThingWithComps) })
+                        AccessTools.Method(modInterop.typeUtils, "IsBunkBed", new Type[] { typeof(ThingWithComps) })
                     );
 
                 Building_Bed_DrawGUIOverlay_Patch_guestBedType =
-                    AccessTools.StaticFieldRefAccess<Type>(AccessTools.Field(typeBuilding_Bed_DrawGUIOverlay_Patch, "guestBedType"));
+                    AccessTools.StaticFieldRefAccess<Type>(AccessTools.Field(modInterop.typeBuilding_Bed_DrawGUIOverlay_Patch, "guestBedType"));
 
                 CompBunkBed_GetMultiOwnersLabelScreenPosFor =
                     DelegateHelper.CreateOpenInstanceDelegate<MethodDelegate_CompBunkBed_GetMultiOwnersLabelScreenPosFor>(
-                        AccessTools.Method(typeCompBunkBed, "GetMultiOwnersLabelScreenPosFor"),
+                        AccessTools.Method(modInterop.typeCompBunkBed, "GetMultiOwnersLabelScreenPosFor"),
                         DelegateHelper.CreateOptions.Downcasting
                     );
             }
