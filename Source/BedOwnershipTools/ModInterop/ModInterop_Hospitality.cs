@@ -9,6 +9,20 @@ using HarmonyLib;
 
 namespace BedOwnershipTools {
     public class ModInterop_Hospitality : ModInterop {
+        // 1.5, 1.6
+        // Orion.Hospitality
+        // Orion
+        // Hospitality
+        // 753498552
+        // Hospitality
+
+        // 1.5, 1.6
+        // Orion.Hospitality
+        // Zaljerem
+        // Hospitality (Continued)
+        // 3509486825
+        // Hospitality
+
         public Assembly assembly;
         public Type typeBuilding_GuestBed;
 

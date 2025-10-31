@@ -12,6 +12,13 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_BunkBeds : ModInterop {
+        // 1.5, 1.6
+        // Darknote.BunkBeds
+        // Darknote
+        // Bunk Beds
+        // 2961752749
+        // BunkBeds
+
         public Assembly assembly;
         public Type typeUtils;
         public Type typeBuilding_Bed_DrawGUIOverlay_Patch;

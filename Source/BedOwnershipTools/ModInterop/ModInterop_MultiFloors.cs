@@ -23,7 +23,20 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_MultiFloors : ModInterop {
+        // 1.5, 1.6
+        // telardo.MultiFloors
+        // telardo
+        // MultiFloors
+        // 3384660931
+        // MultiFloors
+
+        public enum PatchVariant {
+            AssemblyVersionLtEq1p2p2p0,
+            AssemblyVersionGt1p2p2p0,
+        }
+
         public Assembly assembly;
+        public PatchVariant patchVariant;
         public Type typeStairPathFinderUtility;
         public Type typeLevelUtility;
 
@@ -31,8 +44,18 @@ namespace BedOwnershipTools {
             if (enabled) {
                 this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "MultiFloors");
                 if (assembly != null) {
+                    Version assemblyVersion = assembly.GetName().Version;
+                    if (assemblyVersion.Equals(new Version("0.0.0.0")) || assemblyVersion.CompareTo(new Version("1.2.2.0")) > 0) {
+                        this.patchVariant = PatchVariant.AssemblyVersionGt1p2p2p0;
+                    } else {
+                        this.patchVariant = PatchVariant.AssemblyVersionLtEq1p2p2p0;
+                    }
                     this.detected = true;
-                    this.typeStairPathFinderUtility = assembly.GetType("MultiFloors.StairPathFinderUtility");
+
+                    this.typeStairPathFinderUtility = this.patchVariant switch {
+                        PatchVariant.AssemblyVersionLtEq1p2p2p0 => assembly.GetType("MultiFloors.StairPather"),
+                        _ => assembly.GetType("MultiFloors.StairPathFinderUtility"),
+                    };
                     this.typeLevelUtility = assembly.GetType("MultiFloors.LevelUtility");
                     this.qualified =
                         this.typeStairPathFinderUtility != null &&
@@ -74,7 +97,10 @@ namespace BedOwnershipTools {
 
                 LevelUtility_TryGetLevelControllerOnCurrentTile =
                     DelegateHelper.CreateDelegate<MethodDelegate_LevelUtility_TryGetLevelControllerOnCurrentTile>(
-                        AccessTools.Method(modInterop.typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
+                        modInterop.patchVariant switch {
+                            PatchVariant.AssemblyVersionLtEq1p2p2p0 => AccessTools.Method(modInterop.typeLevelUtility, "TryGetLevelMapCompOnCurrentTile"),
+                            _ => AccessTools.Method(modInterop.typeLevelUtility, "TryGetLevelControllerOnCurrentTile"),
+                        },
                         null,
                         DelegateHelper.CreateOptions.DowncastingILG
                     );
@@ -89,8 +115,14 @@ namespace BedOwnershipTools {
         }
 
         public static class ModInteropHarmonyPatches {
-            [HarmonyPatch("MultiFloors.HarmonyPatches.HarmonyPatch_MainColonistBehavior", "BackToLivingLevelForGetRest")]
+            [HarmonyPatch()]
             public class DoublePatch_JobGiver_GetRest_TryGiveJob_Prefix {
+                static MethodBase TargetMethod() {
+                    return BedOwnershipTools.Singleton.modInteropMarshal.modInterop_MultiFloors.patchVariant switch {
+                        PatchVariant.AssemblyVersionLtEq1p2p2p0 => AccessTools.Method("MultiFloors.HarmonyPatch_MainColonistBehavior:BackToLivingLevelForGetRest"),
+                        _ => AccessTools.Method("MultiFloors.HarmonyPatches.HarmonyPatch_MainColonistBehavior:BackToLivingLevelForGetRest"),
+                    };
+                }
                 public static Building_Bed PreprocessAndReturnBedCandidate(Pawn sleeper) {
 
                     CompPawnXAttrs sleeperXAttrs = sleeper.GetComp<CompPawnXAttrs>();
@@ -194,7 +226,10 @@ namespace BedOwnershipTools {
                                 // If the bed's level differs from living level, the Pawn will switch to the bed's map
                                 // then fail to complete routing towards the bed they've chosen.
                                 // We'll set the target map in the find function to be that of the bed's level, like TryGoToMedicalBedOnOtherLevels.
-                                if (instruction.Calls(AccessTools.Method("MultiFloors.Jobs.CrossLevelJobFactory:MakeChangeLevelThroughStairJob"))) {
+                                if (instruction.Calls(BedOwnershipTools.Singleton.modInteropMarshal.modInterop_MultiFloors.patchVariant switch {
+                                    PatchVariant.AssemblyVersionLtEq1p2p2p0 => AccessTools.Method("MultiFloors.StairJobFactory:MakeChangeLevelThroughStairJob"),
+                                    _ => AccessTools.Method("MultiFloors.Jobs.CrossLevelJobFactory:MakeChangeLevelThroughStairJob"),
+                                })) {
                                     yield return new CodeInstruction(OpCodes.Pop);
                                     yield return new CodeInstruction(OpCodes.Pop);
                                     yield return new CodeInstruction(OpCodes.Ldloc_2);

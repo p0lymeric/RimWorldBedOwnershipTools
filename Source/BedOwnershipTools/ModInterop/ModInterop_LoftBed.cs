@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using RimWorld;
 using Verse;
@@ -9,15 +8,50 @@ using HarmonyLib;
 
 namespace BedOwnershipTools {
     public class ModInterop_LoftBed : ModInterop {
+        // 1.5 (mod targets 1.4)
+        // zed.0xff.LoftBed
+        // zed_0xff
+        // Loft Bed
+        // 2961708299
+        // LoftBed
+
+        // 1.6
+        // Nekoemi.LoftBed
+        // Nekoemi, zed_0xff
+        // Loft Bed (Continued)
+        // 3531523881
+        // LoftBed
+
+        public enum PatchVariant {
+            PackageIdZed0xffLoftBed,
+            PackageIdNekoemiLoftBed,
+        }
+
+        public ModContentPack modContentPack;
         public Assembly assembly;
+        public PatchVariant patchVariant;
         public Type typeBuilding_LoftBed;
+
+        public string outerNamespace;
 
         public ModInterop_LoftBed(bool enabled) : base(enabled) {
             if (enabled) {
-                this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assy => assy.GetName().Name == "LoftBed");
-                if (assembly != null) {
+                Pair<ModContentPack, Assembly>? searchResult = FindMCPAssemblyPair(assembly => assembly.GetName().Name == "LoftBed");
+                if (searchResult != null) {
+                    this.modContentPack = searchResult.Value.First;
+                    this.assembly = searchResult.Value.Second;
+                    this.patchVariant = modContentPack.PackageId switch {
+                        "zed.0xff.loftbed" => PatchVariant.PackageIdZed0xffLoftBed,
+                        _ => PatchVariant.PackageIdNekoemiLoftBed,
+                    };
                     this.detected = true;
-                    this.typeBuilding_LoftBed = assembly.GetType("Nekoemi.LoftBed.Building_LoftBed");
+
+                    this.outerNamespace = this.patchVariant switch {
+                        PatchVariant.PackageIdZed0xffLoftBed => "zed_0xff",
+                        _ => "Nekoemi",
+                    };
+
+                    this.typeBuilding_LoftBed = assembly.GetType($"{this.outerNamespace}.LoftBed.Building_LoftBed");
                     this.qualified =
                         this.typeBuilding_LoftBed != null;
                 }
@@ -39,11 +73,11 @@ namespace BedOwnershipTools {
             public static class Patch_Unpatches {
                 public static void ApplyHarmonyPatches(ModInterop_LoftBed modInterop, Harmony harmony) {
                     harmony.Patch(
-                        AccessTools.Method("Nekoemi.LoftBed.Patch_CurrentBed:Postfix"),
+                        AccessTools.Method($"{modInterop.outerNamespace}.LoftBed.Patch_CurrentBed:Postfix"),
                         transpiler: new HarmonyMethod(HarmonyPatches.TranspilerTemplates.StubRetTranspiler)
                     );
                     harmony.Patch(
-                        AccessTools.Method("Nekoemi.LoftBed.Patch_GetCurOccupant:Postfix"),
+                        AccessTools.Method($"{modInterop.outerNamespace}.LoftBed.Patch_GetCurOccupant:Postfix"),
                         transpiler: new HarmonyMethod(HarmonyPatches.TranspilerTemplates.StubRetTranspiler)
                     );
                 }

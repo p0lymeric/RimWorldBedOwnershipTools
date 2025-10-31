@@ -13,6 +13,13 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_VanillaRacesExpandedAndroid : ModInterop {
+        // 1.5, 1.6
+        // vanillaracesexpanded.android
+        // Oskar Potocki, Taranchuk, ISOREX, Sarg Bjornson
+        // Vanilla Races Expanded - Android
+        // 2975771801
+        // VREAndroids
+
         public Assembly assembly;
         public Type typeBuilding_AndroidStand;
         public Type typeCompAssignableToPawn_AndroidStand;

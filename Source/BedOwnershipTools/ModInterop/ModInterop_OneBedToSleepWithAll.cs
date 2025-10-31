@@ -11,6 +11,13 @@ using BedOwnershipTools.Whathecode.System;
 
 namespace BedOwnershipTools {
     public class ModInterop_OneBedToSleepWithAll : ModInterop {
+        // 1.5, 1.6
+        // maeyanie.onebedtosleepwithall
+        // Densevoid, Maeyanie
+        // One bed to sleep with all - Polycule Edition
+        // 3244294636
+        // OneBedToSleepWithAll
+
         public Assembly assembly;
         public Type typeCompPolygamyMode;
         public Type typePolygamyModeUtility;
