@@ -19,6 +19,13 @@ namespace BedOwnershipTools {
         // 2961752749
         // BunkBeds
 
+        // 1.6
+        // vanillaexpanded.gravship
+        // Oskar Potocki, Sarg Bjornson, Sokyran, Taranchuk, Erdelf
+        // Vanilla Gravship Expanded - Chapter 1
+        // 3609835606
+        // BunkBeds
+
         public Assembly assembly;
         public Type typeUtils;
         public Type typeBuilding_Bed_DrawGUIOverlay_Patch;
